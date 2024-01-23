@@ -22,6 +22,9 @@ let package = Package(
             name: "tsl-ios-sdk",
             dependencies: [
                 .product(name: "PubNub", package: "swift")
+            ],
+            resources: [
+                .copy("Resources"),
             ]),
         .testTarget(
             name: "tsl-ios-sdkTests",
