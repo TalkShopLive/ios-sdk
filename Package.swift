@@ -5,6 +5,9 @@ import PackageDescription
 
 let package = Package(
     name: "tsl-ios-sdk",
+    platforms: [
+            .iOS(.v14),
+    ],
     products: [
         // Products define the executables and libraries a package produces, making them visible to other packages.
         .library(
@@ -24,7 +27,12 @@ let package = Package(
                 .product(name: "PubNub", package: "swift")
             ],
             resources: [
-                .copy("Resources"),
+                .process("Resources/Keys/env.json"),
+                .process("Resources/Keys/Development.json"),
+                .process("Resources/Keys/Staging.json"),
+                .process("Resources/Keys/Production.json"),
+
+                // Add other resource files as needed
             ]),
         .testTarget(
             name: "tsl-ios-sdkTests",

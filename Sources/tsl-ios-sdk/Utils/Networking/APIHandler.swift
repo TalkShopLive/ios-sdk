@@ -7,6 +7,24 @@
 
 import Foundation
 
+public enum APIClientError: Error {
+    case invalidURL
+    case requestFailed(Error)
+    case noData
+    case responseDecodingFailed(Error)
+}
+
+public struct Config: Codable {
+    public let PUBLISH_KEY: String
+    public let SUBSCRIBE_KEY: String
+    public let USER_ID: String
+}
+
+public struct APIConfig: Codable {
+    public let BASE_URL: String
+}
+
+
 public class APIHandler {
     private let baseURL: String
 

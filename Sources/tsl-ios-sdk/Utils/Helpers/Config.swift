@@ -24,9 +24,9 @@ public class ConfigLoader {
     public static func loadAPIConfig() throws -> APIConfig {
         var fileName = ""
         #if DEBUG
-            fileName = "StagingConfig"
+            fileName = "Staging"
         #else
-            fileName = "ProductionConfig"
+            fileName = "Production"
         #endif
         guard let fileURL = Bundle.module.url(forResource: fileName, withExtension: "json") else {
             return APIConfig.init(BASE_URL: "")
