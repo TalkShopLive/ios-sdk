@@ -63,7 +63,7 @@ public class PubNubHandler {
         }
     }
     
-    private func fetchAuthKey(completion: @escaping (String) -> Void) {
+    public func fetchAuthKey(completion: @escaping (String) -> Void) {
         // Call your APIClient.postMessagingToken here
         // This is just a placeholder, replace it with your actual implementation
         Networking.postMessagingToken { result in
