@@ -11,11 +11,21 @@ let package = Package(
             name: "tsl-ios-sdk",
             targets: ["tsl-ios-sdk"]),
     ],
+    dependencies: [
+            .package(url: "https://github.com/pubnub/swift.git", from: "6.2.3"),
+            // Add other dependencies if needed
+    ],
     targets: [
         // Targets are the basic building blocks of a package, defining a module or a test suite.
         // Targets can depend on other targets in this package and products from dependencies.
         .target(
-            name: "tsl-ios-sdk"),
+            name: "tsl-ios-sdk",
+            dependencies: [
+                .product(name: "PubNub", package: "swift")
+            ],
+            resources: [
+                .copy("Resources"),
+            ]),
         .testTarget(
             name: "tsl-ios-sdkTests",
             dependencies: ["tsl-ios-sdk"]),
