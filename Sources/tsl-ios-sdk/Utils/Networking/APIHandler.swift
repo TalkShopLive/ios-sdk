@@ -24,6 +24,11 @@ public struct APIConfig: Codable {
     public let BASE_URL: String
 }
 
+public enum HTTPMethod: String {
+    case get = "GET"
+    case post = "POST"
+    // Add other HTTP methods as needed
+}
 
 public class APIHandler {
     private let baseURL: String
@@ -36,7 +41,7 @@ public class APIHandler {
         }
     }
 
-    public func postRequest<T: Decodable>(endpoint: APIEndpoint, body: Encodable, responseType: T.Type, completion: @escaping (Result<T, Error>) -> Void) {
+    public func request<T: Decodable>(endpoint: APIEndpoint, method: HTTPMethod, body: Encodable?, responseType: T.Type, completion: @escaping (Result<T, Error>) -> Void) {
         let fullURL = baseURL + endpoint.path
 
         guard let url = URL(string: fullURL) else {
@@ -45,16 +50,19 @@ public class APIHandler {
         }
 
         var request = URLRequest(url: url)
-        request.httpMethod = "POST"
+        request.httpMethod = method.rawValue
         request.addValue("application/json", forHTTPHeaderField: "Content-Type")
 
-        do {
-            let requestBody = try JSONEncoder().encode(body)
-            request.httpBody = requestBody
-        } catch {
-            completion(.failure(APIClientError.requestFailed(error)))
-            return
+        if let param = body {
+            do {
+                let requestBody = try JSONEncoder().encode(param)
+                request.httpBody = requestBody
+            } catch {
+                completion(.failure(APIClientError.requestFailed(error)))
+                return
+            }
         }
+        
 
         let task = URLSession.shared.dataTask(with: request) { (data, response, error) in
             if let error = error {
