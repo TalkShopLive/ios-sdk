@@ -2,10 +2,11 @@
 //  ChatTests.swift
 //  
 //
-//  Created by Mayuri on 2024-01-25.
+//  Created by TalkShopLive on 2024-01-25.
 //
 
 import XCTest
+import tsl_ios_sdk
 
 final class ChatTests: XCTestCase {
 
@@ -28,8 +29,31 @@ final class ChatTests: XCTestCase {
     func testPerformanceExample() throws {
         // This is an example of a performance test case.
         self.measure {
+            _ = Chat(eventId: "event123", mode: "public", refresh: "manual")
             // Put the code you want to measure the time of here.
         }
+    }
+    
+    func testPubNubConfiguration() {
+        // Arrange
+        let expectation = self.expectation(description: "Fetching Auth Key")
+
+        _ = Chat(eventId: "event123", mode: "public", refresh: "manual")
+
+        Networking.postMessagingToken(completion: { result in
+            switch result {
+            case .success(let token):
+                // Token retrieval successful, pass it to the completion handler
+                print("TOKEN", token)
+                expectation.fulfill()
+            case .failure(let error):
+                // Handle token retrieval failure
+                print(error.localizedDescription)
+                break
+            }
+        })
+        // Wait for the expectation to be fulfilled
+        waitForExpectations(timeout: 10, handler: nil)
     }
 
 }

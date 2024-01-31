@@ -2,7 +2,7 @@
 //  ShowTests.swift
 //  
 //
-//  Created by Mayuri on 2024-01-26.
+//  Created by TalkShopLive on 2024-01-26.
 //
 
 import XCTest
@@ -11,16 +11,6 @@ import XCTest
 
 final class ShowTests: XCTestCase {
     
-    // Mock implementation of ShowService for testing purposes
-        class MockShowService: ShowService {
-            override func getShows(completion: @escaping (Result<TSLShow, Error>) -> Void) {
-                // Provide mock data or simulate behavior for testing
-                // For example, you can create a TSLShow instance and pass it in the completion
-                let mockShow = TSLShow()
-                completion(.success(mockShow))
-            }
-        }
-
     override func setUpWithError() throws {
         // Put setup code here. This method is called before the invocation of each test method in the class.
     }
@@ -44,19 +34,16 @@ final class ShowTests: XCTestCase {
         }
     }
     
-    func testGetShows() {
+    func testFetchShows() {
             // Given
-        let tslSDK = TSLSDK.shared
-            let productKey = "vzzg6tNu0qOv"
+            let showInstance = Show()
+            let showId = "vzzg6tNu0qOv"
 
             // Create an expectation for the asynchronous code
             let expectation = XCTestExpectation(description: "Get shows expectation")
 
-            // Create a mock ShowService instance
-            let mockShowService = MockShowService(productKey: productKey)
-
             // When
-            tslSDK.getShows(productKey: productKey) { result in
+            showInstance.getDetails(showId: showId) { result in
                 // Then
                 switch result {
                 case .success(let show):
@@ -73,5 +60,4 @@ final class ShowTests: XCTestCase {
             // Wait for the expectation to be fulfilled, with a timeout of 5 seconds
             wait(for: [expectation], timeout: 10.0)
         }
-
 }

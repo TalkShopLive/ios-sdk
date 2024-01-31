@@ -74,8 +74,20 @@ public class APIHandler {
                 completion(.failure(APIClientError.noData))
                 return
             }
-
+            
             do {
+                // Convert the response data to a JSON string
+                let json = try JSONSerialization.jsonObject(with: data, options: .allowFragments)
+
+                // Convert the JSON object to a pretty-printed JSON string
+                if let jsonData = try? JSONSerialization.data(withJSONObject: json, options: .prettyPrinted),
+                   let jsonString = String(data: jsonData, encoding: .utf8) {
+                    print("API Response:")
+                    print(jsonString)
+                } else {
+                    print("Failed to convert JSON data to String.")
+                }
+                
                 let apiResponse = try JSONDecoder().decode(responseType, from: data)
                 completion(.success(apiResponse))
             } catch {

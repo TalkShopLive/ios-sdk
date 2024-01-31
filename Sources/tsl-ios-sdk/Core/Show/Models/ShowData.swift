@@ -2,12 +2,12 @@
 //  File.swift
 //  
 //
-//  Created by Mayuri on 2024-01-26.
+//  Created by TalkShopLive on 2024-01-30.
 //
 
 import Foundation
 
-public struct TSLShow: Codable {
+public struct ShowData: Codable {
     public let id: Int?
     public let productKey: String?
     public let name: String?
@@ -28,3 +28,5 @@ public struct TSLShow: Codable {
            // Initialize other optional properties with default values here
        }
 }
+
+

@@ -13,6 +13,6 @@ public struct MessagingTokenResponse: Codable {
 }
 
 public struct GetShowsResponse: Codable {
-    let product : TSLShow
+    let product : ShowData
 }
 
