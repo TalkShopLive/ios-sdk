@@ -9,14 +9,14 @@ import Foundation
 
 public enum APIEndpoint {
     case messagingToken
-    case getShows(productKey:String)
+    case getShows(showId:String)
 
     var path: String {
         switch self {
         case .messagingToken:
             return "/api/messaging_tokens"
-        case .getShows(let productKey):
-            return "/api/products/digital/streaming_content/\(productKey)"
+        case .getShows(let showId):
+            return "/api/products/digital/streaming_content/\(showId)"
         }
     }
 }
