@@ -6,3 +6,8 @@
 //
 
 import Foundation
+
+public protocol ShowProvider {
+    func getShows(completion: @escaping (Result<TSLShow, Error>) -> Void)
+    // Add other functions as needed
+}

@@ -11,3 +11,8 @@ public struct MessagingTokenResponse: Codable {
     let user_id: String
     let token: String
 }
+
+public struct GetShowsResponse: Codable {
+    let product : TSLShow
+}
+

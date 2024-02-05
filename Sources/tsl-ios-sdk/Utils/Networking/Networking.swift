@@ -16,7 +16,7 @@ public class Networking {
             guest_token: "oyrVT6p94Ep",
             refresh: true // or false
         )
-        APIHandler().postRequest(endpoint: APIEndpoint.messagingToken, body:messagingTokenRequest, responseType: MessagingTokenResponse.self) { result in
+        APIHandler().request(endpoint: APIEndpoint.messagingToken, method: .post, body:messagingTokenRequest, responseType: MessagingTokenResponse.self) { result in
             switch result {
             case .success(let apiResponse):
                 completion(.success(apiResponse.token))
@@ -25,6 +25,16 @@ public class Networking {
             }
         }
     }
-
+    
+    public static func getShows(productKey:String, completion: @escaping (Result<TSLShow, Error>) -> Void) {
+        APIHandler().request(endpoint: APIEndpoint.getShows(productKey: productKey), method: .get, body:nil, responseType:GetShowsResponse.self) { result in
+            switch result {
+            case .success(let apiResponse):
+                completion(.success(apiResponse.product))
+            case .failure(let error):
+                completion(.failure(error))
+            }
+        }
+    }
 }
 
