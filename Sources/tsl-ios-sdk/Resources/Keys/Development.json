@@ -1,3 +1,5 @@
 {
     "BASE_URL": "https://staging.cms.talkshop.live"
+    "EVENTS_BASE_URL" : "https://assets.talkshop.live"
+
 }
