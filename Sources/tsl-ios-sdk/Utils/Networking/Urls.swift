@@ -10,6 +10,8 @@ import Foundation
 public enum APIEndpoint {
     case messagingToken
     case getShows(showId:String)
+    case getCurrentEvent(showId:String)
+
 
     var path: String {
         switch self {
@@ -17,6 +19,8 @@ public enum APIEndpoint {
             return "/api/messaging_tokens"
         case .getShows(let showId):
             return "/api/products/digital/streaming_content/\(showId)"
+        case .getCurrentEvent(showId: let showId):
+            return "/api/shows/\(showId)/streams/current"
         }
     }
 }

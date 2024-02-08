@@ -41,13 +41,39 @@ public struct EventData: Codable {
     var tags: [String]?
 
     enum CodingKeys: String, CodingKey {
-        case id, storeId, productId, createdAt, updatedAt, startedAt, endedAt, duration, maxDuration
+        case id
+        case storeId = "store_id"
+        case productId = "product_id"
+        case createdAt = "created_at"
+        case updatedAt = "updated_at"
+        case startedAt = "started_at"
+        case endedAt = "ended_at"
+        case duration
+        case maxDuration = "max_duration"
         case productExpirationTime = "product_expiration_time"
-        case filename, name, status, isFlagged, totalViews, streamKey, platform, jwVideoKey
+        case filename
+        case name
+        case status
+        case isFlagged = "is_flagged"
+        case totalViews = "total_views"
+        case streamKey = "stream_key"
+        case platform
+        case jwVideoKey = "jw_video_key"
         case hlsPlaybackURL = "hls_playback_url"
-        case streamInCloud, vveSupported, totalViewsEmbed, isTest, durationFormatted, hostSourceId
-        case legacyChat, currentStreamStatus, userId, disconnectedAt, isExpired, tags
+        case streamInCloud = "stream_in_cloud"
+        case vveSupported = "vve_supported"
+        case totalViewsEmbed = "total_views_embed"
+        case isTest = "is_test"
+        case durationFormatted = "duration_formatted"
+        case hostSourceId = "host_source_id"
+        case legacyChat = "legacy_chat"
+        case currentStreamStatus = "current_stream_status"
+        case userId = "user_id"
+        case disconnectedAt = "disconnected_at"
+        case isExpired = "is_expired"
+        case tags
     }
+
 
     public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)

@@ -37,9 +37,7 @@ final class ChatTests: XCTestCase {
     func testPubNubConfiguration() {
         // Arrange
         let expectation = self.expectation(description: "Fetching Auth Key")
-
-        _ = Chat(eventId: "event123", mode: "public", refresh: "manual")
-
+        
         Networking.postMessagingToken(completion: { result in
             switch result {
             case .success(let token):
