@@ -35,7 +35,7 @@ public enum APIEndpoint {
         case .getCurrentEvent(showId: let showId):
             return "/api/shows/\(showId)/streams/current"
         case .getClosedCaptions(fileName: let fileName):
-            return "/events/\(fileName)_transcoded.vtt"
+            return "/events/\(fileName)_transcoded.transcript.vtt"
             
         }
     }
