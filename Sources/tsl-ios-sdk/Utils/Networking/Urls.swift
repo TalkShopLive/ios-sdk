@@ -19,7 +19,7 @@ public enum APIEndpoint {
             case .messagingToken, .getShows, .getCurrentEvent:
                 return try ConfigLoader.loadAPIConfig().BASE_URL
             case .getClosedCaptions:
-                return try ConfigLoader.loadAPIConfig().EVENTS_BASE_URL
+                return try ConfigLoader.loadAPIConfig().ASSETS_URL
             }
         } catch {
             fatalError("Failed to load configuration: \(error)")
