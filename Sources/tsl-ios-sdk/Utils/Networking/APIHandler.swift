@@ -12,6 +12,7 @@ public enum APIClientError: Error {
     case requestFailed(Error)
     case noData
     case responseDecodingFailed(Error)
+    case invalidData
 }
 
 public struct Config: Codable {
@@ -22,6 +23,8 @@ public struct Config: Codable {
 
 public struct APIConfig: Codable {
     public let BASE_URL: String
+    public let EVENTS_BASE_URL: String
+    
 }
 
 public enum HTTPMethod: String {
@@ -31,28 +34,26 @@ public enum HTTPMethod: String {
 }
 
 public class APIHandler {
-    private let baseURL: String
-
+    
     public init() {
-        do {
-            self.baseURL = try ConfigLoader.loadAPIConfig().BASE_URL
-        } catch {
-            fatalError("Failed to load configuration: \(error)")
-        }
+        
     }
-
+    
     public func request<T: Decodable>(endpoint: APIEndpoint, method: HTTPMethod, body: Encodable?, responseType: T.Type, completion: @escaping (Result<T, Error>) -> Void) {
-        let fullURL = baseURL + endpoint.path
-
+        
+        
+        let fullURL = endpoint.baseURL + endpoint.path
+        print(fullURL)
+        
         guard let url = URL(string: fullURL) else {
             completion(.failure(APIClientError.invalidURL))
             return
         }
-
+        
         var request = URLRequest(url: url)
         request.httpMethod = method.rawValue
         request.addValue("application/json", forHTTPHeaderField: "Content-Type")
-
+        
         if let param = body {
             do {
                 let requestBody = try JSONEncoder().encode(param)
@@ -63,13 +64,13 @@ public class APIHandler {
             }
         }
         
-
+        
         let task = URLSession.shared.dataTask(with: request) { (data, response, error) in
             if let error = error {
                 completion(.failure(APIClientError.requestFailed(error)))
                 return
             }
-
+            
             guard let data = data else {
                 completion(.failure(APIClientError.noData))
                 return
@@ -86,7 +87,8 @@ public class APIHandler {
                 completion(.failure(APIClientError.responseDecodingFailed(error)))
             }
         }
-
+        
         task.resume()
     }
+    
 }
