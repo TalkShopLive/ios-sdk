@@ -29,7 +29,7 @@ public class ConfigLoader {
             fileName = "Production"
         #endif
         guard let fileURL = Bundle.module.url(forResource: fileName, withExtension: "json") else {
-            return APIConfig.init(BASE_URL: "", EVENTS_BASE_URL: "")
+            return APIConfig.init(BASE_URL: "", ASSETS_URL: "")
         }
 
         let data = try Data(contentsOf: fileURL)

@@ -23,7 +23,7 @@ public struct Config: Codable {
 
 public struct APIConfig: Codable {
     public let BASE_URL: String
-    public let EVENTS_BASE_URL: String
+    public let ASSETS_URL: String
     
 }
 
