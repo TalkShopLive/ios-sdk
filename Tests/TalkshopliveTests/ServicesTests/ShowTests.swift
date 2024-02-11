@@ -6,7 +6,7 @@
 //
 
 import XCTest
-@testable import tsl_ios_sdk
+@testable import TalkShopLive
 
 
 final class ShowTests: XCTestCase {

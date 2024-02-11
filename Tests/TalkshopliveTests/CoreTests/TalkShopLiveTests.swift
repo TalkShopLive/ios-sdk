@@ -1,5 +1,5 @@
 import XCTest
-@testable import tsl_ios_sdk
+@testable import TalkShopLive
 
 final class TalkShopLiveTests: XCTestCase {
     func testExample() throws {
