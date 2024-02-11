@@ -11,12 +11,12 @@ import PubNub
 public class ChatProvider {
     
     private var pubnub: PubNub?
-    private var config: Config
+    private var config: EnvConfig
     
     public init() {
         // Load configuration from ConfigLoader
         do {
-            self.config = try ConfigLoader.loadConfig()
+            self.config = try Config.loadConfig()
 
             // Fetch and set the authentication token asynchronously
             self.createMessagingToken { token in

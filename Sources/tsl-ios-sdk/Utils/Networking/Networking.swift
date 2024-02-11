@@ -48,5 +48,23 @@ public class Networking {
         }
     }
     
+    public static func register(clientKey:String, completion: @escaping (Result<Void, Error>) -> Void) {
+        APIHandler().requestToRegister(endpoint: APIEndpoint.register(clientKey: clientKey), method: .get, body:nil, responseType:RegisteredClientData.self) { result in
+            switch result {
+            case .success(let apiResponse):
+                if apiResponse.status == "ok" {
+                    print("SDK Initialized")
+                    Config.shared.setInitialized(true)
+                    completion(.success(()))
+                } else {
+                    print("SDK is not initialized : Invalid Key")
+                    completion(.failure(APIClientError.invalidData))
+                }
+            case .failure(let error):
+                completion(.failure(error))
+            }
+        }
+    }
+    
 }
 
