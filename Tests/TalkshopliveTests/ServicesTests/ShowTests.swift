@@ -6,7 +6,7 @@
 //
 
 import XCTest
-@testable import TalkShopLive
+@testable import Talkshoplive
 
 
 final class ShowTests: XCTestCase {
@@ -32,6 +32,7 @@ final class ShowTests: XCTestCase {
     }
     
     func testFetchShows() {
+        
         // Given
         let showInstance = Show()
         let showId = "vzzg6tNu0qOv"

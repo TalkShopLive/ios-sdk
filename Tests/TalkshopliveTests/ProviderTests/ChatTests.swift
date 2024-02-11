@@ -6,7 +6,7 @@
 //
 
 import XCTest
-import TalkShopLive
+import Talkshoplive
 
 final class ChatTests: XCTestCase {
 
