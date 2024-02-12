@@ -12,14 +12,17 @@ public enum APIEndpoint {
     case getShows(showId:String)
     case getCurrentEvent(showId:String)
     case getClosedCaptions(fileName:String)
+    case register(clientKey:String)
     
     var baseURL: String {
         do {
             switch self {
             case .messagingToken, .getShows, .getCurrentEvent:
-                return try ConfigLoader.loadAPIConfig().BASE_URL
+                return try Config.loadAPIConfig().BASE_URL
             case .getClosedCaptions:
-                return try ConfigLoader.loadAPIConfig().ASSETS_URL
+                return try Config.loadAPIConfig().ASSETS_URL
+            case .register:
+                return ""
             }
         } catch {
             fatalError("Failed to load configuration: \(error)")
@@ -36,7 +39,8 @@ public enum APIEndpoint {
             return "/api/shows/\(showId)/streams/current"
         case .getClosedCaptions(fileName: let fileName):
             return "/events/\(fileName)_transcoded.transcript.vtt"
-            
+        case .register(clientKey: let clientKey):
+            return "https://mocki.io/v1/00134a6d-0077-4559-bb8f-a86627b34ddb?key=\(clientKey)"
         }
     }
 }
