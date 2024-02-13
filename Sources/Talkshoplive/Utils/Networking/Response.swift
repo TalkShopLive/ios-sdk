@@ -9,7 +9,7 @@ import Foundation
 
 public struct MessagingTokenResponse: Codable {
     let user_id: String
-    let token: String
+    public let token: String
 }
 
 public struct GetShowsResponse: Codable {

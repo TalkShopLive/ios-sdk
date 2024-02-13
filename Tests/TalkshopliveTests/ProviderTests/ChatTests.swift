@@ -34,24 +34,23 @@ final class ChatTests: XCTestCase {
         }
     }
     
-    func testPubNubConfiguration() {
-        // Arrange
-        let expectation = self.expectation(description: "Fetching Auth Key")
+    func testCreateMessagingToken() {
+        TalkShopLiveTests().testInitializeSDK()
         
-        Networking.postMessagingToken(completion: { result in
-            switch result {
-            case .success(let token):
-                // Token retrieval successful, pass it to the completion handler
-                print("TOKEN", token)
-                expectation.fulfill()
-            case .failure(let error):
-                // Handle token retrieval failure
-                print(error.localizedDescription)
-                break
-            }
-        })
-        // Wait for the expectation to be fulfilled
-        waitForExpectations(timeout: 10, handler: nil)
+        let chatProvider = ChatProvider()
+        
+        // Use XCTestExpectation to wait for the asynchronous call to complete
+        let expectation = XCTestExpectation(description: "Token retrieval completion")
+        
+        // Assuming the token is set after retrieval
+        DispatchQueue.main.asyncAfter(deadline: .now() + 5) {
+            XCTAssertNotNil(chatProvider.getToken())
+            expectation.fulfill()
+        }
+        
+        // Wait for the expectation to be fulfilled, timeout after 5 seconds
+        wait(for: [expectation], timeout: 10)
     }
+
 
 }

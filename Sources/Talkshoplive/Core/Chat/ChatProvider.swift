@@ -12,6 +12,7 @@ public class ChatProvider {
     
     private var pubnub: PubNub?
     private var config: EnvConfig
+    private var token: String?
     
     public init() {
         // Load configuration from ConfigLoader
@@ -19,36 +20,48 @@ public class ChatProvider {
             self.config = try Config.loadConfig()
 
             // Fetch and set the authentication token asynchronously
-            self.createMessagingToken { token in
-                // Once the token is obtained, initialize PubNub
-                self.initializePubNub(with: token)
-            }
-
+            self.createMessagingToken()
+            
         } catch {
             // Handle configuration loading failure
             fatalError("Failed to load configuration: \(error)")
         }
     }
     
+    // MARK: - Save messaging token
+    func setMessagingToken(_ token: String) {
+        self.token = token
+    }
+    
+    public func getToken() -> String? {
+        return self.token ?? nil
+    }
+    
     // This method is used to asynchronously fetch the messaging token
-    internal func createMessagingToken(completion: @escaping (String) -> Void) {
+    private func createMessagingToken() {
         // Call Networking to fetch the messaging token
-        Networking.postMessagingToken { result in
+        Networking.createMessagingToken { result in
             switch result {
-            case .success(let token):
-                // Token retrieval successful, pass it to the completion handler
-                print("TOKEN", token)
-                completion(token)
+            case .success(let result):
+                // Token retrieval successful, extract and print the token
+                print("TOKEN", result.token)
+                // Set the retrieved token for later use
+                self.setMessagingToken(result.token)
+                
+                // Initialize PubNub with the obtained token
+                self.initializePubNub(with: self.getToken())
+                
             case .failure(let error):
                 // Handle token retrieval failure
-                print(error.localizedDescription)
+                print("Token retrieval failure. Error: \(error.localizedDescription)")
+                // You might want to handle the error appropriately, e.g., show an alert to the user or log it.
                 break
             }
         }
     }
 
     // This method initializes PubNub with the obtained token and other settings
-    internal func initializePubNub(with token: String?) {
+    private func initializePubNub(with token: String?) {
         // Configure PubNub with the obtained token and other settings
         let configuration = PubNubConfiguration(
             publishKey: self.config.PUBLISH_KEY,
