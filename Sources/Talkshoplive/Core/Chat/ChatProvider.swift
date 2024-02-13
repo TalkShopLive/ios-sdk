@@ -49,7 +49,7 @@ public class ChatProvider {
                 self.setMessagingToken(result.token)
                 
                 // Initialize PubNub with the obtained token
-                self.initializePubNub(with: self.getToken())
+                self.initializePubNub()
                 
             case .failure(let error):
                 // Handle token retrieval failure
@@ -61,13 +61,14 @@ public class ChatProvider {
     }
 
     // This method initializes PubNub with the obtained token and other settings
-    private func initializePubNub(with token: String?) {
+    private func initializePubNub() {
         // Configure PubNub with the obtained token and other settings
+       
         let configuration = PubNubConfiguration(
             publishKey: self.config.PUBLISH_KEY,
             subscribeKey: self.config.SUBSCRIBE_KEY,
             userId: self.config.USER_ID,
-            authKey: token
+            authKey: self.getToken()
             // Add more configuration parameters as needed
         )
         // Initialize PubNub instance
