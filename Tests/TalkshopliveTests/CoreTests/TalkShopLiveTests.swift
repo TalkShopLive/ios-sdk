@@ -20,7 +20,7 @@ final class TalkShopLiveTests: XCTestCase {
     
     // Test initialization
     func testInitializeSDK() {
-        let clientKey = "0GmN76SBDdHRsGLRDcmVzpURj"
+        let clientKey = "sdk_2ea21de19cc8bc5e8640c7b227fef2f3"
         
         // Use XCTest expectations to wait for asynchronous operations
         let initializationExpectation = expectation(description: "TalkShopLive initialization with valid client key")

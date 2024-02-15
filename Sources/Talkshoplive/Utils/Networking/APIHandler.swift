@@ -14,6 +14,7 @@ public enum APIClientError: Error {
     case responseDecodingFailed(Error)
     case invalidData
     case requestDisabled
+    case authenticationInvalid
 }
 
 public struct EnvConfig: Codable {
@@ -69,7 +70,6 @@ public class APIHandler {
             }
         }
         
-        
         let task = URLSession.shared.dataTask(with: request) { (data, response, error) in
             if let error = error {
                 completion(.failure(APIClientError.requestFailed(error)))
@@ -96,7 +96,7 @@ public class APIHandler {
         task.resume()
     }
     
-    public func requestToRegister<T: Decodable>(endpoint: APIEndpoint, method: HTTPMethod, body: Encodable?, responseType: T.Type, completion: @escaping (Result<T, Error>) -> Void) {
+    public func requestToRegister<T: Decodable>(clientKey:String, endpoint: APIEndpoint, method: HTTPMethod, body: Encodable?, responseType: T.Type, completion: @escaping (Result<T, Error>) -> Void) {
         
         let fullURL = endpoint.baseURL + endpoint.path
         print(fullURL)
@@ -109,6 +109,11 @@ public class APIHandler {
         var request = URLRequest(url: url)
         request.httpMethod = method.rawValue
         request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+        
+        
+        // Add x-tsl-sdk-key header
+        request.addValue(clientKey, forHTTPHeaderField: "x-tsl-sdk-key")
+
         
         if let param = body {
             do {
