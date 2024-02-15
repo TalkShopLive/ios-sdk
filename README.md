@@ -44,16 +44,6 @@ For more information, see Apple's guide on [Adding Package Dependencies to Your 
     import Talkshoplive // <- Here is our Talkshoplive module import.
     ```
 
-2. Create and configure a PubNub object:
-
-    ```swift
-    var configuration = TSLIOSSDKConfiguration(
-      publishKey: "myPublishKey",
-      subscribeKey: "mySubscribeKey",
-      uuid: "myUniqueUUID"
-    )
-    ```
-
 ## Shows
 
 ### Overview
