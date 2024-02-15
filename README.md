@@ -30,18 +30,18 @@ You have several options to set up your project using swift package manager.
 
 1. Create or open your project inside of Xcode
 1. Navigate to File > Swift Packages > Add Package Dependency
-1. Search for tsl-ios-sdk and select the swift package owned by tsl, and hit the Next button
+1. Search for Talkshoplive and select the swift package owned by tsl, and hit the Next button
 1. Use the `Up to Next Major Version` rule and hit the Next button
 
 For more information see Apple's guide on [Adding Package Dependencies to Your App](https://developer.apple.com/documentation/xcode/adding_package_dependencies_to_your_app)
 
-## Configure TSL-iOS SDK
+## Configure Talkshoplive SDK
 
-1. Import the module named `tsl-ios-sdk` inside your AppDelegate:
+1. Import the module named `Talkshoplive` inside your AppDelegate:
 
     ```swift
     import UIKit
-    import tsl-ios-sdk // <- Here is our tsl-ios-sdk module import.
+    import Talkshoplive // <- Here is our Talkshoplive module import.
     ```
 
 1. Create and configure a PubNub object:
