@@ -16,11 +16,11 @@ enum StatusCode: String {
 public struct RegisteredClientData: Codable {
     
     // Declare a variable to store the status as a String
-    public var status: String?
+    public var validKey: Bool
 
     // Define CodingKeys enumeration to map keys during encoding and decoding
     enum CodingKeys: String, CodingKey {
-        case status
+        case validKey = "valid_key"
     }
 
     // Implement the custom initializer required for decoding
@@ -29,7 +29,7 @@ public struct RegisteredClientData: Codable {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         
         // Decode the status from the container, and handle potential errors
-        status = try? container.decode(String.self, forKey: .status)
+        validKey = try container.decode(Bool.self, forKey: .validKey)
     }
 }
 
