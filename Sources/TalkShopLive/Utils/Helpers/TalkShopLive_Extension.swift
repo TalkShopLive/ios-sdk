@@ -7,6 +7,6 @@
 
 import Foundation
 
-public extension TalkShopLive {
+public extension TalkShopLiveSDK {
     
 }

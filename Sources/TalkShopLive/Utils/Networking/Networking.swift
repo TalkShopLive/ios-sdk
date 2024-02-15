@@ -48,19 +48,20 @@ public class Networking {
     }
     
     public static func register(clientKey:String, completion: @escaping (Result<Void, Error>) -> Void) {
-        APIHandler().requestToRegister(endpoint: APIEndpoint.register(clientKey: clientKey), method: .get, body:nil, responseType:RegisteredClientData.self) { result in
+        APIHandler().requestToRegister(clientKey:clientKey,endpoint: APIEndpoint.register, method: .get, body:nil, responseType:RegisteredClientData.self) { result in
             switch result {
             case .success(let apiResponse):
-                if apiResponse.status == "ok" {
+                if apiResponse.validKey == true {
                     print("SDK Initialized")
                     Config.shared.setInitialized(true)
                     completion(.success(()))
                 } else {
-                    print("SDK is not initialized : Invalid Key")
-                    completion(.failure(APIClientError.invalidData))
+                    print("SDK is not initialized : Invalid Authentication")
+                    completion(.failure(APIClientError.authenticationInvalid))
                 }
             case .failure(let error):
-                completion(.failure(error))
+                print("SDK is not initialized : Invalid Authentication")
+                completion(.failure(APIClientError.authenticationInvalid))
             }
         }
     }

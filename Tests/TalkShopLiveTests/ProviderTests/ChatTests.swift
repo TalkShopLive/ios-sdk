@@ -6,7 +6,7 @@
 //
 
 import XCTest
-import Talkshoplive
+import TalkShopLive
 
 final class ChatTests: XCTestCase {
 
@@ -35,7 +35,7 @@ final class ChatTests: XCTestCase {
     }
     
     func testCreateMessagingToken() {
-        TalkShopLiveTests().testInitializeSDK()
+        TalkShopLiveSDKTests().testInitializeSDK()
         
         let chatProvider = ChatProvider()
         
