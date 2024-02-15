@@ -13,7 +13,7 @@ public class Config {
     
     // MARK: - Singleton
     
-    static let shared = Config()
+    public static let shared = Config()
     
     // MARK: - Properties
     

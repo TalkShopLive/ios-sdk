@@ -7,9 +7,11 @@
 
 import Foundation
 
-public struct MessagingTokenRequest: Codable {
-    let name: String
-    let id: String
-    let guest_token: String
-    let refresh: Bool
+struct MessagingTokenRequest: Codable {
+    let mode: String
+    let user: User
+
+    struct User: Codable {
+        let prefix: String
+    }
 }
