@@ -35,7 +35,7 @@ final class ChatTests: XCTestCase {
     }
     
     func testCreateMessagingToken() {
-        TalkShopLiveSDKTests().testInitializeSDK()
+        AuthenticateTests().testInitializeSDK()
         
         let chatProvider = ChatProvider()
         

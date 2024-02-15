@@ -32,7 +32,7 @@ final class ShowTests: XCTestCase {
     }
     
     func testFetchShows() {
-        TalkShopLiveSDKTests().testInitializeSDK()
+        AuthenticateTests().testInitializeSDK()
 
         // Given
         let showInstance = Show()
@@ -61,7 +61,7 @@ final class ShowTests: XCTestCase {
     }
     
     func testFetchCurrentEvent() {
-        TalkShopLiveSDKTests().testInitializeSDK()
+        AuthenticateTests().testInitializeSDK()
         
         // Given
         let eventInstance = Show()
