@@ -15,3 +15,13 @@ struct MessagingTokenRequest: Codable {
         let prefix: String
     }
 }
+
+struct RefreshTokenRequest: Codable {
+    let mode: String
+    let user: User
+    let refresh: Bool
+
+    struct User: Codable {
+        let prefix: String
+    }
+}

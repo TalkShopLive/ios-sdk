@@ -44,12 +44,18 @@ final class ChatTests: XCTestCase {
         
         // Assuming the token is set after retrieval
         DispatchQueue.main.asyncAfter(deadline: .now() + 5) {
-            XCTAssertNotNil(chatProvider.getToken())
+            XCTAssertNotNil(chatProvider.getMessagingToken())
             expectation.fulfill()
         }
         
         // Wait for the expectation to be fulfilled, timeout after 5 seconds
         wait(for: [expectation], timeout: 10)
+    }
+    
+    func testRefreshToken() {
+        TalkShopLiveTests().testInitializeSDK()
+        
+        let chatProvider = ChatProvider()
     }
 
 
