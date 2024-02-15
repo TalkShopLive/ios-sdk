@@ -4,15 +4,15 @@
 import PackageDescription
 
 let package = Package(
-    name: "Talkshoplive",
+    name: "TalkShopLive",
     platforms: [
             .iOS(.v14),
     ],
     products: [
         // Products define the executables and libraries a package produces, making them visible to other packages.
         .library(
-            name: "Talkshoplive",
-            targets: ["Talkshoplive"]),
+            name: "TalkShopLive",
+            targets: ["TalkShopLive"]),
     ],
     dependencies: [
             .package(url: "https://github.com/pubnub/swift.git", from: "6.2.3"),
@@ -22,7 +22,7 @@ let package = Package(
         // Targets are the basic building blocks of a package, defining a module or a test suite.
         // Targets can depend on other targets in this package and products from dependencies.
         .target(
-            name: "Talkshoplive",
+            name: "TalkShopLive",
             dependencies: [
                 .product(name: "PubNub", package: "swift")
             ],
@@ -35,7 +35,7 @@ let package = Package(
                 // Add other resource files as needed
             ]),
         .testTarget(
-            name: "TalkshopliveTests",
-            dependencies: ["Talkshoplive"]),
+            name: "TalkShopLiveTests",
+            dependencies: ["TalkShopLive"]),
     ]
 )

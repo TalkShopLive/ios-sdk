@@ -1,7 +1,7 @@
 import XCTest
-@testable import Talkshoplive
+@testable import TalkShopLive
 
-final class TalkShopLiveTests: XCTestCase {
+final class TalkShopLiveSDKTests: XCTestCase {
     func testExample() throws {
         // XCTest Documentation
         // https://developer.apple.com/documentation/xctest
@@ -25,7 +25,7 @@ final class TalkShopLiveTests: XCTestCase {
         // Use XCTest expectations to wait for asynchronous operations
         let initializationExpectation = expectation(description: "TalkShopLive initialization with valid client key")
         
-        let talkShopLive = TalkShopLive(clientKey: clientKey,testMode: true) { result in
+        let talkShopLive = TalkShopLiveSDK(clientKey: clientKey,testMode: true) { result in
             switch result {
             case .success:
                 // Test passed

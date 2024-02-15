@@ -4,7 +4,7 @@
 import Foundation
 import PubNub
 
-public class TalkShopLive {
+public class TalkShopLiveSDK {
     private let clientKey: String // TSL authentication key
     public let debugMode: Bool
     public let testMode: Bool
