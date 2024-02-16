@@ -43,7 +43,18 @@ For more information, see Apple's guide on [Adding Package Dependencies to Your 
     import UIKit
     import Talkshoplive // <- Here is our Talkshoplive module import.
     ```
+    
+2. Initialize the SDK using clientKey:
+   
+   - Parameters:
+       - `clientKey`: Given secured client key.
+       - `debugMode`: Print console logs if true
+       - `testMode`: Switch to staging if true
 
+   ```swift
+   let TSL = Talkshoplive.TalkShopLive(clientKey: "YourClientKey", debugMode: true/false, testMode: true/false)
+    ```
+    
 ## Shows
 
 ### Overview
@@ -57,8 +68,8 @@ The TSL iOS SDK provides methods for fetching details of a specific show and its
 Get detailed information about a specific show.
 
 - Parameters:
-  - `showId`: The unique identifier of the show.
-  - `completion`: A closure that will be called once the show details are fetched. It takes a `Result` enum containing either the `ShowData` on success or an `Error` on failure.
+    - `showId`: The unique identifier of the show.
+    - `completion`: A closure that will be called once the show details are fetched. It takes a `Result` enum containing either the `ShowData` on success or an `Error` on failure.
 
 ```swift
 let showInstance = Talkshoplive.Show()
@@ -78,8 +89,8 @@ showInstance.getDetails(showId: "yourShowId") { result in
 Get the current event of a show.
 
 - Parameters:
-  - `showId`: The unique identifier of the show.
-  - `completion`: A closure that will be called once the show details are fetched. It takes a `Result` enum containing either the `ShowData` on success or an `Error` on failure.
+    - `showId`: The unique identifier of the show.
+    - `completion`: A closure that will be called once the show details are fetched. It takes a `Result` enum containing either the `ShowData` on success or an `Error` on failure.
 
 ```swift
 let showInstance = Talkshoplive.Show()
