@@ -77,4 +77,23 @@ public class ChatProvider {
         print("Initialized Pubnub", pubnub!)
     }
     
+    
+    public func subscribeChannels(showId: String) {
+        Networking.getCurrentEvent(showId: showId, completion: { result in
+            switch result {
+            case .success(let apiResponse):
+                // Set the details and invoke the completion with success.
+                let publicChannel = showId
+                let eventsChannel = "\(apiResponse.id!)"
+                
+                self.pubnub?.subscribe(to: [publicChannel,eventsChannel])
+                
+            case .failure(let error):
+                // Invoke the completion with failure if an error occurs.
+                print("\(error.localizedDescription)")
+            }
+        })
+    }
+    
+    
 }
