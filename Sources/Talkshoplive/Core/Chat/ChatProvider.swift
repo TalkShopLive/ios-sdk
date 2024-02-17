@@ -28,6 +28,18 @@ public class ChatProvider {
         }
     }
     
+    // MARK: - Deinitializer
+    /*
+     When this will get deallocated :
+    var chatInstance: ChatProvider? = ChatProvider()
+    chatInstance = nil
+     */
+    deinit {
+        self.unSubscribeChannels()
+        // Perform cleanup or deallocate resources here
+        print("Chat instance is being deallocated.")        
+    }
+    
     // MARK: - Save messaging token
     func setMessagingToken(_ token: String) {
         self.token = token
@@ -93,6 +105,10 @@ public class ChatProvider {
                 print("\(error.localizedDescription)")
             }
         })
+    }
+    
+    private func unSubscribeChannels() {
+        self.pubnub?.unsubscribeAll()
     }
     
     
