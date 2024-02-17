@@ -78,7 +78,7 @@ public class ChatProvider {
     }
     
     
-    public func subscribeChannels(showId: String) {
+    private func subscribeChannels(showId: String) {
         Networking.getCurrentEvent(showId: showId, completion: { result in
             switch result {
             case .success(let apiResponse):

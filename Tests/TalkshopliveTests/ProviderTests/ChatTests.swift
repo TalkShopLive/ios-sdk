@@ -51,28 +51,5 @@ final class ChatTests: XCTestCase {
         // Wait for the expectation to be fulfilled, timeout after 5 seconds
         wait(for: [expectation], timeout: 10)
     }
-    
-    
-    func testSubscribeChannels() {
-        // Use XCTestExpectation to wait for the asynchronous call to complete
-        let expectation = XCTestExpectation(description: "Token retrieval completion")
-        
-        TalkShopLiveTests().testInitializeSDK()
-        
-        let chatProvider = ChatProvider()
-        
-        let showID = "8WtAFFgRO1K0"
-        chatProvider.subscribeChannels(showId: showID)
-        
-        // Assuming the token is set after retrieval
-        DispatchQueue.main.asyncAfter(deadline: .now() + 5) {
-            XCTAssertNotNil(chatProvider.getToken())
-            expectation.fulfill()
-        }
-        
-        wait(for: [expectation], timeout: 10)
-
-    }
-
 
 }
