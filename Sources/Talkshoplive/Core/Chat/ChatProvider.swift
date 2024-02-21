@@ -13,6 +13,7 @@ public class ChatProvider {
     private var pubnub: PubNub?
     private var config: EnvConfig
     private var token: String?
+    private var messageToken : MessagingTokenResponse?
     
     public init() {
         // Load configuration from ConfigLoader
@@ -29,12 +30,12 @@ public class ChatProvider {
     }
     
     // MARK: - Save messaging token
-    func setMessagingToken(_ token: String) {
-        self.token = token
+    func setMessagingToken(_ token: MessagingTokenResponse) {
+        self.messageToken = token
     }
     
-    public func getToken() -> String? {
-        return self.token ?? nil
+    public func getMessagingToken() -> MessagingTokenResponse? {
+        return self.messageToken
     }
     
     // This method is used to asynchronously fetch the messaging token
@@ -46,7 +47,7 @@ public class ChatProvider {
                 // Token retrieval successful, extract and print the token
                 print("TOKEN", result.token)
                 // Set the retrieved token for later use
-                self.setMessagingToken(result.token)
+                self.setMessagingToken(result)
                 
                 // Initialize PubNub with the obtained token
                 self.initializePubNub()
@@ -64,17 +65,39 @@ public class ChatProvider {
     private func initializePubNub() {
         // Configure PubNub with the obtained token and other settings
        
-        let configuration = PubNubConfiguration(
-            publishKey: self.config.PUBLISH_KEY,
-            subscribeKey: self.config.SUBSCRIBE_KEY,
-            userId: self.config.USER_ID,
-            authKey: self.getToken()
-            // Add more configuration parameters as needed
-        )
-        // Initialize PubNub instance
-        self.pubnub = PubNub(configuration: configuration)
-        // Log the initialization
-        print("Initialized Pubnub", pubnub!)
+        if let messageToken = self.messageToken {
+            let configuration = PubNubConfiguration(
+                publishKey: self.config.PUBLISH_KEY,
+                subscribeKey: self.config.SUBSCRIBE_KEY,
+                userId: messageToken.user_id,
+                authKey: messageToken.token
+                // Add more configuration parameters as needed
+            )
+            // Initialize PubNub instance
+            self.pubnub = PubNub(configuration: configuration)
+            // Log the initialization
+            print("Initialized Pubnub", pubnub!)
+        }
     }
+    
+    
+    private func subscribeChannels(showId: String) {
+        Networking.getCurrentEvent(showId: showId, completion: { result in
+            switch result {
+            case .success(let apiResponse):
+                // Set the details and invoke the completion with success.
+                if let eventId = apiResponse.id {
+                    let publicChannel = "chat.\(eventId)"
+                    let eventsChannel = "events.\(eventId)"
+                    self.pubnub?.subscribe(to: [publicChannel,eventsChannel])
+                }
+                
+            case .failure(let error):
+                // Invoke the completion with failure if an error occurs.
+                print("\(error.localizedDescription)")
+            }
+        })
+    }
+    
     
 }
