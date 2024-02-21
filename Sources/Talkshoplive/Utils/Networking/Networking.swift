@@ -59,7 +59,7 @@ public class Networking {
                     print("SDK is not initialized : Invalid Authentication")
                     completion(.failure(APIClientError.authenticationInvalid))
                 }
-            case .failure(let error):
+            case .failure(_):
                 print("SDK is not initialized : Invalid Authentication")
                 completion(.failure(APIClientError.authenticationInvalid))
             }

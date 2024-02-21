@@ -44,7 +44,7 @@ final class ChatTests: XCTestCase {
         
         // Assuming the token is set after retrieval
         DispatchQueue.main.asyncAfter(deadline: .now() + 5) {
-            XCTAssertNotNil(chatProvider.getToken())
+            XCTAssertNotNil(chatProvider.getMessagingToken())
             expectation.fulfill()
         }
         

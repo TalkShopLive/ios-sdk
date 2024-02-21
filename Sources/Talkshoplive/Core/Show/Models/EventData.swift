@@ -29,6 +29,18 @@ public struct EventData: Codable {
         case hlsPlaybackURL = "hls_playback_url"
         case isTest = "is_test"
     }
+    
+    public init() {
+        id = nil
+        storeId = nil
+        productId = nil
+        filename = nil
+        name = nil
+        status = nil
+        streamKey = nil
+        hlsPlaybackURL = nil
+        isTest = nil
+    }
 
 
     public init(from decoder: Decoder) throws {
