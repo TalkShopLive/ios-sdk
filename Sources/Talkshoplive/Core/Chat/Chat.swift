@@ -22,6 +22,8 @@ public class Chat {
         self.eventId = eventId
         self.mode = mode
         self.refresh = refresh
+        
+        let _ = ChatProvider(showKey: eventId)
     }
 }
 

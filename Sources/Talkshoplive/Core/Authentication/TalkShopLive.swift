@@ -26,11 +26,11 @@ public class TalkShopLive {
         
         // Set the test mode in the shared configuration
         Config.shared.setTestMode(testMode)
-        print(Config.shared.isTestMode())
+        print("Test Mode : ",Config.shared.isTestMode())
         
         // Set the debug mode in the shared configuration
         Config.shared.setDebugMode(debugMode)
-        print(Config.shared.isDebugMode())
+        print("Debug Mode : ",Config.shared.isDebugMode())
         
         // Register the SDK using the provided client key
         Networking.register(clientKey: self.clientKey) { result in
