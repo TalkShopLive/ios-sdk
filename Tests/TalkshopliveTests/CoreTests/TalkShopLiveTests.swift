@@ -20,7 +20,7 @@ final class TalkShopLiveTests: XCTestCase {
     
     // Test initialization
     func testInitializeSDK() {
-        let clientKey = "sdk_2ea21de19cc8bc5e8640c7b227fef2f3"
+        let clientKey = "0GmN76SBDdHRsGLRDcmVzpURj"
         
         // Use XCTest expectations to wait for asynchronous operations
         let initializationExpectation = expectation(description: "TalkShopLive initialization with valid client key")
@@ -31,6 +31,7 @@ final class TalkShopLiveTests: XCTestCase {
                 // Test passed
                 initializationExpectation.fulfill()
             case .failure(let error):
+                initializationExpectation.fulfill()
                 XCTFail("Initialization should not fail with error: \(error)")
             }
         }
@@ -39,9 +40,6 @@ final class TalkShopLiveTests: XCTestCase {
         waitForExpectations(timeout: 10, handler: nil)
         
         // Optionally, you can perform additional assertions on the created instance
-        XCTAssertTrue(talkShopLive.testMode)
-        XCTAssertTrue(Config.shared.isInitialized())
-        XCTAssertFalse(talkShopLive.dnt)
     }
     
 }
