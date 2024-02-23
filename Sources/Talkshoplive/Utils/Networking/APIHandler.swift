@@ -151,7 +151,7 @@ public class APIHandler {
         task.resume()
     }
     
-    public func requestToken<T: Decodable>(jwtToken:String?, endpoint: APIEndpoint, method: HTTPMethod, body: Encodable?, responseType: T.Type, completion: @escaping (Result<T, Error>) -> Void) {
+    public func requestToken<T: Decodable>(jwtToken:String, endpoint: APIEndpoint, method: HTTPMethod, body: Encodable?, responseType: T.Type, completion: @escaping (Result<T, Error>) -> Void) {
         
         // Check if the SDK is initialized or not
         guard Config.shared.isInitialized() else {
@@ -178,9 +178,7 @@ public class APIHandler {
         }
 
         // Add the JWT token to the Authorization header
-        if let jwtToken = jwtToken {
-            request.setValue("Bearer \(jwtToken)", forHTTPHeaderField: "Authorization")
-        }
+        request.setValue("Bearer \(jwtToken)", forHTTPHeaderField: "Authorization")
         
         if let param = body {
             do {

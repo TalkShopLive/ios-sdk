@@ -51,7 +51,8 @@ For more information, see Apple's guide on [Adding Package Dependencies to Your 
     var configuration = TSLIOSSDKConfiguration(
       publishKey: "myPublishKey",
       subscribeKey: "mySubscribeKey",
-      uuid: "myUniqueUUID"
+      userId: "myUniqueId",
+      authKey: "myToken"
     )
     ```
 
@@ -109,18 +110,25 @@ showInstance.getDetails(showId: "yourShowId") { result in
 
 ### Overview
 
-The TSL iOS SDK provides methods for fetching details of a specific show and its current event, enabling you to get show and current event details in your app.
+The TSL iOS SDK provides methods for fetching details of a specific current event, enabling you to get chat features.
 
 ### Methods
 
-#### `init(jwtToken:eventId:mode:refresh:)`
+#### `init(jwtToken:isGuest:showKey:mode:refresh:)`
+
+Initializes a new instance of the Chat class.
 
 - Parameters:
-  - `jwtToken`: Generated JWT token - Need to pass in case of fedarated/registered user - (Optional)
-  - `eventId`: product_key for which show you are connected
+  - `jwtToken`: Generated JWT token
+    - Example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzZGtfMmVhMjFkZTE5Y2M4YmM1ZTg2NDBjN2IyMjdmZWYyZjMiLCJleHAiOjE3MDg3MjI1MDAsInVzZXIiOnsiaWQiOjEyMywibmFtZSI6Ik1heXVyaSJ9LCJqdGkiOiJ0V2hCQXdTVG1YQzZycldLMTVBdURRPT0ifQ.zGgWSlRrZzMz4KWT6rZ6kUBaKetnrGJEPbcxzs8B_E8
+  - `isGuest`: A boolean indicating whether the user is a guest user (true) or a federated user (false).
+  - `showKey`: The show key for which you want to subscribe to the channel.
+  - `mode`: The mode of the chat (e.g., "public").
+  - `refresh`: The refresh mode for the chat (e.g., "manual").
+  
 
 ```swift
-let chatInstance = Talkshoplive.Chat(jwtToken: "YourJWTToken", eventId: "event123", mode: "public", refresh: "manual")
+let chatInstance = Talkshoplive.Chat(jwtToken: "YourJWTToken", isGuest:true/false, showKey: "YourShowKey", mode: "public", refresh: "manual")
 
 ```
     

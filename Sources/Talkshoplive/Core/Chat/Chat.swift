@@ -11,19 +11,19 @@ import PubNub
 public class Chat {
 
     // MARK: - Properties
-    private let eventId: String
+    private let showKey: String
     private let mode: String
     private let refresh: String
 
     // MARK: - Initializer
 
-    public init(jwtToken:String? = nil, eventId: String, mode: String, refresh: String) {
+    public init(jwtToken:String,isGuest:Bool,showKey: String, mode: String, refresh: String) {
         // Initialize properties
-        self.eventId = eventId
+        self.showKey = showKey
         self.mode = mode
         self.refresh = refresh
         
-        let _ = ChatProvider(jwtToken: jwtToken)
+        let _ = ChatProvider(jwtToken: jwtToken, isGuest: isGuest)
     }
 }
 

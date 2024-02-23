@@ -14,12 +14,13 @@ public class ChatProvider {
     private var config: EnvConfig
     private var token: String?
     private var messageToken : MessagingTokenResponse?
+    private var isGuest : Bool
     
-    init(jwtToken:String? = nil) {
+    public init(jwtToken:String,isGuest:Bool) {
         // Load configuration from ConfigLoader
         do {
+            self.isGuest = isGuest
             self.config = try Config.loadConfig()
-            
             self.createMessagingToken(jwtToken: jwtToken)
             
         } catch {
@@ -38,9 +39,9 @@ public class ChatProvider {
     }
     
     // This method is used to asynchronously fetch the messaging token
-    private func createMessagingToken(jwtToken:String?) {
+    private func createMessagingToken(jwtToken:String) {
         // Call Networking to fetch the messaging token
-        Networking.createMessagingToken(jwtToken: jwtToken) { result in
+        Networking.createMessagingToken(jwtToken: jwtToken,isGuest: self.isGuest) { result in
             switch result {
             case .success(let result):
                 // Token retrieval successful, extract and print the token

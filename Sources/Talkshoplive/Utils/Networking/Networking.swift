@@ -9,9 +9,9 @@ import Foundation
 
 public class Networking {
     
-    public static func createMessagingToken(jwtToken: String?, completion: @escaping (Result<MessagingTokenResponse, Error>) -> Void) {
+    public static func createMessagingToken(jwtToken: String,isGuest:Bool, completion: @escaping (Result<MessagingTokenResponse, Error>) -> Void) {
     
-        let endpoint = (jwtToken != nil) ? APIEndpoint.getFederatedUserToken : APIEndpoint.getGuestUserToken
+        let endpoint = isGuest ? APIEndpoint.getGuestUserToken : APIEndpoint.getFederatedUserToken
         APIHandler().requestToken(jwtToken: jwtToken, endpoint: endpoint, method: .post, body: nil, responseType: MessagingTokenResponse.self) { result in
             switch result {
             case .success(let apiResponse):
