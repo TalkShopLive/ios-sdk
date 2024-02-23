@@ -17,11 +17,13 @@ public class Chat {
 
     // MARK: - Initializer
 
-    public init(eventId: String, mode: String, refresh: String) {
+    public init(jwtToken:String? = nil, eventId: String, mode: String, refresh: String) {
         // Initialize properties
         self.eventId = eventId
         self.mode = mode
         self.refresh = refresh
+        
+        let _ = ChatProvider(jwtToken: jwtToken)
     }
 }
 

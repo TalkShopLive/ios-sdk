@@ -9,6 +9,7 @@ TSL takes care of the infrastructure and APIs needed for live streaming of diffe
 * [Set Up Your Project](#set-up-your-project)
 * [Configure TSL-iOS-SDK](#configure-tsl-ios-sdk)
 * [Shows](#shows)
+* [Chats](#chats)
 
 ## Requirements
 
@@ -31,7 +32,7 @@ You have several options to set up your project using Swift Package Manager.
 1. Create or open your project inside Xcode.
 2. Navigate to File > Swift Packages > Add Package Dependency.
 3. Search for Talkshoplive and select the Swift package owned by TSL, and hit the Next button.
-4. Use the `Up to Next Major Version` rule and hit the Next button.
+4. Use the `given version` and hit the Next button.
 
 For more information, see Apple's guide on [Adding Package Dependencies to Your App](https://developer.apple.com/documentation/xcode/adding_package_dependencies_to_your_app).
 
@@ -102,6 +103,25 @@ showInstance.getDetails(showId: "yourShowId") { result in
         print("Error fetching show's current event details: \(error)")
     }
 }
+```
+
+## Chats
+
+### Overview
+
+The TSL iOS SDK provides methods for fetching details of a specific show and its current event, enabling you to get show and current event details in your app.
+
+### Methods
+
+#### `init(jwtToken:eventId:mode:refresh:)`
+
+- Parameters:
+  - `jwtToken`: Generated JWT token - Need to pass in case of fedarated/registered user - (Optional)
+  - `eventId`: product_key for which show you are connected
+
+```swift
+let chatInstance = Talkshoplive.Chat(jwtToken: "YourJWTToken", eventId: "event123", mode: "public", refresh: "manual")
+
 ```
     
 ## Run the Tests: 
