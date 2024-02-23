@@ -122,7 +122,7 @@ Initializes a new instance of the Chat class.
   - `jwtToken`: Generated JWT token
     - Example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzZGtfMmVhMjFkZTE5Y2M4YmM1ZTg2NDBjN2IyMjdmZWYyZjMiLCJleHAiOjE3MDg3MjI1MDAsInVzZXIiOnsiaWQiOjEyMywibmFtZSI6Ik1heXVyaSJ9LCJqdGkiOiJ0V2hCQXdTVG1YQzZycldLMTVBdURRPT0ifQ.zGgWSlRrZzMz4KWT6rZ6kUBaKetnrGJEPbcxzs8B_E8
   - `isGuest`: A boolean indicating whether the user is a guest user (true) or a federated user (false).
-  - `showKey`: The show key for which you want to subscribe to the channel.
+  - `showKey`: show_key for which you want to subscribe to the channel.
   - `mode`: The mode of the chat (e.g., "public").
   - `refresh`: The refresh mode for the chat (e.g., "manual").
   
