@@ -9,6 +9,7 @@ TSL takes care of the infrastructure and APIs needed for live streaming of diffe
 * [Set Up Your Project](#set-up-your-project)
 * [Configure TSL-iOS-SDK](#configure-tsl-ios-sdk)
 * [Shows](#shows)
+* [Chats](#chats)
 
 ## Requirements
 
@@ -31,7 +32,7 @@ You have several options to set up your project using Swift Package Manager.
 1. Create or open your project inside Xcode.
 2. Navigate to File > Swift Packages > Add Package Dependency.
 3. Search for Talkshoplive and select the Swift package owned by TSL, and hit the Next button.
-4. Use the `Up to Next Major Version` rule and hit the Next button.
+4. Use the `given version` and hit the Next button.
 
 For more information, see Apple's guide on [Adding Package Dependencies to Your App](https://developer.apple.com/documentation/xcode/adding_package_dependencies_to_your_app).
 
@@ -53,6 +54,7 @@ For more information, see Apple's guide on [Adding Package Dependencies to Your 
 
    ```swift
    let TSL = Talkshoplive.TalkShopLive(clientKey: "YourClientKey", debugMode: true/false, testMode: true/false)
+
     ```
     
 ## Shows
@@ -103,6 +105,32 @@ showInstance.getDetails(showId: "yourShowId") { result in
         print("Error fetching show's current event details: \(error)")
     }
 }
+```
+
+## Chats
+
+### Overview
+
+The TSL iOS SDK provides methods for fetching details of a specific current event, enabling you to get chat features.
+
+### Methods
+
+#### `init(jwtToken:isGuest:showKey:mode:refresh:)`
+
+Initializes a new instance of the Chat class.
+
+- Parameters:
+  - `jwtToken`: Generated JWT token
+    - Example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzZGtfMmVhMjFkZTE5Y2M4YmM1ZTg2NDBjN2IyMjdmZWYyZjMiLCJleHAiOjE3MDg3MjI1MDAsInVzZXIiOnsiaWQiOjEyMywibmFtZSI6Ik1heXVyaSJ9LCJqdGkiOiJ0V2hCQXdTVG1YQzZycldLMTVBdURRPT0ifQ.zGgWSlRrZzMz4KWT6rZ6kUBaKetnrGJEPbcxzs8B_E8
+  - `isGuest`: A boolean indicating whether the user is a guest user (true) or a federated user (false).
+  - `showKey`: show_key for which you want to subscribe to the channel.
+  - `mode`: The mode of the chat (e.g., "public").
+  - `refresh`: The refresh mode for the chat (e.g., "manual").
+  
+
+```swift
+let chatInstance = Talkshoplive.Chat(jwtToken: "YourJWTToken", isGuest:true/false, showKey: "YourShowKey", mode: "public", refresh: "manual")
+
 ```
     
 ## Run the Tests: 

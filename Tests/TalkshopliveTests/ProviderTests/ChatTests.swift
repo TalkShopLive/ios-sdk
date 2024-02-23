@@ -29,15 +29,35 @@ final class ChatTests: XCTestCase {
     func testPerformanceExample() throws {
         // This is an example of a performance test case.
         self.measure {
-            _ = Chat(eventId: "event123", mode: "public", refresh: "manual")
             // Put the code you want to measure the time of here.
         }
     }
     
-    func testCreateMessagingToken() {
+    func testCreateGuestUserToken() {
         TalkShopLiveTests().testInitializeSDK()
         
-        let chatProvider = ChatProvider()
+        //Testing token
+        let jwtToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzZGtfMmVhMjFkZTE5Y2M4YmM1ZTg2NDBjN2IyMjdmZWYyZjMiLCJleHAiOjE3MDg3MjI1MDAsInVzZXIiOnsiaWQiOjEyMywibmFtZSI6Ik1heXVyaSJ9LCJqdGkiOiJ0V2hCQXdTVG1YQzZycldLMTVBdURRPT0ifQ.zGgWSlRrZzMz4KWT6rZ6kUBaKetnrGJEPbcxzs8B_E8"
+        let chatProvider = ChatProvider(jwtToken: jwtToken, isGuest: true)
+        
+        // Use XCTestExpectation to wait for the asynchronous call to complete
+        let expectation = XCTestExpectation(description: "Token retrieval completion")
+        
+        // Assuming the token is set after retrieval
+        DispatchQueue.main.asyncAfter(deadline: .now() + 5) {
+            XCTAssertNotNil(chatProvider.getMessagingToken())
+            expectation.fulfill()
+        }
+        
+        // Wait for the expectation to be fulfilled, timeout after 5 seconds
+        wait(for: [expectation], timeout: 10)
+    }
+    
+    func testCreateFedaratedUserToken() {
+        TalkShopLiveTests().testInitializeSDK()
+        
+        let jwtToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzZGtfMmVhMjFkZTE5Y2M4YmM1ZTg2NDBjN2IyMjdmZWYyZjMiLCJleHAiOjE3MDg3MjI1MDAsInVzZXIiOnsiaWQiOjEyMywibmFtZSI6Ik1heXVyaSJ9LCJqdGkiOiJ0V2hCQXdTVG1YQzZycldLMTVBdURRPT0ifQ.zGgWSlRrZzMz4KWT6rZ6kUBaKetnrGJEPbcxzs8B_E8"
+        let chatProvider = ChatProvider(jwtToken: jwtToken, isGuest: false)
         
         // Use XCTestExpectation to wait for the asynchronous call to complete
         let expectation = XCTestExpectation(description: "Token retrieval completion")

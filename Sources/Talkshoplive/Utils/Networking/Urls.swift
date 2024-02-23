@@ -13,11 +13,13 @@ public enum APIEndpoint {
     case getCurrentEvent(showId:String)
     case getClosedCaptions(fileName:String)
     case register
+    case getGuestUserToken
+    case getFederatedUserToken
     
     var baseURL: String {
         do {
             switch self {
-            case .messagingToken, .getShows, .getCurrentEvent,.register:
+            case .messagingToken, .getShows, .getCurrentEvent,.register,.getGuestUserToken,.getFederatedUserToken:
                 return try Config.loadAPIConfig().BASE_URL
             case .getClosedCaptions:
                 return try Config.loadAPIConfig().ASSETS_URL
@@ -39,6 +41,10 @@ public enum APIEndpoint {
             return "/events/\(fileName)_transcoded.transcript.vtt"
         case .register:
             return "/api2/v1/sdk"
+        case .getGuestUserToken:
+            return "/api2/v1/sdk/chat/guest_token"
+        case .getFederatedUserToken:
+            return "/api2/v1/sdk/chat/federated_user_token"
         }
     }
 }

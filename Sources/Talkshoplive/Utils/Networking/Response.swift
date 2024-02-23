@@ -8,8 +8,10 @@
 import Foundation
 
 public struct MessagingTokenResponse: Codable {
+    let publish_key: String
+    let subscribe_key: String
     let user_id: String
-    public let token: String
+    let token: String
 }
 
 public struct GetShowsResponse: Codable {

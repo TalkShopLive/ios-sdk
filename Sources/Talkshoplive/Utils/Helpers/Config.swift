@@ -16,10 +16,20 @@ public class Config {
     public static let shared = Config()
     
     // MARK: - Properties
-    
+    private var clientKey: String? // Print all console logs
     private var debugMode: Bool = false // Print all console logs
     private var testMode: Bool = false // Switch to staging if true
     private var hasInitialized: Bool = false // SDK initialization
+    
+    
+    // MARK: - Debug Mode Methods
+    func setClientKey(_ clientKey: String) {
+        self.clientKey = clientKey
+    }
+    
+    func getClientKey() -> String? {
+        return self.clientKey
+    }
     
     // MARK: - Debug Mode Methods
     func setDebugMode(_ isDebugMode: Bool) {

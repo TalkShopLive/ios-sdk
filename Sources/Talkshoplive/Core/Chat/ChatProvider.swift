@@ -14,14 +14,14 @@ public class ChatProvider {
     private var config: EnvConfig
     private var token: String?
     private var messageToken : MessagingTokenResponse?
+    private var isGuest : Bool
     
-    public init() {
+    public init(jwtToken:String,isGuest:Bool) {
         // Load configuration from ConfigLoader
         do {
+            self.isGuest = isGuest
             self.config = try Config.loadConfig()
-
-            // Fetch and set the authentication token asynchronously
-            self.createMessagingToken()
+            self.createMessagingToken(jwtToken: jwtToken)
             
         } catch {
             // Handle configuration loading failure
@@ -51,13 +51,12 @@ public class ChatProvider {
     }
     
     // This method is used to asynchronously fetch the messaging token
-    private func createMessagingToken() {
+    private func createMessagingToken(jwtToken:String) {
         // Call Networking to fetch the messaging token
-        Networking.createMessagingToken { result in
+        Networking.createMessagingToken(jwtToken: jwtToken,isGuest: self.isGuest) { result in
             switch result {
             case .success(let result):
                 // Token retrieval successful, extract and print the token
-                print("TOKEN", result.token)
                 // Set the retrieved token for later use
                 self.setMessagingToken(result)
                 
@@ -79,8 +78,8 @@ public class ChatProvider {
        
         if let messageToken = self.messageToken {
             let configuration = PubNubConfiguration(
-                publishKey: self.config.PUBLISH_KEY,
-                subscribeKey: self.config.SUBSCRIBE_KEY,
+                publishKey: messageToken.publish_key,
+                subscribeKey: messageToken.subscribe_key,
                 userId: messageToken.user_id,
                 authKey: messageToken.token
                 // Add more configuration parameters as needed
