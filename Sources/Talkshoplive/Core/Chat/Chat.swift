@@ -23,7 +23,7 @@ public class Chat {
         self.mode = mode
         self.refresh = refresh
         
-        let _ = ChatProvider(jwtToken: jwtToken, isGuest: isGuest)
+        let _ = ChatProvider(jwtToken: jwtToken, isGuest: isGuest, showKey: showKey)
     }
 }
 
