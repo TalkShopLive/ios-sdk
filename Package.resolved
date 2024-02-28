@@ -5,8 +5,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/pubnub/swift.git",
       "state" : {
-        "revision" : "b47b478ea8f69234069c755f7a5b2c118e01638b",
-        "version" : "6.2.3"
+        "revision" : "d5c5083d5024ecb6d66ceb34c7322fc9049134ae",
+        "version" : "7.0.0"
       }
     }
   ],
