@@ -16,6 +16,7 @@ public class ChatProvider {
     private var messageToken : MessagingTokenResponse?
     private var isGuest : Bool
     private var showKey : String?
+    private var eventId : String?
     
     public init(jwtToken:String,isGuest:Bool,showKey:String) {
         // Load configuration from ConfigLoader
@@ -38,9 +39,9 @@ public class ChatProvider {
    chatInstance = nil
     */
    deinit {
-       self.unSubscribeChannels()
+//       self.unSubscribeChannels()
        // Perform cleanup or deallocate resources here
-       print("Chat instance is being deallocated.")
+//       print("Chat instance is being deallocated.")
    }
     
     // MARK: - Save messaging token
@@ -69,10 +70,10 @@ public class ChatProvider {
                 
                 // Initialize PubNub with the obtained token
                 self.initializePubNub()
-                
                 if let showKey = self.showKey {
                     DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
                         self.addListeners()
+                        self.checkPubnubConnection()
                         self.subscribeChannels(showKey: showKey)
                     }
                 }
@@ -98,7 +99,7 @@ public class ChatProvider {
             publishKey: self.config.PUBLISH_KEY,
             subscribeKey: self.config.SUBSCRIBE_KEY,
             userId: messageToken.user_id,
-            authKey: messageToken.token
+            authToken: messageToken.token
             // Add more configuration parameters as needed
         )
         // Initialize PubNub instance
@@ -114,11 +115,15 @@ public class ChatProvider {
             case .success(let apiResponse):
                 // Set the details and invoke the completion with success.
                 if let eventId = apiResponse.id {
+                    self.eventId = "\(eventId)"
                     let publicChannel = "chat.\(eventId)"
                     let eventsChannel = "events.\(eventId)"
                     
                     self.pubnub?.subscribe(to: [publicChannel,eventsChannel])
                     print("Pubnub : Subscribe Channel : \(publicChannel) , \(eventsChannel)")
+                    
+                    self.fetchMessageHistory()
+
                 }
                 
             case .failure(let error):
@@ -154,5 +159,36 @@ public class ChatProvider {
     
     private func unSubscribeChannels() {
            self.pubnub?.unsubscribeAll()
+    }
+    
+    func checkPubnubConnection() {
+        pubnub.onConnectionStateChange = { [weak self] newStatus in
+            
+            guard let self = self else {
+                return
+            }
+            if newStatus == .connected {
+                print("Pubnub Connected")
+//                if let showKey = self.showKey {
+//                    self.addListeners()
+//                    self.subscribeChannels(showKey: showKey)
+                    self.fetchMessageHistory()
+//                }
+            } else {
+                print("No Status yet")
+            }
+        }
+    }
+    
+    func fetchMessageHistory() {
+        pubnub.fetchMessageHistory(for: ["chat.\(self.eventId!)"]) { result in
+            switch result {
+            case let .success(response):
+              print("Successfully Message Action Fetch Response: \(response)")
+
+            case let .failure(error):
+              print("Error from failed response: \(error.localizedDescription)")
+            }
+        }
     }
 }
