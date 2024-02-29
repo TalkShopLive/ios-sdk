@@ -37,8 +37,8 @@ final class ChatTests: XCTestCase {
         TalkShopLiveTests().testInitializeSDK()
         
         //Testing token
-        let jwtToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzZGtfMmVhMjFkZTE5Y2M4YmM1ZTg2NDBjN2IyMjdmZWYyZjMiLCJleHAiOjE3MDg3MjI1MDAsInVzZXIiOnsiaWQiOjEyMywibmFtZSI6Ik1heXVyaSJ9LCJqdGkiOiJ0V2hCQXdTVG1YQzZycldLMTVBdURRPT0ifQ.zGgWSlRrZzMz4KWT6rZ6kUBaKetnrGJEPbcxzs8B_E8"
-        let chatProvider = ChatProvider(jwtToken: jwtToken, isGuest: true)
+        let jwtToken = "eyJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJzZGtfMmVhMjFkZTE5Y2M4YmM1ZTg2NDBjN2IyMjdmZWYyZjMiLCJleHAiOjE3MDkyNjc3NDYsImp0aSI6InRXaEJBd1NUbVhVNnp5UUsxNUV1eXk9PSJ9.hHFWaQU-8yMCnPTsI7ah5wapjLvwSwo2ZbuQNwPggfU"
+        let chatProvider = ChatProvider(jwtToken: jwtToken, isGuest: true, showKey: "8WtAFFgRO1K0")
         
         // Use XCTestExpectation to wait for the asynchronous call to complete
         let expectation = XCTestExpectation(description: "Token retrieval completion")
@@ -56,8 +56,8 @@ final class ChatTests: XCTestCase {
     func testCreateFedaratedUserToken() {
         TalkShopLiveTests().testInitializeSDK()
         
-        let jwtToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzZGtfMmVhMjFkZTE5Y2M4YmM1ZTg2NDBjN2IyMjdmZWYyZjMiLCJleHAiOjE3MDg3MjI1MDAsInVzZXIiOnsiaWQiOjEyMywibmFtZSI6Ik1heXVyaSJ9LCJqdGkiOiJ0V2hCQXdTVG1YQzZycldLMTVBdURRPT0ifQ.zGgWSlRrZzMz4KWT6rZ6kUBaKetnrGJEPbcxzs8B_E8"
-        let chatProvider = ChatProvider(jwtToken: jwtToken, isGuest: false)
+        let jwtToken = "eyJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJzZGtfMmVhMjFkZTE5Y2M4YmM1ZTg2NDBjN2IyMjdmZWYyZjMiLCJleHAiOjE3MDkzNTQxNDYsImp0aSI6InRXc3NBd1NUbVhVNnp5UUsxNUV1eXk9PSIsInVzZXIiOnsiaWQiOiIxMjMiLCJuYW1lIjoiTWF5dXJpIn19.QS99WYjbvh8l4RfN3-NsNz1X7ZGThbBZep3UoM8oSok"
+        let chatProvider = ChatProvider(jwtToken: jwtToken, isGuest: false, showKey: "8WtAFFgRO1K0")
         
         // Use XCTestExpectation to wait for the asynchronous call to complete
         let expectation = XCTestExpectation(description: "Token retrieval completion")
@@ -70,11 +70,6 @@ final class ChatTests: XCTestCase {
         
         // Wait for the expectation to be fulfilled, timeout after 5 seconds
         wait(for: [expectation], timeout: 10)
-    }
-    
-    func testUnsubscribeChannel() {
-        var chatInstance: ChatProvider? = ChatProvider()
-        chatInstance = nil
     }
 
 }
