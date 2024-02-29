@@ -21,6 +21,7 @@ public struct ShowData: Codable {
     public let event_id: Int?
     public let cc: String?
     public let ended_at: String?
+    public let duration: Int?
     private let currentEvent: Event?
     private let events: [Event]?
     
@@ -38,6 +39,7 @@ public struct ShowData: Codable {
         case event_id
         case cc
         case ended_at
+        case duration
         case currentEvent = "current_event"
         case events
     }
@@ -55,6 +57,7 @@ public struct ShowData: Codable {
         event_id = nil
         cc = nil
         ended_at = nil
+        duration = nil
         currentEvent = nil
         events = nil
     }
@@ -75,6 +78,7 @@ public struct ShowData: Codable {
         hls_url = try? container.decode(String.self, forKey: .hls_url)
         trailer_url = try? container.decode(String.self, forKey: .trailer_url)
         air_date = try? container.decode(String.self, forKey: .air_date)
+        duration = try? container.decode(Int.self, forKey: .duration)
         event_id = currentEvent?.id
         ended_at = currentEvent?.ended_at
         
@@ -97,6 +101,7 @@ public struct Event: Codable {
     let isTest: Bool?
     let hls_playback_url: String?
     let ended_at: String?
+    let duration: Int?
 
     // CodingKeys enum to map the JSON keys to Swift property names
     enum CodingKeys: String, CodingKey {
@@ -108,6 +113,7 @@ public struct Event: Codable {
         case isTest = "is_test"
         case hls_playback_url
         case ended_at
+        case duration
     }
     
     // Custom initializer to handle decoding from JSON
@@ -123,6 +129,6 @@ public struct Event: Codable {
         isTest = try? container.decode(Bool.self, forKey: .isTest)
         hls_playback_url = try? container.decode(String.self, forKey: .hls_playback_url)
         ended_at = try? container.decode(String.self, forKey: .ended_at)
-
+        duration = try? container.decode(Int.self, forKey: .duration)
     }
 }
