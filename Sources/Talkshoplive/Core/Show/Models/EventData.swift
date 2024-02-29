@@ -15,7 +15,7 @@ public struct EventData: Codable {
     public var name: String?
     public var status: String?
     var streamKey: String?
-    var hlsPlaybackURL: URL?
+    public var hlsPlaybackURL: URL?
     var isTest: Bool?
 
     enum CodingKeys: String, CodingKey {
