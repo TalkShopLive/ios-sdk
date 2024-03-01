@@ -10,7 +10,7 @@ import Foundation
 public enum APIEndpoint {
     case messagingToken
     case getShows(showId:String)
-    case getCurrentEvent(showId:String)
+    case getCurrentEvent(showKey:String)
     case getClosedCaptions(fileName:String)
     case register
     case getGuestUserToken
@@ -35,8 +35,8 @@ public enum APIEndpoint {
             return "/api/messaging_tokens"
         case .getShows(let showId):
             return "/api/products/digital/streaming_content/\(showId)"
-        case .getCurrentEvent(showId: let showId):
-            return "/api/shows/\(showId)/streams/current"
+        case .getCurrentEvent(showKey: let showKey):
+            return "/api/shows/\(showKey)/streams/current"
         case .getClosedCaptions(fileName: let fileName):
             return "/events/\(fileName)_transcoded.transcript.vtt"
         case .register:

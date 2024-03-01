@@ -68,7 +68,7 @@ final class ShowTests: XCTestCase {
         let expectation = XCTestExpectation(description: "Get Current Event expectation")
         
         // When
-        eventInstance.getStatus(showId: showId) { result in
+        eventInstance.getStatus(showKey: showId) { result in
             // Then
             switch result {
             case .success(let show):

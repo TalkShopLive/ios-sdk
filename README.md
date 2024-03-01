@@ -40,8 +40,7 @@ For more information, see Apple's guide on [Adding Package Dependencies to Your 
 
 1. Import the module named `Talkshoplive` inside your AppDelegate:
 
-    ```swift
-    import UIKit
+    ```
     import Talkshoplive // <- Here is our Talkshoplive module import.
     ```
     
@@ -52,7 +51,7 @@ For more information, see Apple's guide on [Adding Package Dependencies to Your 
        - `debugMode`: Print console logs if true
        - `testMode`: Switch to staging if true
 
-   ```swift
+   ```
    let TSL = Talkshoplive.TalkShopLive(clientKey: "YourClientKey", debugMode: true/false, testMode: true/false)
 
     ```
@@ -73,7 +72,7 @@ Get detailed information about a specific show.
     - `showId`: The unique identifier of the show.
     - `completion`: A closure that will be called once the show details are fetched. It takes a `Result` enum containing either the `ShowData` on success or an `Error` on failure.
 
-```swift
+```
 let showInstance = Talkshoplive.Show()
 showInstance.getDetails(showId: "yourShowId") { result in
     switch result {
@@ -86,17 +85,17 @@ showInstance.getDetails(showId: "yourShowId") { result in
 }
 ```
 
-#### `getStatus(showId:completion:)`
+#### `getStatus(showKey:completion:)`
 
 Get the current event of a show.
 
 - Parameters:
-    - `showId`: The unique identifier of the show.
+    - `showKey`: The unique identifier of the show.
     - `completion`: A closure that will be called once the show details are fetched. It takes a `Result` enum containing either the `ShowData` on success or an `Error` on failure.
 
-```swift
+```
 let showInstance = Talkshoplive.Show()
-showInstance.getDetails(showId: "yourShowId") { result in
+showInstance.getDetails(showKey: "yourShowId") { result in
     switch result {
     case .success(let eventData):
         print("Show's current event' details: \(eventData)")
@@ -123,18 +122,37 @@ Initializes a new instance of the Chat class.
   - `jwtToken`: Generated JWT token
     - Example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzZGtfMmVhMjFkZTE5Y2M4YmM1ZTg2NDBjN2IyMjdmZWYyZjMiLCJleHAiOjE3MDg3MjI1MDAsInVzZXIiOnsiaWQiOjEyMywibmFtZSI6Ik1heXVyaSJ9LCJqdGkiOiJ0V2hCQXdTVG1YQzZycldLMTVBdURRPT0ifQ.zGgWSlRrZzMz4KWT6rZ6kUBaKetnrGJEPbcxzs8B_E8
   - `isGuest`: A boolean indicating whether the user is a guest user (true) or a federated user (false).
-  - `showKey`: show_key for which you want to subscribe to the channel.
-  - `mode`: The mode of the chat (e.g., "public").
-  - `refresh`: The refresh mode for the chat (e.g., "manual").
-  
+  - `showKey`: show_key for which you want to subscribe to the channel.  
 
-```swift
-let chatInstance = Talkshoplive.Chat(jwtToken: "YourJWTToken", isGuest:true/false, showKey: "YourShowKey", mode: "public", refresh: "manual")
+```
+let chatInstance = Talkshoplive.Chat(jwtToken: "YourJWTToken", isGuest:true/false, showKey: "YourShowKey")
+
+```
+
+#### `sendMessage(message:)`
+
+Use initialized instance of the Chat class and sends a message using that instance.
+
+- Parameters:
+  - `message`: The text message to be sent.
+
+- Send Message
+```
+self.chatInstance.sendMessage(message: "Your Message Here")
+```
+
+- Recieve New message event listener
+```
+class ContentViewModel: ObservableObject, ChatDelegate {
+    func onNewMessage(_ message: MessageData) {
+        // Handle the received message
+    }
+}
 
 ```
     
 ## Run the Tests: 
-1. In swift package manager, navigate to the relatedFile_tests target. After that Click the "Play" button or use the shortcut Cmd + U to build and run the tests.
+1. In  package manager, navigate to the relatedFile_tests target. After that Click the "Play" button or use the shortcut Cmd + U to build and run the tests.
 2. After the tests are run, you can view the results in the Test navigator.
 3. Successful tests will be marked with a green checkmark, and failed tests will be marked with a red X. 
 4. You can click on each test to see detailed output.

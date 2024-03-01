@@ -32,8 +32,8 @@ public class Show {
         }
     }
     
-    public func getStatus(showId: String, completion: @escaping (Result<EventData, Error>) -> Void) {
-        ShowProvider().fetchCurrentEvent(showId: showId) { result in
+    public func getStatus(showKey: String, completion: @escaping (Result<EventData, Error>) -> Void) {
+        ShowProvider().fetchCurrentEvent(showKey: showKey) { result in
             switch result {
             case .success(let apiResponse):
                 // Set the details and invoke the completion with success.
