@@ -249,23 +249,50 @@ public class ChatProvider {
     // MARK: - Message Publishing
     
     // Publish a message to the configured channel
-    func publish(message: String) {        
+    func publish(message: String) {
+        // Check if the message length is within the specified limit
+        guard message.count <= 200 else {
+            // Handle the case where the message exceeds the maximum length
+            print("Publishing Error:: Message exceeds maximum length of 200 characters.")
+            return
+        }
         let messageObject = MessageData(
             id: Int(Date().millisecondsSince1970), //in milliseconds
             createdAt: Date().toString(), //Current Date Object
             sender: messageToken?.user_id,// User id we get from backend after creating messaging token
             text: message,
-            type: .comment,  // either one - question if string contains "?"
+            type: (message.contains("?") ? .question : .comment),
             platform: "sdk")
-            if let channel = self.publishChannel {
-                pubnub?.publish(channel: channel, message: messageObject) { result in
-                    switch result {
-                    case let .success(timetoken):
-                        print("Publish Response at \(timetoken)")
-                    case let .failure(error):
-                        print("Publishing Error: \(error.localizedDescription)")
-                    }
+        if let channel = self.publishChannel {
+            pubnub?.publish(channel: channel, message: messageObject) { result in
+                switch result {
+                case let .success(timetoken):
+                    print("Publish Response at \(timetoken)")
+                case let .failure(error):
+                    print("Publishing Error: \(error.localizedDescription)")
                 }
             }
+        }
     }
+    
+    // MARK: - Fetch Message History
+    
+    func fetchPastMessages() {
+            pubnub?.fetchMessageHistory(for: self.channels, completion: { result in
+                switch result {
+                case let .success(response):
+                    if let myChannelMessages = response.messagesByChannel[self.publishChannel!] {
+                    print("The list of messages returned for `my_channel`: \(myChannelMessages)")
+                    myChannelMessages.forEach { message in
+                      print("The message sent at \(message.published) has the following metadata \(message.metadata)")
+                    }
+                  }
+                  if let nextPage = response.next {
+                    print("The next page used for pagination: \(nextPage)")
+                  }
+                case let .failure(error):
+                  print("Failed History Fetch Response: \(error.localizedDescription)")
+                }
+            })
+        }
 }
