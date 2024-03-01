@@ -8,6 +8,11 @@
 import Foundation
 import PubNub
 
+public protocol _ChatProviderDelegate: AnyObject {
+    func onMessageReceived(_ message: String)
+    // Add more methods for other events if needed
+}
+
 public class ChatProvider {
     
     private var pubnub: PubNub?
@@ -19,6 +24,7 @@ public class ChatProvider {
     private var channels : [String] = []
     private var publishChannel : String?
     private var eventsChannel : String?
+    public var delegate: _ChatProviderDelegate?
 
 
     public init(jwtToken:String,isGuest:Bool,showKey:String) {
@@ -133,10 +139,20 @@ public class ChatProvider {
                 if let subscription = message.subscription {
                     print("The channel-group or wildcard that matched this channel was \(subscription)")
                 }
-                print("The message is \(message.payload) and was sent by \(message.publisher ?? "")")
-                DispatchQueue.main.async {
-                    print(message.payload)
+                switch message.channel {
+                case self.publishChannel :
+                    DispatchQueue.main.async {
+                        if let message = (message.payload.jsonStringify) {
+                            self.delegate?.onMessageReceived(message)
+                        }
+                    }
+                case self.eventsChannel:
+                    break
+                default :
+                    print("The message is \(message.payload) and was sent by \(message.publisher ?? "")")
+                    break
                 }
+                
             case .signalReceived(let signal):
                   print("The \(signal.channel) channel received a message at \(signal.published)")
                   if let subscription = signal.subscription {
@@ -189,3 +205,4 @@ public class ChatProvider {
           
     }
 }
+
