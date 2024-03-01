@@ -17,7 +17,9 @@ public class ChatProvider {
     private var isGuest : Bool
     private var showKey : String
     private var channels : [String] = []
-    private var channelToPublish : String?
+    private var publishChannel : String?
+    private var eventsChannel : String?
+
 
     public init(jwtToken:String,isGuest:Bool,showKey:String) {
         // Load configuration from ConfigLoader
@@ -106,9 +108,9 @@ public class ChatProvider {
             case .success(let apiResponse):
                 // Set the details and invoke the completion with success.
                 if let eventId = apiResponse.id {
-                    self.channelToPublish = "chat.\(eventId)"
-                    let eventsChannel = "events.\(eventId)"
-                    self.channels = [self.channelToPublish!,eventsChannel]
+                    self.publishChannel = "chat.\(eventId)"
+                    self.eventsChannel = "events.\(eventId)"
+                    self.channels = [self.publishChannel!,self.eventsChannel!]
                     self.subscribeChannels()
                 }
             case .failure(let error):
@@ -174,7 +176,7 @@ public class ChatProvider {
     }
 
     func publish(message: String) {
-        if let channel = self.channelToPublish {
+        if let channel = self.publishChannel {
             pubnub?.publish(channel: channel, message: message) { result in
                 switch result {
                 case let .success(timetoken):
