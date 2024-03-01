@@ -8,26 +8,36 @@
 import Foundation
 import PubNub
 
+// MARK: - ChatProviderDelegate
+
+// Protocol for the chat provider delegate to handle different chat events
 public protocol _ChatProviderDelegate: AnyObject {
-    func onMessageReceived(_ message: String)
+    func onMessageReceived(_ message: MessageData)
     // Add more methods for other events if needed
 }
 
+// MARK: - ChatProvider Class
+
+// ChatProvider class responsible for managing chat-related functionality
 public class ChatProvider {
+    
+    // MARK: - Properties
     
     private var pubnub: PubNub?
     private var config: EnvConfig
     private var token: String?
-    private var messageToken : MessagingTokenResponse?
-    private var isGuest : Bool
-    private var showKey : String
-    private var channels : [String] = []
-    private var publishChannel : String?
-    private var eventsChannel : String?
+    private var messageToken: MessagingTokenResponse?
+    private var isGuest: Bool
+    private var showKey: String
+    private var channels: [String] = []
+    private var publishChannel: String?
+    private var eventsChannel: String?
     public var delegate: _ChatProviderDelegate?
 
-
-    public init(jwtToken:String,isGuest:Bool,showKey:String) {
+    // MARK: - Initializer
+    
+    // Initialize ChatProvider with a JWT token and show key
+    public init(jwtToken: String, isGuest: Bool, showKey: String) {
         // Load configuration from ConfigLoader
         do {
             self.isGuest = isGuest
@@ -42,30 +52,30 @@ public class ChatProvider {
     }
     
     // MARK: - Deinitializer
-    /*
-     When this will get deallocated :
-    var chatInstance: ChatProvider? = ChatProvider()
-    chatInstance = nil
-     */
+    
+    // Deinitialize the ChatProvider instance
     deinit {
         self.unSubscribeChannels()
         // Perform cleanup or deallocate resources here
         print("Chat instance is being deallocated.")
     }
+
+    // MARK: - Messaging Token
     
-    // MARK: - Save messaging token
+    // Save the messaging token
     func setMessagingToken(_ token: MessagingTokenResponse) {
         self.messageToken = token
     }
     
+    // Get the saved messaging token
     public func getMessagingToken() -> MessagingTokenResponse? {
         return self.messageToken
     }
-    
-    // This method is used to asynchronously fetch the messaging token
-    private func createMessagingToken(jwtToken:String) {
+
+    // Create a messaging token asynchronously
+    private func createMessagingToken(jwtToken: String) {
         // Call Networking to fetch the messaging token
-        Networking.createMessagingToken(jwtToken: jwtToken,isGuest: self.isGuest) { result in
+        Networking.createMessagingToken(jwtToken: jwtToken, isGuest: self.isGuest) { result in
             switch result {
             case .success(let result):
                 // Token retrieval successful, extract and print the token
@@ -75,8 +85,8 @@ public class ChatProvider {
                 // Initialize PubNub with the obtained token
                 self.initializePubNub()
                 
-                DispatchQueue.main.asyncAfter(deadline: DispatchTime.now()+1.0, execute: {
-                    self.subscribeChannels(showId: self.showKey)
+                DispatchQueue.main.asyncAfter(deadline: DispatchTime.now() + 1.0, execute: {
+                    self.subscribeChannels(showKey: self.showKey)
                 })
                 
             case .failure(let error):
@@ -88,7 +98,9 @@ public class ChatProvider {
         }
     }
 
-    // This method initializes PubNub with the obtained token and other settings
+    // MARK: - PubNub Initialization
+
+    // Initialize PubNub with the obtained token and other settings
     private func initializePubNub() {
         // Configure PubNub with the obtained token and other settings
        
@@ -108,16 +120,19 @@ public class ChatProvider {
     }
     
     
-    private func subscribeChannels(showId: String) {
-        Networking.getCurrentEvent(showId: showId, completion: { result in
+    // MARK: - Channel Subscription
+
+    // Subscribe to channels based on the showKey
+    private func subscribeChannels(showKey: String) {
+        Networking.getCurrentEvent(showKey: showKey, completion: { result in
             switch result {
             case .success(let apiResponse):
                 // Set the details and invoke the completion with success.
                 if let eventId = apiResponse.id {
                     self.publishChannel = "chat.\(eventId)"
                     self.eventsChannel = "events.\(eventId)"
-                    self.channels = [self.publishChannel!,self.eventsChannel!]
-                    self.subscribeChannels()
+                    self.channels = [self.publishChannel!, self.eventsChannel!]
+                    self.subscribe()
                 }
             case .failure(let error):
                 // Invoke the completion with failure if an error occurs.
@@ -125,84 +140,132 @@ public class ChatProvider {
             }
         })
     }
-    
+
+    // Unsubscribe from all channels
     private func unSubscribeChannels() {
         self.pubnub?.unsubscribeAll()
     }
-    
-    private func subscribeChannels() {
+
+    // Subscribe to configured channels and handle events
+    private func subscribe() {
+        // Create a listener for subscription events
         let listener = SubscriptionListener(queue: .main)
+        
         listener.didReceiveSubscription = { event in
+            // Handle different subscription events
             switch event {
             case .messageReceived(let message):
+                // Handle message received event
                 print("The \(message.channel) channel received a message at \(message.published)")
+                
+                // Check if there is a subscription info
                 if let subscription = message.subscription {
                     print("The channel-group or wildcard that matched this channel was \(subscription)")
                 }
+                
+                // Check the channel type
                 switch message.channel {
                 case self.publishChannel :
-                    DispatchQueue.main.async {
-                        if let message = (message.payload.jsonStringify) {
-                            self.delegate?.onMessageReceived(message)
+                    // If it's the publish channel, notify the delegate
+                    if let payloadString = message.payload.jsonStringify {
+                        if let messageData = convertToModel(from: payloadString, responseType: MessageData.self) {
+                            // Notify the delegate if needed
+                            DispatchQueue.main.async {
+                                self.delegate?.onMessageReceived(messageData)
+                            }
                         }
                     }
                 case self.eventsChannel:
+                    // Handle events channel if needed
                     break
                 default :
+                    // Handle other channels
                     print("The message is \(message.payload) and was sent by \(message.publisher ?? "")")
                     break
                 }
                 
             case .signalReceived(let signal):
-                  print("The \(signal.channel) channel received a message at \(signal.published)")
-                  if let subscription = signal.subscription {
+                // Handle signal received event
+                print("The \(signal.channel) channel received a message at \(signal.published)")
+                
+                // Check if there is a subscription info
+                if let subscription = signal.subscription {
                     print("The channel-group or wildcard that matched this channel was \(subscription)")
-                  }
-                  print("The signal is \(signal.payload) and was sent by \(signal.publisher ?? "")")
+                }
+                
+                // Log the signal information
+                print("The signal is \(signal.payload) and was sent by \(signal.publisher ?? "")")
+                
+            // Handle other events
             case .connectionStatusChanged(_):
                 print("The connectionStatusChanged")
+                
             case .subscriptionChanged(_):
                 print("The subscriptionChanged")
+                
             case .presenceChanged(_):
                 print("The presenceChanged")
+                
             case .uuidMetadataSet(_):
                 print("The uuidMetadataSet")
+                
             case .uuidMetadataRemoved(metadataId: let metadataId):
                 print("The uuidMetadataRemoved")
+                
             case .channelMetadataSet(_):
                 print("The channelMetadataSet")
+                
             case .channelMetadataRemoved(metadataId: let metadataId):
                 print("The channelMetadataRemoved")
+                
             case .membershipMetadataSet(_):
                 print("The membershipMetadataSet")
+                
             case .membershipMetadataRemoved(_):
                 print("The membershipMetadataRemoved")
+                
             case .messageActionAdded(_):
                 print("The messageActionAdded")
+                
             case .messageActionRemoved(_):
                 print("The messageActionRemoved")
+                
             case .fileUploaded(_):
                 print("The fileUploaded")
+                
             case .subscribeError(_):
                 print("The subscribeError")
             }
         }
+        
+        // Add the listener to PubNub
         pubnub?.add(listener)
+        
+        // Subscribe to the configured channels
         pubnub?.subscribe(to: self.channels)
     }
 
-    func publish(message: String) {
-        if let channel = self.publishChannel {
-            pubnub?.publish(channel: channel, message: message) { result in
-                switch result {
-                case let .success(timetoken):
-                    print("Publish Response at \(timetoken)")
-                case let .failure(error):
-                    print("Publishing Error: \(error.localizedDescription)")
+
+    // MARK: - Message Publishing
+    
+    // Publish a message to the configured channel
+    func publish(message: String) {        
+        let messageObject = MessageData(
+            id: Int(Date().millisecondsSince1970), //in milliseconds
+            createdAt: Date().toString(), //Current Date Object
+            sender: messageToken?.user_id,// User id we get from backend after creating messaging token
+            text: message,
+            type: .comment,  // either one - question if string contains "?"
+            platform: "sdk")
+            if let channel = self.publishChannel {
+                pubnub?.publish(channel: channel, message: messageObject) { result in
+                    switch result {
+                    case let .success(timetoken):
+                        print("Publish Response at \(timetoken)")
+                    case let .failure(error):
+                        print("Publishing Error: \(error.localizedDescription)")
+                    }
                 }
             }
-        }
-          
     }
 }
-

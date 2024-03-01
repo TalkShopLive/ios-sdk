@@ -23,8 +23,8 @@ public class ShowProvider {
         })
     }
     
-    internal func fetchCurrentEvent(showId: String, completion: @escaping (Result<EventData, Error>) -> Void) {
-        Networking.getCurrentEvent(showId: showId, completion: { result in
+    internal func fetchCurrentEvent(showKey: String, completion: @escaping (Result<EventData, Error>) -> Void) {
+        Networking.getCurrentEvent(showKey: showKey, completion: { result in
             completion(result)
         })
     }

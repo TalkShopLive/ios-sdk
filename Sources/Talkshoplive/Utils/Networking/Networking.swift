@@ -33,8 +33,8 @@ public class Networking {
         }
     }
     
-    public static func getCurrentEvent(showId:String, completion: @escaping (Result<EventData, Error>) -> Void) {
-        APIHandler().request(endpoint: APIEndpoint.getCurrentEvent(showId: showId), method: .get, body:nil, responseType:EventData.self) { result in
+    public static func getCurrentEvent(showKey:String, completion: @escaping (Result<EventData, Error>) -> Void) {
+        APIHandler().request(endpoint: APIEndpoint.getCurrentEvent(showKey: showKey), method: .get, body:nil, responseType:EventData.self) { result in
             switch result {
             case .success(let apiResponse):
                 completion(.success(apiResponse))

@@ -6,31 +6,32 @@
 //
 
 import Foundation
+import PubNub
 
-/*
- {
-   createdAt: DATE,  // Date object
-   id: EPOCH/UNIX TimeStamp, // in milliseconds
-   sender: UUID, // User id we get from CMS after creating messaging token
-   text: "MESSAGE STRING", // Max length is 200
-   type: "comment/question/giphy", // either one - question if string contains "?"
-   platform: "sdk",
- }
- */
-public struct Message: Codable {
-    public var id: Int? // Current Timeinterval
-    public var createdAt: Date? //Current Date
-    public var sender: String?
-    public var text: String?
-    public var type: MessageType
-    public var platform: String?
+/// A struct representing the data structure for chat messages.
+public struct MessageData: JSONCodable {
+    
+    // MARK: - Properties
+    
+    public var id: Int? // Represents the current date converted to String.
+    public var createdAt: String? // Represents the current timestamp in seconds.
+    public var sender: String? // User ID obtained from the backend after creating a messaging token.
+    public var text: String? //The message to be sent.
+    public var type: MessageType // Enum representing the MessageType. Use .question if the text contains "?".
+    public var platform: String? // Platform identifier, e.g., "sdk".
 
+    // MARK: - Message Types
+    
+    /// Enum defining different types of messages.
     public enum MessageType: String, Codable {
         case comment
         case question
         case giphy
     }
 
+    // MARK: - Coding Keys
+    
+    /// Coding keys for encoding and decoding.
     enum CodingKeys: String, CodingKey {
         case id
         case createdAt
@@ -40,26 +41,43 @@ public struct Message: Codable {
         case platform
     }
     
-    public init(id: Int? = nil, createdAt: Date? = nil, sender: String? = nil, text: String? = nil, type: MessageType? = nil, platform: String? = nil) {
-            self.id = id
-            self.createdAt = createdAt
-            self.sender = sender
-            self.text = text
-            self.type = type ?? .comment // Default value, adjust as needed
-            self.platform = platform
-        }
+    // MARK: - Initializers
+    
+    /// Default initializer with default values.
+    public init() {
+        self.id = nil
+        self.createdAt = nil
+        self.sender = nil
+        self.text = nil
+        self.type = .comment // Default value, adjust as needed
+        self.platform = nil
+    }
+    
+    /// Custom initializer with parameters for all properties.
+    public init(id: Int? = nil, createdAt: String? = nil, sender: String? = nil, text: String? = nil, type: MessageType? = nil, platform: String? = nil) {
+        self.id = id
+        self.createdAt = createdAt
+        self.sender = sender
+        self.text = text
+        self.type = type ?? .comment // Default value, adjust as needed
+        self.platform = platform
+    }
 
+    // MARK: - Codable Protocol
+    
+    /// Decoder initializer for creating an instance from encoded data.
     public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
 
         id = try container.decodeIfPresent(Int.self, forKey: .id)
-        createdAt = try container.decodeIfPresent(Date.self, forKey: .createdAt)
+        createdAt = try container.decodeIfPresent(String.self, forKey: .createdAt)
         sender = try container.decodeIfPresent(String.self, forKey: .sender)
         text = try container.decodeIfPresent(String.self, forKey: .text)
         type = try container.decode(MessageType.self, forKey: .type)
         platform = try container.decodeIfPresent(String.self, forKey: .platform)
     }
 
+    /// Encoder method to convert the struct to an encoded format.
     public func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
 
@@ -69,21 +87,5 @@ public struct Message: Codable {
         try container.encodeIfPresent(text, forKey: .text)
         try container.encode(type, forKey: .type)
         try container.encodeIfPresent(platform, forKey: .platform)
-    }
-    
-    public func toJSON(messageObject:Message) -> String? {
-        // Encode the Message instance into JSON data
-        do {
-            // Encode the Message instance into JSON data
-            let jsonData = try JSONEncoder().encode(messageObject)
-
-            // Convert the JSON data to a JSON string
-            if let jsonString = String(data: jsonData, encoding: .utf8) {
-               return jsonString
-            }
-        } catch {
-            print("Error encoding message: \(error)")
-            return nil
-        }
     }
 }
