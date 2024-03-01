@@ -16,6 +16,7 @@ public struct EventData: Codable {
     public var status: String?
     var streamKey: String?
     public var hlsPlaybackURL: URL?
+    public var duration: Int?
     var isTest: Bool?
 
     enum CodingKeys: String, CodingKey {
@@ -27,6 +28,7 @@ public struct EventData: Codable {
         case status
         case streamKey = "stream_key"
         case hlsPlaybackURL = "hls_playback_url"
+        case duration = "duration"
         case isTest = "is_test"
     }
     
@@ -39,6 +41,7 @@ public struct EventData: Codable {
         status = nil
         streamKey = nil
         hlsPlaybackURL = nil
+        duration = nil
         isTest = nil
     }
 
@@ -54,6 +57,7 @@ public struct EventData: Codable {
         status = try? container.decode(String.self, forKey: .status)
         streamKey = try? container.decode(String.self, forKey: .streamKey)
         hlsPlaybackURL = try? container.decode(URL.self, forKey: .hlsPlaybackURL)
+        duration = try? container.decode(Int.self, forKey: .duration)
         isTest = try? container.decode(Bool.self, forKey: .isTest)
     }
 }
