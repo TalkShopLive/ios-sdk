@@ -8,7 +8,7 @@
 import Foundation
 
 extension Date {
-    var millisecondsSince1970: TimeInterval {
+    var milliseconds: TimeInterval {
         return self.timeIntervalSince1970 * 1000.0
     }
     func toString(format: String = "yyyy-MM-dd'T'HH:mm:ssZ") -> String {
@@ -16,4 +16,11 @@ extension Date {
         dateFormatter.dateFormat = format
         return dateFormatter.string(from: self)
     }
+    
+    func getPubnubTimeToken() -> Int {
+        let precision = 10000
+        let timetoken = Int64(self.milliseconds * Double(precision))
+        return Int(timetoken)
+    }
 }
+

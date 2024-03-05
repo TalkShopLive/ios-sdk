@@ -57,7 +57,7 @@ public class ChatProvider {
     deinit {
         self.unSubscribeChannels()
         // Perform cleanup or deallocate resources here
-        print("Chat instance is being deallocated.")
+        Config.shared.isDebugMode() ? print("Chat instance is being deallocated.") : ()
     }
 
     // MARK: - Messaging Token
@@ -91,7 +91,7 @@ public class ChatProvider {
                 
             case .failure(let error):
                 // Handle token retrieval failure
-                print("Token retrieval failure. Error: \(error.localizedDescription)")
+                Config.shared.isDebugMode() ? print("Token retrieval failure. Error: \(error.localizedDescription)") : ()
                 // You might want to handle the error appropriately, e.g., show an alert to the user or log it.
                 break
             }
@@ -115,7 +115,7 @@ public class ChatProvider {
             // Initialize PubNub instance
             self.pubnub = PubNub(configuration: configuration)
             // Log the initialization
-            print("Initialized Pubnub", pubnub!)
+            Config.shared.isDebugMode() ? print("Initialized Pubnub", pubnub!) : ()
         }
     }
     
@@ -136,7 +136,7 @@ public class ChatProvider {
                 }
             case .failure(let error):
                 // Invoke the completion with failure if an error occurs.
-                print("\(error.localizedDescription)")
+                Config.shared.isDebugMode() ? print("\(error.localizedDescription)") : ()
             }
         })
     }
@@ -156,11 +156,11 @@ public class ChatProvider {
             switch event {
             case .messageReceived(let message):
                 // Handle message received event
-                print("The \(message.channel) channel received a message at \(message.published)")
+                Config.shared.isDebugMode() ? print("The \(message.channel) channel received a message at \(message.published)") : ()
                 
                 // Check if there is a subscription info
                 if let subscription = message.subscription {
-                    print("The channel-group or wildcard that matched this channel was \(subscription)")
+                    Config.shared.isDebugMode() ? print("The channel-group or wildcard that matched this channel was \(subscription)") : ()
                 }
                 
                 // Check the channel type
@@ -180,61 +180,61 @@ public class ChatProvider {
                     break
                 default :
                     // Handle other channels
-                    print("The message is \(message.payload) and was sent by \(message.publisher ?? "")")
+                    Config.shared.isDebugMode() ? print("The message is \(message.payload) and was sent by \(message.publisher ?? "")") : ()
                     break
                 }
                 
             case .signalReceived(let signal):
                 // Handle signal received event
-                print("The \(signal.channel) channel received a message at \(signal.published)")
+                Config.shared.isDebugMode() ? print("The \(signal.channel) channel received a message at \(signal.published)") : ()
                 
                 // Check if there is a subscription info
                 if let subscription = signal.subscription {
-                    print("The channel-group or wildcard that matched this channel was \(subscription)")
+                    Config.shared.isDebugMode() ? print("The channel-group or wildcard that matched this channel was \(subscription)") : ()
                 }
                 
                 // Log the signal information
-                print("The signal is \(signal.payload) and was sent by \(signal.publisher ?? "")")
+                Config.shared.isDebugMode() ? print("The signal is \(signal.payload) and was sent by \(signal.publisher ?? "")") : ()
                 
             // Handle other events
             case .connectionStatusChanged(_):
-                print("The connectionStatusChanged")
+                Config.shared.isDebugMode() ? print("The connectionStatusChanged") : ()
                 
             case .subscriptionChanged(_):
-                print("The subscriptionChanged")
+                Config.shared.isDebugMode() ? print("The subscriptionChanged") : ()
                 
             case .presenceChanged(_):
-                print("The presenceChanged")
+                Config.shared.isDebugMode() ? print("The presenceChanged") : ()
                 
             case .uuidMetadataSet(_):
-                print("The uuidMetadataSet")
+                Config.shared.isDebugMode() ? print("The uuidMetadataSet") : ()
                 
             case .uuidMetadataRemoved(metadataId: let metadataId):
-                print("The uuidMetadataRemoved")
+                Config.shared.isDebugMode() ? print("The uuidMetadataRemoved") : ()
                 
             case .channelMetadataSet(_):
-                print("The channelMetadataSet")
+                Config.shared.isDebugMode() ? print("The channelMetadataSet") : ()
                 
             case .channelMetadataRemoved(metadataId: let metadataId):
-                print("The channelMetadataRemoved")
+                Config.shared.isDebugMode() ? print("The channelMetadataRemoved") : ()
                 
             case .membershipMetadataSet(_):
-                print("The membershipMetadataSet")
+                Config.shared.isDebugMode() ? print("The membershipMetadataSet") : ()
                 
             case .membershipMetadataRemoved(_):
-                print("The membershipMetadataRemoved")
+                Config.shared.isDebugMode() ? print("The membershipMetadataRemoved") : ()
                 
             case .messageActionAdded(_):
-                print("The messageActionAdded")
+                Config.shared.isDebugMode() ? print("The messageActionAdded") : ()
                 
             case .messageActionRemoved(_):
-                print("The messageActionRemoved")
+                Config.shared.isDebugMode() ? print("The messageActionRemoved") : ()
                 
             case .fileUploaded(_):
-                print("The fileUploaded")
+                Config.shared.isDebugMode() ? print("The fileUploaded") : ()
                 
             case .subscribeError(_):
-                print("The subscribeError")
+                Config.shared.isDebugMode() ? print("The subscribeError") :()
             }
         }
         
@@ -249,7 +249,7 @@ public class ChatProvider {
     // MARK: - Message Publishing
     
     // Publish a message to the configured channel
-    func publish(message: String) {
+    internal func publish(message: String) {
         // Check if the message length is within the specified limit
         guard message.count <= 200 else {
             // Handle the case where the message exceeds the maximum length
@@ -257,7 +257,7 @@ public class ChatProvider {
             return
         }
         let messageObject = MessageData(
-            id: Int(Date().millisecondsSince1970), //in milliseconds
+            id: Int(Date().milliseconds), //in milliseconds
             createdAt: Date().toString(), //Current Date Object
             sender: messageToken?.user_id,// User id we get from backend after creating messaging token
             text: message,
@@ -267,32 +267,12 @@ public class ChatProvider {
             pubnub?.publish(channel: channel, message: messageObject) { result in
                 switch result {
                 case let .success(timetoken):
-                    print("Publish Response at \(timetoken)")
+                    Config.shared.isDebugMode() ? print("Publish Response at \(timetoken)") : ()
                 case let .failure(error):
                     print("Publishing Error: \(error.localizedDescription)")
                 }
             }
         }
     }
-    
-    // MARK: - Fetch Message History
-    
-    func fetchPastMessages() {
-            pubnub?.fetchMessageHistory(for: self.channels, completion: { result in
-                switch result {
-                case let .success(response):
-                    if let myChannelMessages = response.messagesByChannel[self.publishChannel!] {
-                    print("The list of messages returned for `my_channel`: \(myChannelMessages)")
-                    myChannelMessages.forEach { message in
-                      print("The message sent at \(message.published) has the following metadata \(message.metadata)")
-                    }
-                  }
-                  if let nextPage = response.next {
-                    print("The next page used for pagination: \(nextPage)")
-                  }
-                case let .failure(error):
-                  print("Failed History Fetch Response: \(error.localizedDescription)")
-                }
-            })
-        }
+
 }

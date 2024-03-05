@@ -64,17 +64,17 @@ The TSL iOS SDK provides methods for fetching details of a specific show and its
 
 ### Methods
 
-#### `getDetails(showId:completion:)`
+#### `getDetails(showKey:completion:)`
 
 Get detailed information about a specific show.
 
 - Parameters:
-    - `showId`: The unique identifier of the show.
+    - `showKey`: The unique identifier of the show.
     - `completion`: A closure that will be called once the show details are fetched. It takes a `Result` enum containing either the `ShowData` on success or an `Error` on failure.
 
 ```
 let showInstance = Talkshoplive.Show()
-showInstance.getDetails(showId: "yourShowId") { result in
+showInstance.getDetails(showKey: "yourShowKey") { result in
     switch result {
     case .success(let show):
         print("Show details: \(show)")
@@ -95,7 +95,7 @@ Get the current event of a show.
 
 ```
 let showInstance = Talkshoplive.Show()
-showInstance.getDetails(showKey: "yourShowId") { result in
+showInstance.getStatus(showKey: "YourShowKey") { result in
     switch result {
     case .success(let eventData):
         print("Show's current event' details: \(eventData)")

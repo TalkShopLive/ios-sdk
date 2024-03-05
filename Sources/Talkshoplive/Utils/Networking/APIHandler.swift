@@ -49,7 +49,6 @@ public class APIHandler {
         }
         
         let fullURL = endpoint.baseURL + endpoint.path
-        print(fullURL)
         
         guard let url = URL(string: fullURL) else {
             completion(.failure(APIClientError.invalidURL))
@@ -84,7 +83,13 @@ public class APIHandler {
             do {
                 // Convert the response data to a JSON string
                 let json = try JSONSerialization.jsonObject(with: data, options: .allowFragments)
-                print("API Response: ", json)
+//                print("API Response: ", json)
+                if json is NSNull {
+                    // Handle the case where the response is null by creating an empty instance
+                    let emptyInstance = try JSONDecoder().decode(T.self, from: "{}".data(using: .utf8)!)
+                    completion(.success(emptyInstance))
+                    return
+                }
                 
                 let apiResponse = try JSONDecoder().decode(responseType, from: data)
                 completion(.success(apiResponse))
@@ -99,7 +104,6 @@ public class APIHandler {
     public func requestToRegister<T: Decodable>(clientKey:String, endpoint: APIEndpoint, method: HTTPMethod, body: Encodable?, responseType: T.Type, completion: @escaping (Result<T, Error>) -> Void) {
         
         let fullURL = endpoint.baseURL + endpoint.path
-        print(fullURL)
         
         guard let url = URL(string: fullURL) else {
             completion(.failure(APIClientError.invalidURL))
@@ -139,7 +143,7 @@ public class APIHandler {
             do {
                 // Convert the response data to a JSON string
                 let json = try JSONSerialization.jsonObject(with: data, options: .allowFragments)
-                print("API Response: ", json)
+//                print("API Response: ", json)
                 
                 let apiResponse = try JSONDecoder().decode(responseType, from: data)
                 completion(.success(apiResponse))
@@ -161,7 +165,6 @@ public class APIHandler {
         }
         
         let fullURL = endpoint.baseURL + endpoint.path
-        print(fullURL)
         
         guard let url = URL(string: fullURL) else {
             completion(.failure(APIClientError.invalidURL))
@@ -205,7 +208,7 @@ public class APIHandler {
             do {
                 // Convert the response data to a JSON string
                 let json = try JSONSerialization.jsonObject(with: data, options: .allowFragments)
-                print("API Response: ", json)
+//                print("API Response: ", json)
                 
                 let apiResponse = try JSONDecoder().decode(responseType, from: data)
                 completion(.success(apiResponse))

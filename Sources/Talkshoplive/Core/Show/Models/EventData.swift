@@ -15,9 +15,11 @@ public struct EventData: Codable {
     public var name: String?
     public var status: String?
     var streamKey: String?
-    public var hlsPlaybackURL: URL?
     public var duration: Int?
+    public var hls_playback_url: String?
+    public var hls_url: String?
     var isTest: Bool?
+    public var ended_at : String?
 
     enum CodingKeys: String, CodingKey {
         case id
@@ -27,9 +29,11 @@ public struct EventData: Codable {
         case name
         case status
         case streamKey = "stream_key"
-        case hlsPlaybackURL = "hls_playback_url"
         case duration = "duration"
+        case hls_playback_url
         case isTest = "is_test"
+        case ended_at
+        case hls_url
     }
     
     public init() {
@@ -40,9 +44,11 @@ public struct EventData: Codable {
         name = nil
         status = nil
         streamKey = nil
-        hlsPlaybackURL = nil
         duration = nil
+        hls_playback_url = nil
         isTest = nil
+        ended_at = nil
+        hls_url = nil
     }
 
 
@@ -56,8 +62,16 @@ public struct EventData: Codable {
         name = try? container.decode(String.self, forKey: .name)
         status = try? container.decode(String.self, forKey: .status)
         streamKey = try? container.decode(String.self, forKey: .streamKey)
-        hlsPlaybackURL = try? container.decode(URL.self, forKey: .hlsPlaybackURL)
         duration = try? container.decode(Int.self, forKey: .duration)
+        hls_playback_url = try? container.decode(String.self, forKey: .hls_playback_url)
         isTest = try? container.decode(Bool.self, forKey: .isTest)
+        ended_at = try? container.decode(String.self, forKey: .ended_at)
+        
+        if let fileName = filename {
+            let url = APIEndpoint.getHlsUrl(fileName: fileName)
+            hls_url = url.baseURL + url.path
+        } else {
+            hls_url = nil
+        }
     }
 }
