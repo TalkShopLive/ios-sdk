@@ -77,16 +77,17 @@ public struct ShowData: Codable {
         currentEvent = try? container.decode(EventData.self, forKey: .currentEvent)
         events = try? container.decode([EventData].self, forKey: .events)
         air_date = try? container.decode(String.self, forKey: .air_date)
-        duration = try? container.decode(Int.self, forKey: .duration)
         streamingContent = try? container.decode(StreamingContent.self, forKey: .streamingContent)
         ended_at = currentEvent?.ended_at
         
         if currentEvent == nil {
             hls_playback_url = nil
             status = "created"
+            duration = nil
         } else {
             hls_playback_url = currentEvent?.hls_playback_url
             status = currentEvent?.status
+            duration = currentEvent?.duration
         }
         
         if let fileName = currentEvent?.filename {
