@@ -35,13 +35,13 @@ final class ShowTests: XCTestCase {
         
         // Given
         let showInstance = Show()
-        let showId = "vzzg6tNu0qOv"
+        let showKey = "8WtAFFgRO1K0"
         
         // Create an expectation for the asynchronous code
         let expectation = XCTestExpectation(description: "Get shows expectation")
         
         // When
-        showInstance.getDetails(showId: showId) { result in
+        showInstance.getDetails(showKey: showKey) { result in
             // Then
             switch result {
             case .success(let show):
@@ -62,13 +62,13 @@ final class ShowTests: XCTestCase {
     func testFetchCurrentEvent() {
         // Given
         let eventInstance = Show()
-        let showId = "8WtAFFgRO1K0"
+        let showKey = "8WtAFFgRO1K0"
         
         // Create an expectation for the asynchronous code
         let expectation = XCTestExpectation(description: "Get Current Event expectation")
         
         // When
-        eventInstance.getStatus(showKey: showId) { result in
+        eventInstance.getStatus(showKey: showKey) { result in
             // Then
             switch result {
             case .success(let show):

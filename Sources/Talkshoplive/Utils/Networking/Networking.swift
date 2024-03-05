@@ -22,8 +22,8 @@ public class Networking {
         }
     }
     
-    public static func getShows(showId:String, completion: @escaping (Result<ShowData, Error>) -> Void) {
-        APIHandler().request(endpoint: APIEndpoint.getShows(showId: showId), method: .get, body:nil, responseType:GetShowsResponse.self) { result in
+    public static func getShows(showKey:String, completion: @escaping (Result<ShowData, Error>) -> Void) {
+        APIHandler().request(endpoint: APIEndpoint.getShows(showKey: showKey), method: .get, body:nil, responseType:GetShowsResponse.self) { result in
             switch result {
             case .success(let apiResponse):
                 completion(.success(apiResponse.product))

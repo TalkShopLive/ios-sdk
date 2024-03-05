@@ -13,7 +13,7 @@ public struct ShowData: Codable {
     public let show_key: String?
     public let name: String?
     public let description: String?
-    public let status: String?
+    public var status: String?
     public let hls_playback_url: String?
     public let hls_url: String?
     public let trailer_url: String?
@@ -22,8 +22,9 @@ public struct ShowData: Codable {
     public let cc: String?
     public let ended_at: String?
     public let duration: Int?
-    private let currentEvent: Event?
-    private let events: [Event]?
+    private let currentEvent: EventData?
+    private let events: [EventData]?
+    private let streamingContent: StreamingContent?
     
     // CodingKeys enum to map the JSON keys to Swift property names
     enum CodingKeys: String, CodingKey {
@@ -42,6 +43,7 @@ public struct ShowData: Codable {
         case duration
         case currentEvent = "current_event"
         case events
+        case streamingContent = "streaming_content"
     }
     
     public init() {
@@ -60,6 +62,7 @@ public struct ShowData: Codable {
         duration = nil
         currentEvent = nil
         events = nil
+        streamingContent = nil
     }
     
     // Custom initializer to handle decoding from JSON
@@ -71,16 +74,30 @@ public struct ShowData: Codable {
         show_key = try? container.decode(String.self, forKey: .show_key)
         name = try? container.decode(String.self, forKey: .name)
         description = try? container.decode(String.self, forKey: .description)
-        currentEvent = try? container.decode(Event.self, forKey: .currentEvent)
-        events = try? container.decode([Event].self, forKey: .events)
-        status = currentEvent?.status
-        hls_playback_url = currentEvent?.hls_playback_url
-        hls_url = try? container.decode(String.self, forKey: .hls_url)
-        trailer_url = try? container.decode(String.self, forKey: .trailer_url)
+        currentEvent = try? container.decode(EventData.self, forKey: .currentEvent)
+        events = try? container.decode([EventData].self, forKey: .events)
         air_date = try? container.decode(String.self, forKey: .air_date)
         duration = try? container.decode(Int.self, forKey: .duration)
-        event_id = currentEvent?.id
+        streamingContent = try? container.decode(StreamingContent.self, forKey: .streamingContent)
         ended_at = currentEvent?.ended_at
+        
+        if currentEvent == nil {
+            hls_playback_url = nil
+            status = "created"
+        } else {
+            hls_playback_url = currentEvent?.hls_playback_url
+            status = currentEvent?.status
+        }
+        
+        if let fileName = currentEvent?.filename {
+            let url = APIEndpoint.getHlsUrl(fileName: fileName)
+            hls_url = url.baseURL + url.path
+        } else {
+            hls_url = nil
+        }
+        
+        trailer_url = streamingContent?.trailers?.first?.video
+        event_id = streamingContent?.airDates?.first?.eventID
         
         if let fileName = currentEvent?.streamKey, currentEvent?.isTest == false {
             let captionUrl = APIEndpoint.getClosedCaptions(fileName: fileName)
@@ -89,31 +106,19 @@ public struct ShowData: Codable {
         } else {
             cc = nil
         }
+        
     }
 }
-// Define a nested struct representing the "events" data
-public struct Event: Codable {
-    let id: Int?
-    let filename: String?
-    let eventName: String?
-    let status: String?
-    let streamKey: String?
-    let isTest: Bool?
-    let hls_playback_url: String?
-    let ended_at: String?
-    let duration: Int?
 
-    // CodingKeys enum to map the JSON keys to Swift property names
-    enum CodingKeys: String, CodingKey {
+struct StreamingContent: Codable {
+    let id: Int?
+    let trailers: [Trailer]?
+    let airDates: [AirDate]?
+    
+    private enum CodingKeys: String, CodingKey {
         case id
-        case filename
-        case eventName = "name"
-        case status
-        case streamKey = "stream_key"
-        case isTest = "is_test"
-        case hls_playback_url
-        case ended_at
-        case duration
+        case trailers
+        case airDates = "air_dates"
     }
     
     // Custom initializer to handle decoding from JSON
@@ -122,13 +127,49 @@ public struct Event: Codable {
 
         // Decode each property and use nil coalescing to handle optional values
         id = try? container.decode(Int.self, forKey: .id)
-        filename = try? container.decode(String.self, forKey: .filename)
-        eventName = try? container.decode(String.self, forKey: .eventName)
-        status = try? container.decode(String.self, forKey: .status)
-        streamKey = try? container.decode(String.self, forKey: .streamKey)
-        isTest = try? container.decode(Bool.self, forKey: .isTest)
-        hls_playback_url = try? container.decode(String.self, forKey: .hls_playback_url)
-        ended_at = try? container.decode(String.self, forKey: .ended_at)
-        duration = try? container.decode(Int.self, forKey: .duration)
+        trailers = try? container.decode([Trailer].self, forKey: .trailers)
+        airDates = try? container.decode([AirDate].self, forKey: .airDates)
+    }
+}
+
+struct Trailer: Codable {
+    let id: Int?
+    let video: String?  // Assuming you want to work with URLs for video
+    
+    private enum CodingKeys: String, CodingKey {
+        case id
+        case video
+    }
+    
+    // Custom initializer to handle decoding from JSON
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+
+        // Decode each property and use nil coalescing to handle optional values
+        id = try? container.decode(Int.self, forKey: .id)
+        video = try? container.decode(String.self, forKey: .video)
+    }
+}
+
+struct AirDate: Codable {
+    let id: Int?
+    let name: String?
+    let eventID: Int? // Renamed for camelCase convention
+    
+    private enum CodingKeys: String, CodingKey {
+        case id
+        case name
+        case eventID = "event_id"
+    }
+    
+    // Custom initializer to handle decoding from JSON
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+
+        // Decode each property and use nil coalescing to handle optional values
+        id = try? container.decode(Int.self, forKey: .id)
+        name = try? container.decode(String.self, forKey: .name)
+        eventID = try? container.decode(Int.self, forKey: .eventID)
+
     }
 }
