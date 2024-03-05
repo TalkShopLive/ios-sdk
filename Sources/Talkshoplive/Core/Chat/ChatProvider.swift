@@ -248,7 +248,8 @@ public class ChatProvider {
 
     // MARK: - Message Publishing
     
-    // Publish a message to the configured channel
+    /// Publishes a message to the configured channel.
+    /// - Parameter message: The message to be published.
     internal func publish(message: String) {
         // Check if the message length is within the specified limit
         guard message.count <= 200 else {
@@ -256,23 +257,77 @@ public class ChatProvider {
             print("Publishing Error:: Message exceeds maximum length of 200 characters.")
             return
         }
+        
+        // Create a MessageData object with relevant information
         let messageObject = MessageData(
             id: Int(Date().milliseconds), //in milliseconds
             createdAt: Date().toString(), //Current Date Object
-            sender: messageToken?.user_id,// User id we get from backend after creating messaging token
+            sender: messageToken?.user_id, // User id obtained from the backend after creating a messaging token
             text: message,
             type: (message.contains("?") ? .question : .comment),
             platform: "sdk")
+        
+        // Check if the publish channel is configured
         if let channel = self.publishChannel {
+            // Use PubNub's publish method to send the message
             pubnub?.publish(channel: channel, message: messageObject) { result in
                 switch result {
                 case let .success(timetoken):
                     Config.shared.isDebugMode() ? print("Publish Response at \(timetoken)") : ()
                 case let .failure(error):
+                    // Print an error message in case of a failure during publishing
                     print("Publishing Error: \(error.localizedDescription)")
                 }
             }
         }
     }
+    
+    // MARK: - Fetch Message History
+    
+    /// Fetches past chat messages using PubNub's message history API.
+    /// - Parameters:
+    ///   - page: An optional pagination parameter representing the page to retrieve.
+    ///   - completion: A closure to be called upon completion, providing a Result with an array of MessageBase objects,
+    ///                 an optional MessagePage for pagination, or an error if the operation fails.
+     internal func fetchPastMessages(page: MessagePage? = nil,completion: @escaping (Result<([MessageBase], MessagePage?), Error>) -> Void) {
+         // Use PubNub's fetchMessageHistory method to retrieve message history for specified channels
+         pubnub?.fetchMessageHistory(for: self.channels, includeActions: true, includeMeta: true, page: page?.toPubNubBoundedPageBase(), completion: { result in
+             do {
+                 switch result {
+                 case let .success(response):
+                     // Check if there is a next page for pagination and print it in debug mode
+                     if let nextPage = response.next {
+                         Config.shared.isDebugMode() ? print("The next page used for pagination: \(nextPage)") : ()
+                     }
+                     
+                     // Check if the messages for the specified channel exist in the response
+                     if let myChannelMessages = response.messagesByChannel[self.publishChannel!] {
+                         // Convert the dictionary into an array of MessageBase
+                         let messageArray : [MessageBase] = myChannelMessages.compactMap { message in
+                             return MessageBase(pubNubMessage: message)
+                         }
+                         
+                         // Create a MessagePage object based on the next page information
+                         let page = MessagePage(page: response.next as! PubNubBoundedPageBase)
+                         
+                         Config.shared.isDebugMode() ? print("Message Array", messageArray) : ()
+                         
+                         // Invoke the completion closure with success and the obtained messages and page
+                         completion(.success((messageArray,page)))
+                         
+                     }
+                     
+                 case let .failure(error):
+                     // Print an error message in case of a failure and invoke the completion closure with the error
+                     print("Failed History Fetch Response: \(error.localizedDescription)")
+                     completion(.failure(error))
+                 }
+             } catch {
+                 // Print an error message if there is an issue processing the response and invoke the completion closure with the error
+                 print("Error processing PubNub message history response: \(error)")
+                 completion(.failure(error))
+             }
+         })
+     }
 
 }

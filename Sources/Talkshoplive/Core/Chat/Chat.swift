@@ -52,6 +52,14 @@ public class Chat {
         // Call the publish method in ChatProvider to send the message
         self.chatProvider?.publish(message: message)
     }
+    
+    // Method to retrieve chat messages, optionally specifying a page for pagination.
+    public func getChatMessages(page: MessagePage? = nil,completion: @escaping (Result<([MessageBase], MessagePage?), Error>) -> Void) {
+        // Call the fetchPastMessages method in ChatProvider to retrieve past messages
+        self.chatProvider?.fetchPastMessages(page:page,completion: { result in
+            completion(result)
+        })
+    }
 }
 
 // MARK: - Chat Extension
