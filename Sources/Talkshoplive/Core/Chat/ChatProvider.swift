@@ -250,7 +250,7 @@ public class ChatProvider {
     
     /// Publishes a message to the configured channel.
     /// - Parameter message: The message to be published.
-    internal func publish(message: String) {
+    internal func publish(message: String,name:String) {
         // Check if the message length is within the specified limit
         guard message.count <= 200 else {
             // Handle the case where the message exceeds the maximum length
@@ -258,25 +258,27 @@ public class ChatProvider {
             return
         }
         
-        // Create a MessageData object with relevant information
-        let messageObject = MessageData(
-            id: Int(Date().milliseconds), //in milliseconds
-            createdAt: Date().toString(), //Current Date Object
-            sender: messageToken?.user_id, // User id obtained from the backend after creating a messaging token
-            text: message,
-            type: (message.contains("?") ? .question : .comment),
-            platform: "sdk")
-        
-        // Check if the publish channel is configured
-        if let channel = self.publishChannel {
-            // Use PubNub's publish method to send the message
-            pubnub?.publish(channel: channel, message: messageObject) { result in
-                switch result {
-                case let .success(timetoken):
-                    Config.shared.isDebugMode() ? print("Publish Response at \(timetoken)") : ()
-                case let .failure(error):
-                    // Print an error message in case of a failure during publishing
-                    print("Publishing Error: \(error.localizedDescription)")
+        if let messageToken = messageToken {
+            // Create a MessageData object with relevant information
+            let messageObject = MessageData(
+                id: Int(Date().milliseconds), //in milliseconds
+                createdAt: Date().toString(), //Current Date Object
+                sender: Sender(id: messageToken.user_id, name: name), // User id obtained from the backend after creating a messaging token
+                text: message,
+                type: (message.contains("?") ? .question : .comment),
+                platform: "sdk")
+            
+            // Check if the publish channel is configured
+            if let channel = self.publishChannel {
+                // Use PubNub's publish method to send the message
+                pubnub?.publish(channel: channel, message: messageObject) { result in
+                    switch result {
+                    case let .success(timetoken):
+                        Config.shared.isDebugMode() ? print("Publish Response at \(timetoken)") : ()
+                    case let .failure(error):
+                        // Print an error message in case of a failure during publishing
+                        print("Publishing Error: \(error.localizedDescription)")
+                    }
                 }
             }
         }
@@ -322,11 +324,7 @@ public class ChatProvider {
                      print("Failed History Fetch Response: \(error.localizedDescription)")
                      completion(.failure(error))
                  }
-             } catch {
-                 // Print an error message if there is an issue processing the response and invoke the completion closure with the error
-                 print("Error processing PubNub message history response: \(error)")
-                 completion(.failure(error))
-             }
+             } 
          })
      }
 

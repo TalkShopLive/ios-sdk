@@ -113,6 +113,52 @@ public struct MessageBase: JSONCodable {
     }
 }
 
+// MARK: Sender Object
+public struct Sender : JSONCodable{
+    let id: String? //User ID obtained from the backend after creating a messaging token.
+    let name: String?
+    
+    // MARK: - Coding Keys
+    
+    /// Coding keys for encoding and decoding.
+    enum CodingKeys: String, CodingKey {
+        case id
+        case name
+    }
+    
+    // MARK: - Initializers
+    
+    /// Default initializer with default values.
+    public init() {
+        self.id = nil
+        self.name = nil
+    }
+    
+    /// Custom initializer with parameters for all properties.
+    public init(id: String? = nil, name: String? = nil) {
+        self.id = id
+        self.name = name
+    }
+    
+    // MARK: - Codable
+    
+    /// Decoder initializer for creating an instance from encoded data.
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        
+        id = try container.decodeIfPresent(String.self, forKey: .id)
+        name = try container.decodeIfPresent(String.self, forKey: .name)
+    }
+    
+    /// Encoder method to convert the struct to an encoded format.
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        
+        try container.encodeIfPresent(id, forKey: .id)
+        try container.encodeIfPresent(name, forKey: .name)
+    }
+}
+
 // MARK: Message Data Class
 
 /// A struct representing the data structure for chat messages.
@@ -122,7 +168,7 @@ public struct MessageData: JSONCodable {
     
     public var id: Int? // Represents the current date converted to String.
     public var createdAt: String? // Represents the current timestamp in seconds.
-    public var sender: String? // User ID obtained from the backend after creating a messaging token.
+    public var sender: Sender? //
     public var text: String? //The message to be sent.
     public var type: MessageType // Enum representing the MessageType. Use .question if the text contains "?".
     public var platform: String? // Platform identifier, e.g., "sdk".
@@ -160,7 +206,7 @@ public struct MessageData: JSONCodable {
     }
     
     /// Custom initializer with parameters for all properties.
-    public init(id: Int? = nil, createdAt: String? = nil, sender: String? = nil, text: String? = nil, type: MessageType? = nil, platform: String? = nil) {
+    public init(id: Int? = nil, createdAt: String? = nil, sender: Sender? = nil, text: String? = nil, type: MessageType? = nil, platform: String? = nil) {
         self.id = id
         self.createdAt = createdAt
         self.sender = sender
@@ -177,7 +223,7 @@ public struct MessageData: JSONCodable {
         
         id = try container.decodeIfPresent(Int.self, forKey: .id)
         createdAt = try container.decodeIfPresent(String.self, forKey: .createdAt)
-        sender = try container.decodeIfPresent(String.self, forKey: .sender)
+        sender = try container.decodeIfPresent(Sender.self, forKey: .sender)
         text = try container.decodeIfPresent(String.self, forKey: .text)
         type = try container.decode(MessageType.self, forKey: .type)
         platform = try container.decodeIfPresent(String.self, forKey: .platform)
