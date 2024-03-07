@@ -76,7 +76,6 @@ public struct ShowData: Codable {
         description = try? container.decode(String.self, forKey: .description)
         currentEvent = try? container.decode(EventData.self, forKey: .currentEvent)
         events = try? container.decode([EventData].self, forKey: .events)
-        air_date = try? container.decode(String.self, forKey: .air_date)
         streamingContent = try? container.decode(StreamingContent.self, forKey: .streamingContent)
         ended_at = currentEvent?.ended_at
         
@@ -99,6 +98,7 @@ public struct ShowData: Codable {
         
         trailer_url = streamingContent?.trailers?.first?.video
         event_id = streamingContent?.airDates?.first?.eventID
+        air_date = streamingContent?.airDates?.first?.date
         
         if let fileName = currentEvent?.streamKey, currentEvent?.isTest == false {
             let captionUrl = APIEndpoint.getClosedCaptions(fileName: fileName)
@@ -156,11 +156,13 @@ struct AirDate: Codable {
     let id: Int?
     let name: String?
     let eventID: Int? // Renamed for camelCase convention
+    let date: String?
     
     private enum CodingKeys: String, CodingKey {
         case id
         case name
         case eventID = "event_id"
+        case date
     }
     
     // Custom initializer to handle decoding from JSON
@@ -171,6 +173,7 @@ struct AirDate: Codable {
         id = try? container.decode(Int.self, forKey: .id)
         name = try? container.decode(String.self, forKey: .name)
         eventID = try? container.decode(Int.self, forKey: .eventID)
+        date = try? container.decode(String.self, forKey: .date)
 
     }
 }
