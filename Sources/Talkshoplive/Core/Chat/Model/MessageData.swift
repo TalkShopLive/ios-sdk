@@ -116,7 +116,7 @@ public struct MessageBase: JSONCodable {
 // MARK: Sender Object
 public struct Sender : JSONCodable{
     let id: String? //User ID obtained from the backend after creating a messaging token.
-    let name: String?
+    public let name: String?
     
     // MARK: - Coding Keys
     
