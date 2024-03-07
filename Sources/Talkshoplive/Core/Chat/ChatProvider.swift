@@ -250,7 +250,7 @@ public class ChatProvider {
     
     /// Publishes a message to the configured channel.
     /// - Parameter message: The message to be published.
-    internal func publish(message: String,name:String) {
+    internal func publish(message: String) {
         // Check if the message length is within the specified limit
         guard message.count <= 200 else {
             // Handle the case where the message exceeds the maximum length
@@ -263,7 +263,7 @@ public class ChatProvider {
             let messageObject = MessageData(
                 id: Int(Date().milliseconds), //in milliseconds
                 createdAt: Date().toString(), //Current Date Object
-                sender: Sender(id: messageToken.user_id, name: name), // User id obtained from the backend after creating a messaging token
+                sender: Sender(id: messageToken.user_id, name: messageToken.user_id), // User id obtained from the backend after creating a messaging token
                 text: message,
                 type: (message.contains("?") ? .question : .comment),
                 platform: "sdk")
