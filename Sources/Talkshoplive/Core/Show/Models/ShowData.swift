@@ -1,6 +1,6 @@
 //
 //  File.swift
-//  
+//
 //
 //  Created by TalkShopLive on 2024-01-30.
 //
@@ -12,77 +12,77 @@ import Foundation
 // Define the main struct representing the top-level data
 public struct ShowData: Codable {
     public let id: Int?
-    public let show_key: String?
+    public let showKey: String?
     public let name: String?
-    public let show_description: String?
+    public let showDescription: String?
     public var status: String?
-    public let hls_playback_url: String?
-    public let hls_url: String?
-    public let trailer_url: String?
-    public let air_date: String?
-    public let event_id: Int?
+    public let hlsPlaybackUrl: String?
+    public let hlsUrl: String?
+    public let trailerUrl: String?
+    public let airDate: String?
+    public let eventId: Int?
     public let cc: String?
-    public let ended_at: String?
+    public let endedAt: String?
     public let duration: Int?
     private let currentEvent: EventData?
     private let events: [EventData]?
     private let streamingContent: StreamingContent?
     private let owningStore: OwningStore?
     private let master: Master?
-    public let video_thumbnail_url: String?
-    public let channel_logo: String?
-    public let channel_name: String?
-    public let trailer_duration: Int?
+    public let videoThumbnailUrl: String?
+    public let channelLogo: String?
+    public let channelName: String?
+    public let trailerDuration: Int?
     
     // CodingKeys enum to map the JSON keys to Swift property names
     enum CodingKeys: String, CodingKey {
         case id
-        case show_key = "product_key"
+        case showKey = "product_key"
         case name
         case status
-        case hls_playback_url
-        case hls_url
-        case trailer_url
-        case air_date
-        case event_id
+        case hlsPlaybackUrl
+        case hlsUrl
+        case trailerUrl
+        case airDate
+        case eventId
         case cc
-        case ended_at
+        case endedAt
         case duration
         case currentEvent = "current_event"
         case events
         case streamingContent = "streaming_content"
         case owningStore = "owning_store"
-        case show_description = "description"
+        case showDescription = "description"
         case master
-        case video_thumbnail_url
-        case channel_logo
-        case channel_name = "brand_name"
-        case trailer_duration
+        case videoThumbnailUrl
+        case channelLogo
+        case channelName = "brand_name"
+        case trailerDuration
     }
     
     public init() {
         id = nil
-        show_key = nil
+        showKey = nil
         name = nil
-        show_description = nil
+        showDescription = nil
         status = nil
-        hls_playback_url = nil
-        hls_url = nil
-        trailer_url = nil
-        air_date = nil
-        event_id = nil
+        hlsPlaybackUrl = nil
+        hlsUrl = nil
+        trailerUrl = nil
+        airDate = nil
+        eventId = nil
         cc = nil
-        ended_at = nil
+        endedAt = nil
         duration = nil
         currentEvent = nil
         events = nil
         streamingContent = nil
         owningStore = nil
         master = nil
-        video_thumbnail_url = nil
-        channel_logo = nil
-        channel_name = nil
-        trailer_duration = nil
+        videoThumbnailUrl = nil
+        channelLogo = nil
+        channelName = nil
+        trailerDuration = nil
     }
     
     // Custom initializer to handle decoding from JSON
@@ -91,40 +91,40 @@ public struct ShowData: Codable {
 
         // Decode each property and use nil coalescing to handle optional values
         id = try? container.decode(Int.self, forKey: .id)
-        show_key = try? container.decode(String.self, forKey: .show_key)
+        showKey = try? container.decode(String.self, forKey: .showKey)
         name = try? container.decode(String.self, forKey: .name)
-        show_description = try? container.decode(String.self, forKey: .show_description)
+        showDescription = try? container.decode(String.self, forKey: .showDescription)
         currentEvent = try? container.decode(EventData.self, forKey: .currentEvent)
         events = try? container.decode([EventData].self, forKey: .events)
         streamingContent = try? container.decode(StreamingContent.self, forKey: .streamingContent)
         owningStore = try? container.decode(OwningStore.self, forKey: .owningStore)
         master = try? container.decode(Master.self, forKey: .master)
-        ended_at = currentEvent?.ended_at
-        channel_name = try? container.decode(String.self, forKey: .channel_name)
+        endedAt = currentEvent?.endedAt
+        channelName = try? container.decode(String.self, forKey: .channelName)
 
         if currentEvent == nil {
-            hls_playback_url = nil
+            hlsPlaybackUrl = nil
             status = "created"
             duration = nil
         } else {
-            hls_playback_url = currentEvent?.hls_playback_url
+            hlsPlaybackUrl = currentEvent?.hlsPlaybackUrl
             status = currentEvent?.status
             duration = currentEvent?.duration
         }
         
         if let fileName = currentEvent?.filename {
             let url = APIEndpoint.getHlsUrl(fileName: fileName)
-            hls_url = url.baseURL + url.path
+            hlsUrl = url.baseURL + url.path
         } else {
-            hls_url = nil
+            hlsUrl = nil
         }
         
-        trailer_url = streamingContent?.trailers?.first?.video
-        event_id = streamingContent?.airDates?.first?.eventID
-        air_date = streamingContent?.airDates?.first?.date
-        channel_logo = owningStore?.image?.attachment?.large
-        video_thumbnail_url = master?.images?.first?.attachment?.large
-        trailer_duration = streamingContent?.trailers?.first?.duration
+        trailerUrl = streamingContent?.trailers?.first?.video
+        eventId = streamingContent?.airDates?.first?.eventID
+        airDate = streamingContent?.airDates?.first?.date
+        channelLogo = owningStore?.image?.attachment?.large
+        videoThumbnailUrl = master?.images?.first?.attachment?.large
+        trailerDuration = streamingContent?.trailers?.first?.duration
         
         if let fileName = currentEvent?.streamKey, currentEvent?.isTest == false {
             let captionUrl = APIEndpoint.getClosedCaptions(fileName: fileName)
