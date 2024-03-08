@@ -291,9 +291,9 @@ public class ChatProvider {
     ///   - page: An optional pagination parameter representing the page to retrieve.
     ///   - completion: A closure to be called upon completion, providing a Result with an array of MessageBase objects,
     ///                 an optional MessagePage for pagination, or an error if the operation fails.
-     internal func fetchPastMessages(page: MessagePage? = nil,completion: @escaping (Result<([MessageBase], MessagePage?), Error>) -> Void) {
+    internal func fetchPastMessages(page: MessagePage? = nil,includeActions:Bool = true, includeMeta:Bool = true, includeUUID:Bool = true, completion: @escaping (Result<([MessageBase], MessagePage?), Error>) -> Void) {
          // Use PubNub's fetchMessageHistory method to retrieve message history for specified channels
-         pubnub?.fetchMessageHistory(for: self.channels, includeActions: true, includeMeta: true, page: page?.toPubNubBoundedPageBase(), completion: { result in
+         pubnub?.fetchMessageHistory(for: self.channels, includeActions: includeActions, includeMeta: includeMeta, includeUUID: includeUUID, page: page?.toPubNubBoundedPageBase(), completion: { result in
              do {
                  switch result {
                  case let .success(response):
@@ -311,9 +311,7 @@ public class ChatProvider {
                          
                          // Create a MessagePage object based on the next page information
                          let page = MessagePage(page: response.next as! PubNubBoundedPageBase)
-                         
-                         Config.shared.isDebugMode() ? print("Message Array", messageArray) : ()
-                         
+                                                  
                          // Invoke the completion closure with success and the obtained messages and page
                          completion(.success((messageArray,page)))
                          

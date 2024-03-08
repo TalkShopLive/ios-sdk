@@ -18,6 +18,8 @@ public struct MessageBase: JSONCodable {
     var published: String?
     public var messageType: MessageType
     public var payload: MessageData?
+    public var actions: [MessageAction]?
+    public var metaData: String?
     
     // MARK: - Enums
     
@@ -43,6 +45,8 @@ public struct MessageBase: JSONCodable {
         case published
         case concreteMetadata
         case messageType
+        case actions
+        case metaData
     }
     
     /// Default initializer with all properties set to nil or default values.
@@ -53,23 +57,8 @@ public struct MessageBase: JSONCodable {
         published = nil
         messageType = .unknown
         payload = nil
-    }
-    
-    /// Custom initializer to create a MessageBase object with specified values.
-    public init(
-        payload: MessageData,
-        publisher: String?,
-        channel: String,
-        subscription: String?,
-        published: String,
-        messageType: MessageType = .unknown
-    ) {
-        self.payload = payload
-        self.publisher = publisher
-        self.channel = channel
-        self.subscription = subscription
-        self.published = published
-        self.messageType = messageType
+        actions = nil
+        metaData = nil
     }
     
     /// Custom initializer to create a MessageBase object from a PubNubMessage.
@@ -84,6 +73,17 @@ public struct MessageBase: JSONCodable {
         self.subscription = pubNubMessage.subscription
         self.published = pubNubMessage.published.description.jsonStringify
         self.messageType = MessageType(rawValue: pubNubMessage.messageType.rawValue) ?? .unknown
+        self.metaData = pubNubMessage.metadata?.jsonStringify
+        self.actions = self.toMessageActions(actions: pubNubMessage.actions)
+    }
+    
+    public func toMessageActions(actions : [PubNubMessageAction]) -> [MessageAction]{
+        var actionsArray = [MessageAction]()
+        for i in actions {
+            let actionObject = MessageAction(action: i)
+            actionsArray.append(actionObject)
+        }
+        return actionsArray
     }
     
     // MARK: - Codable
@@ -98,6 +98,8 @@ public struct MessageBase: JSONCodable {
         try container.encodeIfPresent(self.subscription, forKey: .subscription)
         try container.encode(self.published, forKey: .published)
         try container.encode(self.messageType, forKey: .messageType)
+        try container.encode(self.actions, forKey: .actions)
+        try container.encode(self.metaData, forKey: .metaData)
     }
     
     /// Decodes a MessageBase object from a given decoder.
@@ -110,6 +112,8 @@ public struct MessageBase: JSONCodable {
         self.subscription = try container.decodeIfPresent(String.self, forKey: .subscription)
         self.published = try container.decode(String.self, forKey: .published)
         self.messageType = try container.decode(MessageType.self, forKey: .messageType)
+        self.actions = try container.decode([MessageAction].self, forKey: .actions)
+        self.metaData = try container.decode(String.self, forKey: .metaData)
     }
 }
 
@@ -245,7 +249,6 @@ public struct MessageData: JSONCodable {
 
 // MARK: MessagePage Class
 
-/// Represents a page of chat messages for pagination purposes, conforming to the JSONCodable protocol.
 public struct MessagePage: JSONCodable {
     
     // MARK: - Properties
@@ -311,4 +314,63 @@ public struct MessagePage: JSONCodable {
     func toPubNubBoundedPageBase() -> PubNubBoundedPageBase {
         return PubNubBoundedPageBase(start: UInt64(start ?? 0), end: UInt64(end ?? 0), limit: limit) ?? PubNubBoundedPageBase.init()!
     }
+}
+
+public struct MessageAction : JSONCodable{
+   
+    // MARK: - Properties
+    public var actionType: String?
+    public var actionValue: String?
+    public var actionTimetoken: Int?
+    public var publisher: String?
+    
+    // MARK: - Coding Keys
+    
+    /// Coding keys for encoding and decoding.
+    enum CodingKeys: String, CodingKey {
+        case actionType
+        case actionValue
+        case actionTimetoken
+        case publisher
+    }
+    
+    // MARK: - Initializers
+    
+    /// Default initializer with default values.
+    public init() {
+        actionType = nil
+        actionValue = nil
+        actionTimetoken = nil
+        publisher = nil
+    }
+    
+    /// Custom initializer to create a MessagePage object from a PubNubBoundedPageBase.
+    public init(action : PubNubMessageAction) {
+        actionType = action.actionType
+        actionValue = action.actionValue
+        actionTimetoken = Int(action.actionTimetoken)
+        publisher = action.publisher
+    }
+    
+    // MARK: - Codable Protocol
+    
+    /// Decoder initializer for creating an instance from encoded data.
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        
+        actionType = try container.decodeIfPresent(String.self, forKey: .actionType)
+        actionValue = try container.decodeIfPresent(String.self, forKey: .actionValue)
+        actionTimetoken = try container.decodeIfPresent(Int.self, forKey: .actionTimetoken)
+        publisher = try container.decodeIfPresent(String.self, forKey: .publisher)
+    }
+    
+    /// Encoder method to convert the struct to an encoded format.
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        
+        try container.encodeIfPresent(actionType, forKey: .actionType)
+        try container.encodeIfPresent(actionValue, forKey: .actionValue)
+        try container.encodeIfPresent(publisher, forKey: .publisher)
+    }
+    
 }
