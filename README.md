@@ -120,7 +120,7 @@ Initializes a new instance of the Chat class.
 
 - Parameters:
   - `jwtToken`: Generated JWT token
-    - Example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzZGtfMmVhMjFkZTE5Y2M4YmM1ZTg2NDBjN2IyMjdmZWYyZjMiLCJleHAiOjE3MDg3MjI1MDAsInVzZXIiOnsiaWQiOjEyMywibmFtZSI6Ik1heXVyaSJ9LCJqdGkiOiJ0V2hCQXdTVG1YQzZycldLMTVBdURRPT0ifQ.zGgWSlRrZzMz4KWT6rZ6kUBaKetnrGJEPbcxzs8B_E8
+    - Example: eyJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJzZGtfMmVhMjFkZTE5Y2M4YmM1ZTg2NDBjN2IyMjdmZWYyZjMiLCJleHAiOjE3MTAwMjM0NDEsImp0aSI6InRXc3NBd1Nvb2VoaHp5UTA5NUV1eXk9PSJ9.XtPM3iibdTt-fp8fhm2Gh2T7X0XXuUuIPY17bW648Gk
   - `isGuest`: A boolean indicating whether the user is a guest user (true) or a federated user (false).
   - `showKey`: show_key for which you want to subscribe to the channel.  
 
@@ -149,6 +149,38 @@ class ContentViewModel: ObservableObject, ChatDelegate {
     }
 }
 
+```
+#### `getChatMessages(page:includeActions:includeMeta:includeUUID:completion:)`
+
+Use to retrieve messages for a specific page, including or excluding actions, metadata, and UUID in the response.
+
+- Parameters:
+  - `page`: Specifies the page from which to retrieve chat history. If not provided (set to nil), the method will fetch chat history without specifying a particular page.
+  - `includeActions`: Defaults to true. Set to false if you wish to exclude actions from the response.
+  - `includeMeta`: Defaults to true. Set to false if you want to omit metadata from the response.
+  - `includeUUID`: Defaults to true. Set to false if you prefer not to include UUID in the response.
+  - `completion`: A closure invoked upon fetching chat history. It receives a Result enum with an array of `MessageBase` on success or an `Error` on failure.
+  
+```
+self.chatInstance.getChatMessages(page: page, completion: { result in
+    switch result {
+    case let .success((messageArray, nextPage)):
+        // print("Next Page:", nextPage)
+        // print("Received chat messages:", messageArray)
+        
+        // Access the actions if 'includeActions' is set to true
+        for message in messageArray {
+            if let actions = message.actions, actions.count > 0 {
+                for action in actions {
+                    print("Message Action:", action)
+                }
+            }
+        }            
+    case .failure(let error):
+        // Handle error case
+        print("Error: \(error.localizedDescription)")
+    }
+})
 ```
     
 ## Run the Tests: 
