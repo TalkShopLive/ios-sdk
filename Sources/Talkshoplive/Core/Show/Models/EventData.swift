@@ -1,6 +1,6 @@
 //
 //  File.swift
-//  
+//
 //
 //  Created by TalkShoLive on 2024-01-30.
 //
@@ -16,10 +16,10 @@ public struct EventData: Codable {
     public var status: String?
     var streamKey: String?
     public var duration: Int?
-    public var hls_playback_url: String?
-    public var hls_url: String?
+    public var hlsPlaybackUrl: String?
+    public var hlsUrl: String?
     var isTest: Bool?
-    public var ended_at : String?
+    public var endedAt : String?
 
     enum CodingKeys: String, CodingKey {
         case id
@@ -30,10 +30,10 @@ public struct EventData: Codable {
         case status
         case streamKey = "stream_key"
         case duration = "duration"
-        case hls_playback_url
+        case hlsPlaybackUrl = "hls_playback_url"
         case isTest = "is_test"
-        case ended_at
-        case hls_url
+        case endedAt
+        case hlsUrl = "hls_url"
     }
     
     public init() {
@@ -45,10 +45,10 @@ public struct EventData: Codable {
         status = nil
         streamKey = nil
         duration = nil
-        hls_playback_url = nil
+        hlsPlaybackUrl = nil
         isTest = nil
-        ended_at = nil
-        hls_url = nil
+        endedAt = nil
+        hlsUrl = nil
     }
 
 
@@ -63,15 +63,15 @@ public struct EventData: Codable {
         status = try? container.decode(String.self, forKey: .status)
         streamKey = try? container.decode(String.self, forKey: .streamKey)
         duration = try? container.decode(Int.self, forKey: .duration)
-        hls_playback_url = try? container.decode(String.self, forKey: .hls_playback_url)
+        hlsPlaybackUrl = try? container.decode(String.self, forKey: .hlsPlaybackUrl)
         isTest = try? container.decode(Bool.self, forKey: .isTest)
-        ended_at = try? container.decode(String.self, forKey: .ended_at)
+        endedAt = try? container.decode(String.self, forKey: .endedAt)
         
         if let fileName = filename {
             let url = APIEndpoint.getHlsUrl(fileName: fileName)
-            hls_url = url.baseURL + url.path
+            hlsUrl = url.baseURL + url.path
         } else {
-            hls_url = nil
+            hlsUrl = nil
         }
     }
 }

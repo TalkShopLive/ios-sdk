@@ -106,9 +106,9 @@ public class ChatProvider {
        
         if let messageToken = self.messageToken {
             let configuration = PubNubConfiguration(
-                publishKey: messageToken.publish_key,
-                subscribeKey: messageToken.subscribe_key,
-                userId: messageToken.user_id,
+                publishKey: messageToken.publishKey,
+                subscribeKey: messageToken.subscribeKey,
+                userId: messageToken.userId,
                 authKey: messageToken.token
                 // Add more configuration parameters as needed
             )
@@ -263,7 +263,7 @@ public class ChatProvider {
             let messageObject = MessageData(
                 id: Int(Date().milliseconds), //in milliseconds
                 createdAt: Date().toString(), //Current Date Object
-                sender: Sender(id: messageToken.user_id, name: messageToken.user_id), // User id obtained from the backend after creating a messaging token
+                sender: Sender(id: messageToken.userId, name: messageToken.userId), // User id obtained from the backend after creating a messaging token
                 text: message,
                 type: (message.contains("?") ? .question : .comment),
                 platform: "sdk")
@@ -291,9 +291,9 @@ public class ChatProvider {
     ///   - page: An optional pagination parameter representing the page to retrieve.
     ///   - completion: A closure to be called upon completion, providing a Result with an array of MessageBase objects,
     ///                 an optional MessagePage for pagination, or an error if the operation fails.
-     internal func fetchPastMessages(page: MessagePage? = nil,completion: @escaping (Result<([MessageBase], MessagePage?), Error>) -> Void) {
+    internal func fetchPastMessages(page: MessagePage? = nil,includeActions:Bool = true, includeMeta:Bool = true, includeUUID:Bool = true, completion: @escaping (Result<([MessageBase], MessagePage?), Error>) -> Void) {
          // Use PubNub's fetchMessageHistory method to retrieve message history for specified channels
-         pubnub?.fetchMessageHistory(for: self.channels, includeActions: true, includeMeta: true, page: page?.toPubNubBoundedPageBase(), completion: { result in
+         pubnub?.fetchMessageHistory(for: self.channels, includeActions: includeActions, includeMeta: includeMeta, includeUUID: includeUUID, page: page?.toPubNubBoundedPageBase(), completion: { result in
              do {
                  switch result {
                  case let .success(response):
@@ -311,9 +311,7 @@ public class ChatProvider {
                          
                          // Create a MessagePage object based on the next page information
                          let page = MessagePage(page: response.next as! PubNubBoundedPageBase)
-                         
-                         Config.shared.isDebugMode() ? print("Message Array", messageArray) : ()
-                         
+                                                  
                          // Invoke the completion closure with success and the obtained messages and page
                          completion(.success((messageArray,page)))
                          
@@ -324,7 +322,7 @@ public class ChatProvider {
                      print("Failed History Fetch Response: \(error.localizedDescription)")
                      completion(.failure(error))
                  }
-             } 
+             }
          })
      }
 
