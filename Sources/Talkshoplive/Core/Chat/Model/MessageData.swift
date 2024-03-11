@@ -93,9 +93,9 @@ public struct MessageBase: JSONCodable {
         var container = encoder.container(keyedBy: CodingKeys.self)
         
         try container.encode(self.payload, forKey: .payload)
-        try container.encodeIfPresent(self.publisher, forKey: .publisher)
+        try container.encode(self.publisher, forKey: .publisher)
         try container.encode(self.channel, forKey: .channel)
-        try container.encodeIfPresent(self.subscription, forKey: .subscription)
+        try container.encode(self.subscription, forKey: .subscription)
         try container.encode(self.published, forKey: .published)
         try container.encode(self.messageType, forKey: .messageType)
         try container.encode(self.actions, forKey: .actions)
@@ -107,9 +107,9 @@ public struct MessageBase: JSONCodable {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         
         self.payload = try container.decode(MessageData.self, forKey: .payload)
-        self.publisher = try container.decodeIfPresent(String.self, forKey: .publisher)
+        self.publisher = try container.decode(String.self, forKey: .publisher)
         self.channel = try container.decode(String.self, forKey: .channel)
-        self.subscription = try container.decodeIfPresent(String.self, forKey: .subscription)
+        self.subscription = try container.decode(String.self, forKey: .subscription)
         self.published = try container.decode(String.self, forKey: .published)
         self.messageType = try container.decode(MessageType.self, forKey: .messageType)
         self.actions = try container.decode([MessageAction].self, forKey: .actions)
@@ -150,16 +150,17 @@ public struct Sender : JSONCodable{
     public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         
-        id = try container.decodeIfPresent(String.self, forKey: .id)
-        name = try container.decodeIfPresent(String.self, forKey: .name)
+        id = try container.decode(String.self, forKey: .id)
+        name = try container.decode(String.self, forKey: .name)
+
     }
     
     /// Encoder method to convert the struct to an encoded format.
     public func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         
-        try container.encodeIfPresent(id, forKey: .id)
-        try container.encodeIfPresent(name, forKey: .name)
+        try container.encode(id, forKey: .id)
+        try container.encode(name, forKey: .name)
     }
 }
 
@@ -182,6 +183,11 @@ public struct MessageData: JSONCodable {
         case comment
         case question
         case giphy
+        
+        public init(from decoder: Decoder) throws {
+                let stringValue = try decoder.singleValueContainer().decode(String.self)
+                self = MessageType(rawValue: stringValue.lowercased()) ?? .comment
+        }
     }
 
     
@@ -225,24 +231,33 @@ public struct MessageData: JSONCodable {
     public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         
-        id = try container.decodeIfPresent(Int.self, forKey: .id)
-        createdAt = try container.decodeIfPresent(String.self, forKey: .createdAt)
-        sender = try container.decodeIfPresent(Sender.self, forKey: .sender)
-        text = try container.decodeIfPresent(String.self, forKey: .text)
+        id = try? container.decode(Int.self, forKey: .id)
+        createdAt = try container.decode(String.self, forKey: .createdAt)
+        text = try container.decode(String.self, forKey: .text)
         type = try container.decode(MessageType.self, forKey: .type)
-        platform = try container.decodeIfPresent(String.self, forKey: .platform)
+        platform = try container.decode(String.self, forKey: .platform)
+        
+        do {
+            // Try to decode the "sender" key as a Sender object
+            sender = try container.decode(Sender.self, forKey: .sender)
+        } catch DecodingError.typeMismatch {
+            // If decoding as Sender fails due to type mismatch (probably it's a String),
+            // try to decode it as a String and create a Sender object with the provided value
+            let senderString = try container.decode(String.self, forKey: .sender)
+            sender = Sender(id: senderString, name: senderString)
+        }
     }
     
     /// Encoder method to convert the struct to an encoded format.
     public func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         
-        try container.encodeIfPresent(id, forKey: .id)
-        try container.encodeIfPresent(createdAt, forKey: .createdAt)
-        try container.encodeIfPresent(sender, forKey: .sender)
-        try container.encodeIfPresent(text, forKey: .text)
+        try container.encode(id, forKey: .id)
+        try container.encode(createdAt, forKey: .createdAt)
+        try container.encode(sender, forKey: .sender)
+        try container.encode(text, forKey: .text)
         try container.encode(type, forKey: .type)
-        try container.encodeIfPresent(platform, forKey: .platform)
+        try container.encode(platform, forKey: .platform)
     }
 }
 
@@ -290,16 +305,16 @@ public struct MessagePage: JSONCodable {
     public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
 
-        start = try container.decodeIfPresent(Int.self, forKey: .start)
-        limit = try container.decodeIfPresent(Int.self, forKey: .limit)
+        start = try container.decode(Int.self, forKey: .start)
+        limit = try container.decode(Int.self, forKey: .limit)
     }
     
     /// Encoder method to convert the struct to an encoded format.
     public func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         
-        try container.encodeIfPresent(start, forKey: .start)
-        try container.encodeIfPresent(limit, forKey: .limit)
+        try container.encode(start, forKey: .start)
+        try container.encode(limit, forKey: .limit)
     }
     
     /// Converts the MessagePage object to a PubNubBoundedPageBase object.
@@ -350,19 +365,19 @@ public struct MessageAction : JSONCodable{
     public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         
-        actionType = try container.decodeIfPresent(String.self, forKey: .actionType)
-        actionValue = try container.decodeIfPresent(String.self, forKey: .actionValue)
-        actionTimetoken = try container.decodeIfPresent(Int.self, forKey: .actionTimetoken)
-        publisher = try container.decodeIfPresent(String.self, forKey: .publisher)
+        actionType = try container.decode(String.self, forKey: .actionType)
+        actionValue = try container.decode(String.self, forKey: .actionValue)
+        actionTimetoken = try container.decode(Int.self, forKey: .actionTimetoken)
+        publisher = try container.decode(String.self, forKey: .publisher)
     }
     
     /// Encoder method to convert the struct to an encoded format.
     public func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         
-        try container.encodeIfPresent(actionType, forKey: .actionType)
-        try container.encodeIfPresent(actionValue, forKey: .actionValue)
-        try container.encodeIfPresent(publisher, forKey: .publisher)
+        try container.encode(actionType, forKey: .actionType)
+        try container.encode(actionValue, forKey: .actionValue)
+        try container.encode(publisher, forKey: .publisher)
     }
     
 }
