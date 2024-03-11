@@ -7,6 +7,10 @@
 
 import Foundation
 
+// MARK: - EventData
+
+/// Represents the data structure for an event.
+
 public struct EventData: Codable {
     var id: Int?
     var storeId: Int?
@@ -19,7 +23,10 @@ public struct EventData: Codable {
     public var hlsPlaybackUrl: String?
     public var hlsUrl: String?
     var isTest: Bool?
-    public var endedAt : String?
+    public var endedAt: String?
+    public var streamInCloud: Bool
+
+    // MARK: Coding Keys
 
     enum CodingKeys: String, CodingKey {
         case id
@@ -34,8 +41,12 @@ public struct EventData: Codable {
         case isTest = "is_test"
         case endedAt
         case hlsUrl = "hls_url"
+        case streamInCloud = "stream_in_cloud"
     }
     
+    // MARK: Initializers
+        
+    /// Default initializer to create an empty EventData instance.
     public init() {
         id = nil
         storeId = nil
@@ -49,9 +60,10 @@ public struct EventData: Codable {
         isTest = nil
         endedAt = nil
         hlsUrl = nil
+        streamInCloud = false
     }
 
-
+    /// Custom initializer to create an instance of EventData from a decoder.
     public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
 
@@ -66,7 +78,9 @@ public struct EventData: Codable {
         hlsPlaybackUrl = try? container.decode(String.self, forKey: .hlsPlaybackUrl)
         isTest = try? container.decode(Bool.self, forKey: .isTest)
         endedAt = try? container.decode(String.self, forKey: .endedAt)
-        
+        streamInCloud = try container.decode(Bool.self, forKey: .streamInCloud)
+
+        // Generate hlsUrl if filename is available
         if let fileName = filename {
             let url = APIEndpoint.getHlsUrl(fileName: fileName)
             hlsUrl = url.baseURL + url.path
