@@ -252,9 +252,7 @@ public struct MessageData: JSONCodable {
 public struct MessagePage: JSONCodable {
     
     // MARK: - Properties
-    
     public var start: Int?
-    public var end: Int?
     public var limit: Int?
 
     
@@ -263,7 +261,6 @@ public struct MessagePage: JSONCodable {
     /// Coding keys for encoding and decoding.
     enum CodingKeys: String, CodingKey {
         case start
-        case end
         case limit
     }
     
@@ -272,21 +269,18 @@ public struct MessagePage: JSONCodable {
     /// Default initializer with default values.
     public init() {
         self.start = nil
-        self.end = nil
-        self.limit = nil
+        self.limit = 25
     }
     
     /// Custom initializer with parameters for all properties.
-    public init(start: Int? = nil, end: Int? = nil, limit: Int? = nil) {
+    public init(start: Int? = nil, limit: Int? = 25) {
         self.start = start
-        self.end = end
         self.limit = limit
     }
     
     /// Custom initializer to create a MessagePage object from a PubNubBoundedPageBase.
     public init(page : PubNubBoundedPageBase) {
         self.start = page.start.map { Int($0) }
-        self.end = page.end.map { Int($0) }
         self.limit = page.limit
     }
     
@@ -295,9 +289,8 @@ public struct MessagePage: JSONCodable {
     /// Decoder initializer for creating an instance from encoded data.
     public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
-        
+
         start = try container.decodeIfPresent(Int.self, forKey: .start)
-        end = try container.decodeIfPresent(Int.self, forKey: .end)
         limit = try container.decodeIfPresent(Int.self, forKey: .limit)
     }
     
@@ -306,13 +299,12 @@ public struct MessagePage: JSONCodable {
         var container = encoder.container(keyedBy: CodingKeys.self)
         
         try container.encodeIfPresent(start, forKey: .start)
-        try container.encodeIfPresent(end, forKey: .end)
         try container.encodeIfPresent(limit, forKey: .limit)
     }
     
     /// Converts the MessagePage object to a PubNubBoundedPageBase object.
     func toPubNubBoundedPageBase() -> PubNubBoundedPageBase {
-        return PubNubBoundedPageBase(start: UInt64(start ?? 0), end: UInt64(end ?? 0), limit: limit) ?? PubNubBoundedPageBase.init()!
+        return PubNubBoundedPageBase(start: UInt64(start ?? 0), limit: limit) ?? PubNubBoundedPageBase.init()!
     }
 }
 

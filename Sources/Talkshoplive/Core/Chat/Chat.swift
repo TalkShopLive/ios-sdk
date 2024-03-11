@@ -54,9 +54,9 @@ public class Chat {
     }
     
     // Method to retrieve chat messages, optionally specifying a page for pagination.
-    public func getChatMessages(page: MessagePage? = nil, includeActions:Bool = true, includeMeta:Bool = true, includeUUID:Bool = true, completion: @escaping (Result<([MessageBase], MessagePage?), Error>) -> Void) {
+    public func getChatMessages(limit: Int? = 25, start: Int? = nil, includeActions:Bool = true, includeMeta:Bool = true, includeUUID:Bool = true, completion: @escaping (Result<([MessageBase], MessagePage?), Error>) -> Void) {
         // Call the fetchPastMessages method in ChatProvider to retrieve past messages
-        self.chatProvider?.fetchPastMessages(page: page, includeActions: includeActions, includeMeta: includeMeta, includeUUID: includeUUID, completion: { result in
+        self.chatProvider?.fetchPastMessages(limit: limit ?? 25, start: start, includeActions: includeActions, includeMeta: includeMeta, includeUUID: includeUUID, completion: { result in
             completion(result)
         })
     }
