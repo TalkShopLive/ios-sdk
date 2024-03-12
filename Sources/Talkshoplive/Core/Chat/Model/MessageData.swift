@@ -13,9 +13,9 @@ import PubNub
 public struct MessageBase: JSONCodable {
     
     public var publisher: String?
-    var channel: String?
-    var subscription: String?
-    var published: String?
+    public var channel: String?
+    public var subscription: String?
+    public var published: String?
     public var messageType: MessageType
     public var payload: MessageData?
     public var actions: [MessageAction]?
@@ -119,8 +119,9 @@ public struct MessageBase: JSONCodable {
 
 // MARK: Sender Object
 public struct Sender : JSONCodable{
-    let id: String? //User ID obtained from the backend after creating a messaging token.
+    public let id: String? //User ID obtained from the backend after creating a messaging token.
     public let name: String?
+    public let profileUrl: String?
     
     // MARK: - Coding Keys
     
@@ -128,6 +129,7 @@ public struct Sender : JSONCodable{
     enum CodingKeys: String, CodingKey {
         case id
         case name
+        case profileUrl
     }
     
     // MARK: - Initializers
@@ -136,12 +138,14 @@ public struct Sender : JSONCodable{
     public init() {
         self.id = nil
         self.name = nil
+        self.profileUrl = nil
     }
     
     /// Custom initializer with parameters for all properties.
-    public init(id: String? = nil, name: String? = nil) {
+    public init(id: String? = nil, name: String? = nil, profileUrl:String? = nil) {
         self.id = id
         self.name = name
+        self.profileUrl = profileUrl
     }
     
     // MARK: - Codable
@@ -152,6 +156,8 @@ public struct Sender : JSONCodable{
         
         id = try container.decode(String.self, forKey: .id)
         name = try container.decode(String.self, forKey: .name)
+        let profileURL = try container.decode(URL.self, forKey: .profileUrl)
+        profileUrl = profileURL.absoluteString
 
     }
     
@@ -161,6 +167,8 @@ public struct Sender : JSONCodable{
         
         try container.encode(id, forKey: .id)
         try container.encode(name, forKey: .name)
+        try container.encode(profileUrl, forKey: .profileUrl)
+
     }
 }
 
