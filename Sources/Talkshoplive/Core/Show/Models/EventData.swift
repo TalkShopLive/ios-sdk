@@ -24,7 +24,7 @@ public struct EventData: Codable {
     public var hlsUrl: String?
     var isTest: Bool?
     public var endedAt: String?
-    public var streamInCloud: Bool
+    public var streamInCloud: Bool?
 
     // MARK: Coding Keys
 
@@ -67,18 +67,18 @@ public struct EventData: Codable {
     public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
 
-        id = try? container.decode(Int.self, forKey: .id)
-        storeId = try? container.decode(Int.self, forKey: .storeId)
-        productId = try? container.decode(Int.self, forKey: .productId)
-        filename = try? container.decode(String.self, forKey: .filename)
-        name = try? container.decode(String.self, forKey: .name)
-        status = try? container.decode(String.self, forKey: .status)
-        streamKey = try? container.decode(String.self, forKey: .streamKey)
-        duration = try? container.decode(Int.self, forKey: .duration)
-        hlsPlaybackUrl = try? container.decode(String.self, forKey: .hlsPlaybackUrl)
-        isTest = try? container.decode(Bool.self, forKey: .isTest)
-        endedAt = try? container.decode(String.self, forKey: .endedAt)
-        streamInCloud = try container.decode(Bool.self, forKey: .streamInCloud)
+        id = try? container.decodeIfPresent(Int.self, forKey: .id)
+        storeId = try? container.decodeIfPresent(Int.self, forKey: .storeId)
+        productId = try? container.decodeIfPresent(Int.self, forKey: .productId)
+        filename = try? container.decodeIfPresent(String.self, forKey: .filename)
+        name = try? container.decodeIfPresent(String.self, forKey: .name)
+        status = try? container.decodeIfPresent(String.self, forKey: .status)
+        streamKey = try? container.decodeIfPresent(String.self, forKey: .streamKey)
+        duration = try? container.decodeIfPresent(Int.self, forKey: .duration)
+        hlsPlaybackUrl = try? container.decodeIfPresent(String.self, forKey: .hlsPlaybackUrl)
+        isTest = try? container.decodeIfPresent(Bool.self, forKey: .isTest)
+        endedAt = try? container.decodeIfPresent(String.self, forKey: .endedAt)
+        streamInCloud = try container.decodeIfPresent(Bool.self, forKey: .streamInCloud)
 
         // Generate hlsUrl if filename is available
         if let fileName = filename {
