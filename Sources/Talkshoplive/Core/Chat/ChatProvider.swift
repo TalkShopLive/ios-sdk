@@ -12,7 +12,7 @@ import PubNub
 
 // Protocol for the chat provider delegate to handle different chat events
 public protocol _ChatProviderDelegate: AnyObject {
-    func onMessageReceived(_ message: MessageData)
+    func onMessageReceived(_ message: MessageBase)
     // Add more methods for other events if needed
 }
 
@@ -166,14 +166,9 @@ public class ChatProvider {
                 // Check the channel type
                 switch message.channel {
                 case self.publishChannel :
-                    // If it's the publish channel, notify the delegate
-                    if let payloadString = message.payload.jsonStringify {
-                        if let messageData = convertToModel(from: payloadString, responseType: MessageData.self) {
-                            // Notify the delegate if needed
-                            DispatchQueue.main.async {
-                                self.delegate?.onMessageReceived(messageData)
-                            }
-                        }
+                    let convertedMessage = MessageBase(pubNubMessage: message)
+                    DispatchQueue.main.async {
+                        self.delegate?.onMessageReceived(MessageBase(pubNubMessage: message))
                     }
                 case self.eventsChannel:
                     // Handle events channel if needed
@@ -266,7 +261,7 @@ public class ChatProvider {
                 sender: Sender(id: messageToken.userId, name: messageToken.userId), // User id obtained from the backend after creating a messaging token
                 text: message,
                 type: (message.contains("?") ? .question : .comment),
-                platform: "sdk")
+                platform: "mobile")
             
             // Check if the publish channel is configured
             if let channel = self.publishChannel {
@@ -307,7 +302,12 @@ public class ChatProvider {
                      if let myChannelMessages = response.messagesByChannel[self.publishChannel!] {
                          // Convert the dictionary into an array of MessageBase
                          let messageArray : [MessageBase] = myChannelMessages.compactMap { message in
-                             return MessageBase(pubNubMessage: message)
+                             let convertedMessage = MessageBase(pubNubMessage: message)
+                             guard convertedMessage.payload?.text != nil else {
+                                    // Skip converted messages without text
+                                    return nil
+                            }
+                            return convertedMessage
                          }
                          
                          // Create a MessagePage object based on the next page information
