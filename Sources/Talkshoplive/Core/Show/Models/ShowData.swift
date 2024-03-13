@@ -90,17 +90,17 @@ public struct ShowData: Codable {
         let container = try decoder.container(keyedBy: CodingKeys.self)
 
         // Decode each property and use nil coalescing to handle optional values
-        id = try? container.decode(Int.self, forKey: .id)
-        showKey = try? container.decode(String.self, forKey: .showKey)
-        name = try? container.decode(String.self, forKey: .name)
-        showDescription = try? container.decode(String.self, forKey: .showDescription)
-        currentEvent = try? container.decode(EventData.self, forKey: .currentEvent)
-        events = try? container.decode([EventData].self, forKey: .events)
-        streamingContent = try? container.decode(StreamingContent.self, forKey: .streamingContent)
-        owningStore = try? container.decode(OwningStore.self, forKey: .owningStore)
-        master = try? container.decode(Master.self, forKey: .master)
+        id = try? container.decodeIfPresent(Int.self, forKey: .id)
+        showKey = try? container.decodeIfPresent(String.self, forKey: .showKey)
+        name = try? container.decodeIfPresent(String.self, forKey: .name)
+        showDescription = try? container.decodeIfPresent(String.self, forKey: .showDescription)
+        currentEvent = try? container.decodeIfPresent(EventData.self, forKey: .currentEvent)
+        events = try? container.decodeIfPresent([EventData].self, forKey: .events)
+        streamingContent = try? container.decodeIfPresent(StreamingContent.self, forKey: .streamingContent)
+        owningStore = try? container.decodeIfPresent(OwningStore.self, forKey: .owningStore)
+        master = try? container.decodeIfPresent(Master.self, forKey: .master)
         endedAt = currentEvent?.endedAt
-        channelName = try? container.decode(String.self, forKey: .channelName)
+        channelName = try? container.decodeIfPresent(String.self, forKey: .channelName)
 
         if currentEvent == nil {
             hlsPlaybackUrl = nil
@@ -155,9 +155,9 @@ struct StreamingContent: Codable {
         let container = try decoder.container(keyedBy: CodingKeys.self)
 
         // Decode each property and use nil coalescing to handle optional values
-        id = try? container.decode(Int.self, forKey: .id)
-        trailers = try? container.decode([Trailer].self, forKey: .trailers)
-        airDates = try? container.decode([AirDate].self, forKey: .airDates)
+        id = try? container.decodeIfPresent(Int.self, forKey: .id)
+        trailers = try? container.decodeIfPresent([Trailer].self, forKey: .trailers)
+        airDates = try? container.decodeIfPresent([AirDate].self, forKey: .airDates)
     }
 }
 
@@ -179,9 +179,9 @@ struct Trailer: Codable {
         let container = try decoder.container(keyedBy: CodingKeys.self)
 
         // Decode each property and use nil coalescing to handle optional values
-        id = try? container.decode(Int.self, forKey: .id)
-        video = try? container.decode(String.self, forKey: .video)
-        duration = try? container.decode(Int.self, forKey: .duration)
+        id = try? container.decodeIfPresent(Int.self, forKey: .id)
+        video = try? container.decodeIfPresent(String.self, forKey: .video)
+        duration = try? container.decodeIfPresent(Int.self, forKey: .duration)
     }
 }
 
@@ -205,10 +205,10 @@ struct AirDate: Codable {
         let container = try decoder.container(keyedBy: CodingKeys.self)
 
         // Decode each property and use nil coalescing to handle optional values
-        id = try? container.decode(Int.self, forKey: .id)
-        name = try? container.decode(String.self, forKey: .name)
-        eventID = try? container.decode(Int.self, forKey: .eventID)
-        date = try? container.decode(String.self, forKey: .date)
+        id = try? container.decodeIfPresent(Int.self, forKey: .id)
+        name = try? container.decodeIfPresent(String.self, forKey: .name)
+        eventID = try? container.decodeIfPresent(Int.self, forKey: .eventID)
+        date = try? container.decodeIfPresent(String.self, forKey: .date)
 
     }
 }
@@ -231,9 +231,9 @@ struct OwningStore : Codable {
         let container = try decoder.container(keyedBy: CodingKeys.self)
 
         // Decode each property and use nil coalescing to handle optional values
-        id = try? container.decode(Int.self, forKey: .id)
-        name = try? container.decode(String.self, forKey: .name)
-        image = try? container.decode(ImageAttachment.self, forKey: .image)
+        id = try? container.decodeIfPresent(Int.self, forKey: .id)
+        name = try? container.decodeIfPresent(String.self, forKey: .name)
+        image = try? container.decodeIfPresent(ImageAttachment.self, forKey: .image)
     }
 }
 
@@ -257,10 +257,10 @@ struct ImageAttachment : Codable {
         let container = try decoder.container(keyedBy: CodingKeys.self)
 
         // Decode each property and use nil coalescing to handle optional values
-        id = try? container.decode(Int.self, forKey: .id)
-        attachmentContentType = try? container.decode(String.self, forKey: .attachmentContentType)
-        attachmentFileName = try? container.decode(String.self, forKey: .attachmentFileName)
-        attachment = try? container.decode(AttachmentDetails.self, forKey: .attachment)
+        id = try? container.decodeIfPresent(Int.self, forKey: .id)
+        attachmentContentType = try? container.decodeIfPresent(String.self, forKey: .attachmentContentType)
+        attachmentFileName = try? container.decodeIfPresent(String.self, forKey: .attachmentFileName)
+        attachment = try? container.decodeIfPresent(AttachmentDetails.self, forKey: .attachment)
     }
 }
 
@@ -280,8 +280,8 @@ struct AttachmentDetails : Codable {
         let container = try decoder.container(keyedBy: CodingKeys.self)
 
         // Decode each property and use nil coalescing to handle optional values
-        product = try? container.decode(String.self, forKey: .product)
-        large = try? container.decode(String.self, forKey: .large)
+        product = try? container.decodeIfPresent(String.self, forKey: .product)
+        large = try? container.decodeIfPresent(String.self, forKey: .large)
     }
 }
 
@@ -301,8 +301,8 @@ struct Master : Codable {
         let container = try decoder.container(keyedBy: CodingKeys.self)
 
         // Decode each property and use nil coalescing to handle optional values
-        id = try? container.decode(Int.self, forKey: .id)
-        images = try? container.decode([ImageAttachment].self, forKey: .images)
+        id = try? container.decodeIfPresent(Int.self, forKey: .id)
+        images = try? container.decodeIfPresent([ImageAttachment].self, forKey: .images)
     }
 }
 

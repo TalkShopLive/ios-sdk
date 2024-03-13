@@ -16,7 +16,7 @@ public struct MessageBase: JSONCodable {
     public var channel: String?
     public var subscription: String?
     public var published: String?
-    public var messageType: MessageType
+    public var messageType: MessageType?
     public var payload: MessageData?
     public var actions: [MessageAction]?
     public var metaData: String?
@@ -106,14 +106,14 @@ public struct MessageBase: JSONCodable {
     public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         
-        self.payload = try container.decode(MessageData.self, forKey: .payload)
-        self.publisher = try container.decode(String.self, forKey: .publisher)
-        self.channel = try container.decode(String.self, forKey: .channel)
-        self.subscription = try container.decode(String.self, forKey: .subscription)
-        self.published = try container.decode(String.self, forKey: .published)
-        self.messageType = try container.decode(MessageType.self, forKey: .messageType)
-        self.actions = try container.decode([MessageAction].self, forKey: .actions)
-        self.metaData = try container.decode(String.self, forKey: .metaData)
+        self.payload = try container.decodeIfPresent(MessageData.self, forKey: .payload)
+        self.publisher = try container.decodeIfPresent(String.self, forKey: .publisher)
+        self.channel = try container.decodeIfPresent(String.self, forKey: .channel)
+        self.subscription = try container.decodeIfPresent(String.self, forKey: .subscription)
+        self.published = try container.decodeIfPresent(String.self, forKey: .published)
+        self.messageType = try container.decodeIfPresent(MessageType.self, forKey: .messageType)
+        self.actions = try container.decodeIfPresent([MessageAction].self, forKey: .actions)
+        self.metaData = try container.decodeIfPresent(String.self, forKey: .metaData)
     }
 }
 
@@ -154,8 +154,8 @@ public struct Sender : JSONCodable{
     public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         
-        id = try container.decode(String.self, forKey: .id)
-        name = try container.decode(String.self, forKey: .name)
+        id = try container.decodeIfPresent(String.self, forKey: .id)
+        name = try container.decodeIfPresent(String.self, forKey: .name)
         if let profileURL = try? container.decode(URL.self, forKey: .profileUrl) {
             profileUrl = profileURL.absoluteString
         } else {
@@ -186,7 +186,7 @@ public struct MessageData: JSONCodable {
     public var createdAt: String? // Represents the current timestamp in seconds.
     public var sender: Sender? //
     public var text: String? //The message to be sent.
-    public var type: MessageType // Enum representing the MessageType. Use .question if the text contains "?".
+    public var type: MessageType? // Enum representing the MessageType. Use .question if the text contains "?".
     public var platform: String? // Platform identifier, e.g., "sdk".
     
     /// Enum defining different types of messages.
@@ -242,11 +242,11 @@ public struct MessageData: JSONCodable {
     public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         
-        id = try? container.decode(Int.self, forKey: .id)
-        createdAt = try container.decode(String.self, forKey: .createdAt)
-        text = try container.decode(String.self, forKey: .text)
-        type = try container.decode(MessageType.self, forKey: .type)
-        platform = try container.decode(String.self, forKey: .platform)
+        id = try? container.decodeIfPresent(Int.self, forKey: .id)
+        createdAt = try container.decodeIfPresent(String.self, forKey: .createdAt)
+        text = try container.decodeIfPresent(String.self, forKey: .text)
+        type = try container.decodeIfPresent(MessageType.self, forKey: .type)
+        platform = try container.decodeIfPresent(String.self, forKey: .platform)
         
         do {
             // Try to decode the "sender" key as a Sender object
@@ -376,10 +376,10 @@ public struct MessageAction : JSONCodable{
     public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         
-        actionType = try container.decode(String.self, forKey: .actionType)
-        actionValue = try container.decode(String.self, forKey: .actionValue)
-        actionTimetoken = try container.decode(Int.self, forKey: .actionTimetoken)
-        publisher = try container.decode(String.self, forKey: .publisher)
+        actionType = try container.decodeIfPresent(String.self, forKey: .actionType)
+        actionValue = try container.decodeIfPresent(String.self, forKey: .actionValue)
+        actionTimetoken = try container.decodeIfPresent(Int.self, forKey: .actionTimetoken)
+        publisher = try container.decodeIfPresent(String.self, forKey: .publisher)
     }
     
     /// Encoder method to convert the struct to an encoded format.
