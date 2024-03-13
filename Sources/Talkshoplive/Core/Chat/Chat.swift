@@ -12,7 +12,7 @@ import PubNub
 
 // Protocol for the chat delegate to handle different chat events
 public protocol ChatDelegate: AnyObject {
-    func onNewMessage(_ message: MessageData)
+    func onNewMessage(_ message: MessageBase)
     // Add more methods for other events if needed
 }
 
@@ -67,7 +67,7 @@ public class Chat {
 // Extend Chat to conform to _ChatProviderDelegate for handling messages received from ChatProvider
 extension Chat: _ChatProviderDelegate {
     // Delegate method called when a new message is received
-    public func onMessageReceived(_ message: MessageData) {
+    public func onMessageReceived(_ message: MessageBase) {
         // Forward the received message to the ChatDelegate
         self.delegate?.onNewMessage(message)
     }

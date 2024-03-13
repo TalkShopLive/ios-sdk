@@ -156,8 +156,11 @@ public struct Sender : JSONCodable{
         
         id = try container.decode(String.self, forKey: .id)
         name = try container.decode(String.self, forKey: .name)
-        let profileURL = try container.decode(URL.self, forKey: .profileUrl)
-        profileUrl = profileURL.absoluteString
+        if let profileURL = try? container.decode(URL.self, forKey: .profileUrl) {
+            profileUrl = profileURL.absoluteString
+        } else {
+            profileUrl = nil
+        }
 
     }
     
