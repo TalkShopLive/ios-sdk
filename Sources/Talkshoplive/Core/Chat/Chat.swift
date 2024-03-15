@@ -68,7 +68,7 @@ public class Chat {
             completion(result)
         })
     }
-    
+
     // Clears all resources
     public func clean() {
         // Remove the delegate to prevent potential retain cycles
@@ -79,6 +79,30 @@ public class Chat {
         
         // Set the chat provider to nil to release its reference and free up memory
         self.chatProvider = nil
+    }
+
+    // Method to update user
+    public func updateUser(jwtToken: String, isGuest: Bool, completion: @escaping (Bool, Error?) -> Void) {
+        // Check if there's an existing JWT token
+        if let existingToken = self.chatProvider?.getJwtToken() {
+            // Compare existing token with the new token
+            if existingToken != jwtToken {
+                // Create a new ChatProvider instance with updated parameters
+                let newChatProvider = ChatProvider(jwtToken: jwtToken, isGuest: isGuest, showKey: self.showKey)
+                // Set the delegate to receive chat events from the new ChatProvider
+                newChatProvider.delegate = self
+                // Update the chatProvider property with the new instance
+                self.chatProvider = newChatProvider
+                // Call completion handler indicating success
+                completion(true,nil)
+            } else {
+                // If the new token is the same as the existing one, indicate failure with sameToken error
+                completion(false,APIClientError.sameToken)
+            }
+        } else {
+            // If there's no existing token, indicate failure with somethingWentWrong error
+            completion(false,APIClientError.somethingWentWrong)
+        }
     }
 }
 

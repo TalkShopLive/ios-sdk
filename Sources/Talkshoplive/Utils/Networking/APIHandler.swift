@@ -15,6 +15,33 @@ public enum APIClientError: Error {
     case invalidData
     case requestDisabled
     case authenticationInvalid
+    case sameToken
+    case somethingWentWrong
+}
+
+extension APIClientError: LocalizedError {
+    public var errorDescription: String? {
+        switch self {
+        case .invalidURL:
+            return "Invalid URL"
+        case .requestFailed(let error):
+            return "Request failed: \(error.localizedDescription)"
+        case .noData:
+            return "No data received"
+        case .responseDecodingFailed(let error):
+            return "Response decoding failed: \(error.localizedDescription)"
+        case .invalidData:
+            return "Invalid data"
+        case .requestDisabled:
+            return "Request is disabled"
+        case .authenticationInvalid:
+            return "Authentication is invalid"
+        case .sameToken:
+            return "Same token error"
+        case .somethingWentWrong:
+            return "Something went wrong"
+        }
+    }
 }
 
 public struct EnvConfig: Codable {
@@ -142,7 +169,7 @@ public class APIHandler {
             
             do {
                 // Convert the response data to a JSON string
-                let json = try JSONSerialization.jsonObject(with: data, options: .allowFragments)
+//                let json = try JSONSerialization.jsonObject(with: data, options: .allowFragments)
 //                print("API Response: ", json)
                 
                 let apiResponse = try JSONDecoder().decode(responseType, from: data)
@@ -207,7 +234,7 @@ public class APIHandler {
             
             do {
                 // Convert the response data to a JSON string
-                let json = try JSONSerialization.jsonObject(with: data, options: .allowFragments)
+//                let json = try JSONSerialization.jsonObject(with: data, options: .allowFragments)
 //                print("API Response: ", json)
                 
                 let apiResponse = try JSONDecoder().decode(responseType, from: data)
