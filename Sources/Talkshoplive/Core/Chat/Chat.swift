@@ -23,7 +23,7 @@ public class Chat {
     // MARK: - Properties
     
     private let showKey: String
-    private let chatProvider: ChatProvider?
+    private var chatProvider: ChatProvider?
     public var delegate: ChatDelegate?
     
     // MARK: - Initializer
@@ -59,6 +59,31 @@ public class Chat {
         self.chatProvider?.fetchPastMessages(limit: limit ?? 25, start: start, includeActions: includeActions, includeMeta: includeMeta, includeUUID: includeUUID, completion: { result in
             completion(result)
         })
+    }
+    
+    // Method to update user
+    public func updateUser(jwtToken: String, isGuest: Bool, completion: @escaping (Bool, Error?) -> Void) {
+        // Check if there's an existing JWT token
+        if let existingToken = self.chatProvider?.getJwtToken() {
+            // Compare existing token with the new token
+            if existingToken != jwtToken {
+                // Create a new ChatProvider instance with updated parameters
+                let newChatProvider = ChatProvider(jwtToken: jwtToken, isGuest: isGuest, showKey: self.showKey)
+                // Set the delegate to receive chat events from the new ChatProvider
+                newChatProvider.delegate = self
+                // Update the chatProvider property with the new instance
+                self.chatProvider = newChatProvider
+                // Call completion handler indicating success
+                completion(true,nil)
+            } else {
+                // If the new token is the same as the existing one, indicate failure with sameToken error
+                completion(false,APIClientError.sameToken)
+            }
+        } else {
+            // If there's no existing token, indicate failure with somethingWentWrong error
+            completion(false,APIClientError.somethingWentWrong)
+        }
+        
     }
 }
 

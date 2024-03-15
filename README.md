@@ -182,6 +182,23 @@ self.chatInstance.getChatMessages(page: page, completion: { result in
     }
 })
 ```
+#### `updateUser(jwtToken:isGuest:completion:)`
+
+Use initialized instance of the Chat class and update use with updated jwtToken
+
+- Parameters:
+  - `jwtToken`: Updated JWT token 
+  - `isGuest`: A boolean indicating whether the user will updated to guest user (true) or a federated user (false).
+
+```
+self.chatInstance.updateUser(jwtToken: "Your Updated JWTToken", isGuest:true/false) { status, error in
+    if status {
+        print("User Updated successfully!")
+    } else {
+        print("Error occurred: \(error.localizedDescription)")
+    }
+}
+```
     
 ## Run the Tests: 
 1. In  package manager, navigate to the relatedFile_tests target. After that Click the "Play" button or use the shortcut Cmd + U to build and run the tests.
