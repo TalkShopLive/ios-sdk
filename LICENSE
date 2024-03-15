@@ -173,6 +173,11 @@
       incurred by, or claims asserted against, such Contributor by reason
       of your accepting any such warranty or additional liability.
 
+  10. Telemetry Data. Notwithstanding any other terms of this License, 
+      telemetry data collected via "Collector" are provided "as is" and are
+      not meant to be modified or removed by You. Any attempt to modify, 
+      manipulate, or remove such data is a violation of this License.
+
    END OF TERMS AND CONDITIONS
 
    APPENDIX: How to apply the Apache License to your work.
