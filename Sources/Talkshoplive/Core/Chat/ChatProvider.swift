@@ -24,8 +24,6 @@ public class ChatProvider {
     // MARK: - Properties
     
     private var pubnub: PubNub?
-    private var config: EnvConfig
-    private var token: String?
     private var messageToken: MessagingTokenResponse?
     private var isGuest: Bool
     private var showKey: String
@@ -33,6 +31,7 @@ public class ChatProvider {
     private var publishChannel: String?
     private var eventsChannel: String?
     public var delegate: _ChatProviderDelegate?
+    private var jwtToken: String?
 
     // MARK: - Initializer
     
@@ -41,10 +40,9 @@ public class ChatProvider {
         // Load configuration from ConfigLoader
         do {
             self.isGuest = isGuest
-            self.config = try Config.loadConfig()
             self.showKey = showKey
-            self.createMessagingToken(jwtToken: jwtToken)
-            
+            self.setJwtToken(jwtToken)
+            self.createMessagingToken(jwtToken:jwtToken)
         } catch {
             // Handle configuration loading failure
             fatalError("Failed to load configuration: \(error)")
@@ -60,6 +58,16 @@ public class ChatProvider {
         Config.shared.isDebugMode() ? print("Chat instance is being deallocated.") : ()
     }
 
+    // Save the messaging token
+    func setJwtToken(_ token: String) {
+        self.jwtToken = token
+    }
+    
+    // Get the saved messaging token
+    public func getJwtToken() -> String? {
+        return self.jwtToken
+    }
+    
     // MARK: - Messaging Token
     
     // Save the messaging token
@@ -168,7 +176,7 @@ public class ChatProvider {
                 case self.publishChannel :
                     let convertedMessage = MessageBase(pubNubMessage: message)
                     DispatchQueue.main.async {
-                        self.delegate?.onMessageReceived(MessageBase(pubNubMessage: message))
+                        self.delegate?.onMessageReceived(convertedMessage)
                     }
                 case self.eventsChannel:
                     // Handle events channel if needed
