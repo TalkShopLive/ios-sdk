@@ -135,10 +135,24 @@ Use initialized instance of the Chat class and sends a message using that instan
 
 - Parameters:
   - `message`: The text message to be sent.
+  
+- Completion:
+  - `status`: A boolean value indicating whether the message was sent successfully or not.
+  - `error`: An optional error that occurred during the sending process, if any.
 
 - Send Message
 ```
-self.chatInstance.sendMessage(message: "Your Message Here")
+self.chatInstance.sendMessage(message: "Your Message Here") { status, error in
+    if let error = error {
+        print("Error occurred: \(error.localizedDescription)")
+    } else {
+        if status {
+            print("Message sent successfully!")
+        } else {
+            print("Failed to send message.")
+        }
+    }
+}
 ```
 
 - Recieve New message event listener

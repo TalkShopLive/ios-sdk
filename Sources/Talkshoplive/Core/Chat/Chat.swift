@@ -56,9 +56,9 @@ public class Chat {
     // MARK: - Public Methods
     
     // Method to send a new message
-    public func sendMessage(message: String) {
+    public func sendMessage(message: String, completion: @escaping (Bool, Error?) -> Void) {
         // Call the publish method in ChatProvider to send the message
-        self.chatProvider?.publish(message: message)
+        self.chatProvider?.publish(message: message, completion: completion)
     }
     
     // Method to retrieve chat messages, optionally specifying a page for pagination.

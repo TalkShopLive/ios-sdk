@@ -252,7 +252,7 @@ public class ChatProvider {
     
     /// Publishes a message to the configured channel.
     /// - Parameter message: The message to be published.
-    internal func publish(message: String) {
+    internal func publish(message: String, completion: @escaping (Bool, Error?) -> Void)  {
         // Check if the message length is within the specified limit
         guard message.count <= 200 else {
             // Handle the case where the message exceeds the maximum length
@@ -277,9 +277,11 @@ public class ChatProvider {
                     switch result {
                     case let .success(timetoken):
                         Config.shared.isDebugMode() ? print("Publish Response at \(timetoken)") : ()
+                        completion(true, nil) // Indicate success with status true and no error
                     case let .failure(error):
                         // Print an error message in case of a failure during publishing
                         print("Publishing Error: \(error.localizedDescription)")
+                        completion(false, error) // Indicate failure with status false and pass the error
                     }
                 }
             }
