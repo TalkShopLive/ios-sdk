@@ -53,9 +53,8 @@ public class ChatProvider {
     
     // Deinitialize the ChatProvider instance
     deinit {
-        self.unSubscribeChannels()
         // Perform cleanup or deallocate resources here
-        Config.shared.isDebugMode() ? print("Chat instance is being deallocated.") : ()
+        Config.shared.isDebugMode() ? print("ChatProvider instance is being deallocated.") : ()
     }
 
     // Save the messaging token
@@ -334,5 +333,23 @@ public class ChatProvider {
              }
          })
      }
+    
+    // MARK: - Clears the connection
+    internal func clearConnection() {
+        // Unsubscribe from all channels
+        self.unSubscribeChannels()
+        
+        // Reset instance variables to nil
+        self.pubnub = nil
+        self.token = nil
+        self.messageToken = nil
+        
+        // Remove all channels from the list
+        self.channels.removeAll()
+        
+        // Reset specific channels to nil
+        self.publishChannel = nil
+        self.eventsChannel = nil
+    }
 
 }

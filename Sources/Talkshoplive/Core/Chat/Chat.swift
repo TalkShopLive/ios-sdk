@@ -45,6 +45,14 @@ public class Chat {
         self.chatProvider?.delegate = self
     }
     
+    // MARK: - Deinitializer
+    
+    // Deinitialize the ChatProvider instance
+    deinit {
+        // Perform cleanup or deallocate resources here
+        Config.shared.isDebugMode() ? print("Chat instance is being deallocated.") : ()
+    }
+    
     // MARK: - Public Methods
     
     // Method to send a new message
@@ -60,7 +68,19 @@ public class Chat {
             completion(result)
         })
     }
-    
+
+    // Clears all resources
+    public func clean() {
+        // Remove the delegate to prevent potential retain cycles
+        self.chatProvider?.delegate = nil
+        
+        // Clear the connection and release any resources held by the chat provider
+        self.chatProvider?.clearConnection()
+        
+        // Set the chat provider to nil to release its reference and free up memory
+        self.chatProvider = nil
+    }
+
     // Method to update user
     public func updateUser(jwtToken: String, isGuest: Bool, completion: @escaping (Bool, Error?) -> Void) {
         // Check if there's an existing JWT token
@@ -83,7 +103,6 @@ public class Chat {
             // If there's no existing token, indicate failure with somethingWentWrong error
             completion(false,APIClientError.somethingWentWrong)
         }
-        
     }
 }
 

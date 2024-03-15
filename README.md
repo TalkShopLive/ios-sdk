@@ -182,6 +182,15 @@ self.chatInstance.getChatMessages(page: page, completion: { result in
     }
 })
 ```
+
+#### `clean()`
+
+Use to clear all resources associated with the chat instance, including connections and delegates.
+
+```
+self.chatInstance.clean()
+
+
 #### `updateUser(jwtToken:isGuest:completion:)`
 
 Use initialized instance of the Chat class and update use with updated jwtToken
