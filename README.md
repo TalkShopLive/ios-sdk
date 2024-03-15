@@ -182,6 +182,15 @@ self.chatInstance.getChatMessages(page: page, completion: { result in
     }
 })
 ```
+
+#### `clean()`
+
+Use to clear all resources associated with the chat instance, including connections and delegates.
+
+```
+self.chatInstance.clean()
+
+```
     
 ## Run the Tests: 
 1. In  package manager, navigate to the relatedFile_tests target. After that Click the "Play" button or use the shortcut Cmd + U to build and run the tests.

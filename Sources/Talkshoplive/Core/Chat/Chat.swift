@@ -23,7 +23,7 @@ public class Chat {
     // MARK: - Properties
     
     private let showKey: String
-    private let chatProvider: ChatProvider?
+    private var chatProvider: ChatProvider?
     public var delegate: ChatDelegate?
     
     // MARK: - Initializer
@@ -45,6 +45,14 @@ public class Chat {
         self.chatProvider?.delegate = self
     }
     
+    // MARK: - Deinitializer
+    
+    // Deinitialize the ChatProvider instance
+    deinit {
+        // Perform cleanup or deallocate resources here
+        Config.shared.isDebugMode() ? print("Chat instance is being deallocated.") : ()
+    }
+    
     // MARK: - Public Methods
     
     // Method to send a new message
@@ -59,6 +67,18 @@ public class Chat {
         self.chatProvider?.fetchPastMessages(limit: limit ?? 25, start: start, includeActions: includeActions, includeMeta: includeMeta, includeUUID: includeUUID, completion: { result in
             completion(result)
         })
+    }
+    
+    // Clears all resources
+    public func clean() {
+        // Remove the delegate to prevent potential retain cycles
+        self.chatProvider?.delegate = nil
+        
+        // Clear the connection and release any resources held by the chat provider
+        self.chatProvider?.clearConnection()
+        
+        // Set the chat provider to nil to release its reference and free up memory
+        self.chatProvider = nil
     }
 }
 
