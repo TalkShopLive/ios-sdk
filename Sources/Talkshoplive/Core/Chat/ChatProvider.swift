@@ -343,7 +343,6 @@ public class ChatProvider {
         
         // Reset instance variables to nil
         self.pubnub = nil
-        self.token = nil
         self.messageToken = nil
         
         // Remove all channels from the list
