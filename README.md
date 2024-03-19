@@ -204,6 +204,7 @@ Use to clear all resources associated with the chat instance, including connecti
 ```
 self.chatInstance.clean()
 
+```
 
 #### `updateUser(jwtToken:isGuest:completion:)`
 
@@ -212,6 +213,9 @@ Use initialized instance of the Chat class and update use with updated jwtToken
 - Parameters:
   - `jwtToken`: Updated JWT token 
   - `isGuest`: A boolean indicating whether the user will updated to guest user (true) or a federated user (false).
+  - `completion`:
+      - `status`: A boolean value indicating whether the user was updated successfully or not.
+      - `error`: An optional error that occurred during the sending process, if any.
 
 ```
 self.chatInstance.updateUser(jwtToken: "Your Updated JWTToken", isGuest:true/false) { status, error in
@@ -221,6 +225,25 @@ self.chatInstance.updateUser(jwtToken: "Your Updated JWTToken", isGuest:true/fal
         print("Error occurred: \(error.localizedDescription)")
     }
 }
+```
+
+#### `countMessages(completion:)`
+
+Use to retrieve the count of messages using a chat instance.
+
+- `completion`:
+  - `count`: An integer value representing the total count of messages.
+  - `error`: An optional error that occurred during the counting process, if any.
+
+```
+self.chat?.countMessages({ count, error in
+    if let error = error {
+        print(error.localizedDescription)
+        print("Error fetching messages count: \(error.localizedDescription))"
+    } else {
+        print("Message Count : \(count)")
+    }
+})
 ```
     
 ## Run the Tests: 

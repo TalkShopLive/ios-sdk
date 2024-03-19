@@ -104,9 +104,15 @@ public class Chat {
             completion(false,APIClientError.somethingWentWrong)
         }
     }
+
+    //Methos to count the total number of messages using the chat provider.
+    public func countMessages(_ completion: @escaping (Int, Error?) -> Void?) {
+        // Call the count method of the chat provider, passing the completion closure
+        self.chatProvider?.count(completion: completion)
+    }
 }
 
-// MARK: - Chat Extension
+// MARK: - Chat Listeners
 
 // Extend Chat to conform to _ChatProviderDelegate for handling messages received from ChatProvider
 extension Chat: _ChatProviderDelegate {
