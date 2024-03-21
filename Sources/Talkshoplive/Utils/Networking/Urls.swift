@@ -16,11 +16,12 @@ public enum APIEndpoint {
     case getGuestUserToken
     case getFederatedUserToken
     case getHlsUrl(fileName:String)
+    case deleteMessage(eventId:String,timetoken:String)
     
     var baseURL: String {
         do {
             switch self {
-            case .messagingToken, .getShows, .getCurrentEvent,.register,.getGuestUserToken,.getFederatedUserToken:
+            case .messagingToken, .getShows, .getCurrentEvent,.register,.getGuestUserToken,.getFederatedUserToken,.deleteMessage:
                 return try Config.loadAPIConfig().BASE_URL
             case .getClosedCaptions,.getHlsUrl:
                 return try Config.loadAPIConfig().ASSETS_URL
@@ -48,7 +49,8 @@ public enum APIEndpoint {
             return "/api2/v1/sdk/chat/federated_user_token"
         case .getHlsUrl(fileName: let fileName):
             return "/events/\(fileName)"
-            
+        case .deleteMessage(eventId: let eventId, timetoken: let timetoken):
+            return "/api2/v1/sdk/chat/messages/\(eventId)/\(timetoken)"
         }
     }
 }

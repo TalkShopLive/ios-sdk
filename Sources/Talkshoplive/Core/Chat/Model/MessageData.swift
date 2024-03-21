@@ -71,7 +71,7 @@ public struct MessageBase: JSONCodable {
         self.publisher = pubNubMessage.publisher
         self.channel = pubNubMessage.channel
         self.subscription = pubNubMessage.subscription
-        self.published = pubNubMessage.published.description.jsonStringify
+        self.published = String(pubNubMessage.published)
         self.messageType = MessageType(rawValue: pubNubMessage.messageType.rawValue) ?? .unknown
         self.metaData = pubNubMessage.metadata?.jsonStringify
         self.actions = self.toMessageActions(actions: pubNubMessage.actions)
@@ -188,6 +188,13 @@ public struct MessageData: JSONCodable {
     public var text: String? //The message to be sent.
     public var type: MessageType? // Enum representing the MessageType. Use .question if the text contains "?".
     public var platform: String? // Platform identifier, e.g., "sdk".
+    public var key: MessagePayloadKey? // Platform identifier, e.g., "sdk".
+    public var timeToken: String?
+    
+    public enum MessagePayloadKey: String, Codable {
+        case messageDeleted = "message_deleted"
+        // Add more cases as needed
+    }
     
     /// Enum defining different types of messages.
     public enum MessageType: String, Codable {
@@ -212,6 +219,8 @@ public struct MessageData: JSONCodable {
         case text
         case type
         case platform
+        case key
+        case timeToken = "payload"
     }
     
     // MARK: - Initializers
@@ -224,16 +233,20 @@ public struct MessageData: JSONCodable {
         self.text = nil
         self.type = .comment // Default value, adjust as needed
         self.platform = nil
+        self.key = nil
+        self.timeToken = nil
     }
     
     /// Custom initializer with parameters for all properties.
-    public init(id: Int? = nil, createdAt: String? = nil, sender: Sender? = nil, text: String? = nil, type: MessageType? = nil, platform: String? = nil) {
+    public init(id: Int? = nil, createdAt: String? = nil, sender: Sender? = nil, text: String? = nil, type: MessageType? = nil, platform: String? = nil,key:MessagePayloadKey? = nil, payload:String? = nil) {
         self.id = id
         self.createdAt = createdAt
         self.sender = sender
         self.text = text
         self.type = type ?? .comment // Default value, adjust as needed
         self.platform = platform
+        self.key = key
+        self.timeToken = payload
     }
     
     // MARK: - Codable
@@ -247,14 +260,17 @@ public struct MessageData: JSONCodable {
         text = try container.decodeIfPresent(String.self, forKey: .text)
         type = try container.decodeIfPresent(MessageType.self, forKey: .type)
         platform = try container.decodeIfPresent(String.self, forKey: .platform)
+        key = try container.decodeIfPresent(MessagePayloadKey.self, forKey: .key)
+        timeToken = try container.decodeIfPresent(String.self, forKey: .timeToken)
+
         
         do {
             // Try to decode the "sender" key as a Sender object
-            sender = try container.decode(Sender.self, forKey: .sender)
+            sender = try container.decodeIfPresent(Sender.self, forKey: .sender)
         } catch DecodingError.typeMismatch {
             // If decoding as Sender fails due to type mismatch (probably it's a String),
             // try to decode it as a String and create a Sender object with the provided value
-            let senderString = try container.decode(String.self, forKey: .sender)
+            let senderString = try container.decodeIfPresent(String.self, forKey: .sender)
             sender = Sender(id: senderString, name: senderString)
         }
     }
@@ -269,6 +285,8 @@ public struct MessageData: JSONCodable {
         try container.encode(text, forKey: .text)
         try container.encode(type, forKey: .type)
         try container.encode(platform, forKey: .platform)
+        try container.encode(key, forKey: .key)
+        try container.encode(timeToken, forKey: .timeToken)
     }
 }
 

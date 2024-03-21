@@ -13,6 +13,7 @@ import PubNub
 // Protocol for the chat provider delegate to handle different chat events
 public protocol _ChatProviderDelegate: AnyObject {
     func onMessageReceived(_ message: MessageBase)
+    func onMessageRemoved(_ message: MessageBase)
     // Add more methods for other events if needed
 }
 
@@ -36,6 +37,10 @@ public class ChatProvider {
     // MARK: - Initializer
     
     // Initialize ChatProvider with a JWT token and show key
+    /// - Parameters:
+    ///   - jwtToken: The JWT token used for authentication.
+    ///   - isGuest: A boolean indicating whether the user is a guest.
+    ///   - showKey: The show key used to configure the chat provider.
     public init(jwtToken: String, isGuest: Bool, showKey: String) {
         // Load configuration from ConfigLoader
         do {
@@ -57,12 +62,16 @@ public class ChatProvider {
         Config.shared.isDebugMode() ? print("ChatProvider instance is being deallocated.") : ()
     }
 
-    // Save the messaging token
+    // MARK: - JWT Token
+    
+    // Save the JWT token.
+    /// - Parameter token: The JWT token to be saved.
     func setJwtToken(_ token: String) {
         self.jwtToken = token
     }
     
-    // Get the saved messaging token
+    /// Get the saved JWT token.
+    /// - Returns: The saved JWT token, if available.
     public func getJwtToken() -> String? {
         return self.jwtToken
     }
@@ -70,16 +79,19 @@ public class ChatProvider {
     // MARK: - Messaging Token
     
     // Save the messaging token
+    /// - Parameter token: The messaging token to be saved.
     func setMessagingToken(_ token: MessagingTokenResponse) {
         self.messageToken = token
     }
     
     // Get the saved messaging token
+    /// - Returns: The saved messaging token, if available.
     public func getMessagingToken() -> MessagingTokenResponse? {
         return self.messageToken
     }
 
     // Create a messaging token asynchronously
+    /// - Parameter jwtToken: The JWT token used for authentication.
     private func createMessagingToken(jwtToken: String) {
         // Call Networking to fetch the messaging token
         Networking.createMessagingToken(jwtToken: jwtToken, isGuest: self.isGuest) { result in
@@ -129,7 +141,8 @@ public class ChatProvider {
     
     // MARK: - Channel Subscription
 
-    // Subscribe to channels based on the showKey
+    /// Subscribe to channels based on the showKey.
+    /// - Parameter showKey: The show key used to determine which channels to subscribe to.
     private func subscribeChannels(showKey: String) {
         Networking.getCurrentEvent(showKey: showKey, completion: { result in
             switch result {
@@ -163,23 +176,29 @@ public class ChatProvider {
             switch event {
             case .messageReceived(let message):
                 // Handle message received event
-                Config.shared.isDebugMode() ? print("The \(message.channel) channel received a message at \(message.published)") : ()
+                Config.shared.isDebugMode() ? print("messageReceived:=> The \(message.channel) channel received a listener event at \(message.published)") : ()
                 
-                // Check if there is a subscription info
-                if let subscription = message.subscription {
-                    Config.shared.isDebugMode() ? print("The channel-group or wildcard that matched this channel was \(subscription)") : ()
-                }
+                // Convert the received message into a MessageBase object
+                let convertedMessage = MessageBase(pubNubMessage: message)
                 
                 // Check the channel type
                 switch message.channel {
                 case self.publishChannel :
-                    let convertedMessage = MessageBase(pubNubMessage: message)
+                    // If the message is from the publish channel, notify the delegate asynchronously
                     DispatchQueue.main.async {
                         self.delegate?.onMessageReceived(convertedMessage)
                     }
+                    
                 case self.eventsChannel:
-                    // Handle events channel if needed
-                    break
+                    // If the message is from the events channel
+                    if let payloadKey = convertedMessage.payload?.key, payloadKey == .messageDeleted {
+                        // If the payload key is "messageDeleted", notify the delegate asynchronously
+                        DispatchQueue.main.async {
+                            self.delegate?.onMessageRemoved(convertedMessage)
+                        }
+                    }
+                    // Handle other scenarios related to the events channel if needed
+
                 default :
                     // Handle other channels
                     Config.shared.isDebugMode() ? print("The message is \(message.payload) and was sent by \(message.publisher ?? "")") : ()
@@ -248,10 +267,14 @@ public class ChatProvider {
     }
 
 
-    // MARK: - Message Publishing
+    // MARK: - Publish Message
     
     /// Publishes a message to the configured channel.
-    /// - Parameter message: The message to be published.
+    /// - Parameters:
+    ///   - message: The message to be published.
+    ///   - completion: A closure to be called after the publishing operation completes. It receives two parameters:
+    ///                 - success: A boolean value indicating whether the publishing operation was successful.
+    ///                 - error: An optional Error object indicating any error that occurred during the publishing operation.
     internal func publish(message: String, completion: @escaping (Bool, Error?) -> Void)  {
         // Check if the message length is within the specified limit
         guard message.count <= 200 else {
@@ -337,13 +360,14 @@ public class ChatProvider {
      }
     
     // MARK: - Clears the connection
+    
+    /// Clears the connection by unsubscribing from all channels, resetting instance variables to nil, and removing channels from the list.
     internal func clearConnection() {
         // Unsubscribe from all channels
         self.unSubscribeChannels()
         
         // Reset instance variables to nil
         self.pubnub = nil
-        self.token = nil
         self.messageToken = nil
         
         // Remove all channels from the list
@@ -352,6 +376,23 @@ public class ChatProvider {
         // Reset specific channels to nil
         self.publishChannel = nil
         self.eventsChannel = nil
+    }
+    
+    // MARK: - Delete Message
+
+    /// Unpublishes a message of specified timetoken.
+    /// - Parameters:
+    ///   - timetoken: The timetoken of the message when it's published.
+    ///   - completion: A closure that receives the result of the deletion operation as a `Result` enum with a `Bool` indicating success or failure and an `Error` in case of failure.
+    internal func unPublishMessage(timetoken: String, completion: @escaping (Result<Bool, Error>) -> Void) {
+        // Check if the publish channel and JWT token are available
+        if let channel = publishChannel, let jwtToken = self.getJwtToken() {
+            // Call the Networking's deletMessage method to delete the message
+            Networking.deletMessage(jwtToken: jwtToken, eventId: channel, timeToken: timetoken) { result in
+                // Invoke the completion handler with the result of the deletion operation
+                completion(result)
+            }
+        }
     }
 
 }

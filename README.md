@@ -114,9 +114,9 @@ The TSL iOS SDK provides methods for fetching details of a specific current even
 
 ### Methods
 
-#### `init(jwtToken:isGuest:showKey:mode:refresh:)`
+#### `init(jwtToken:isGuest:showKey)`
 
-Initializes a new instance of the Chat class.
+Initializes a new instance of the Chat class and confirm the delegate to recieve chat events.
 
 - Parameters:
   - `jwtToken`: Generated JWT token
@@ -126,6 +126,7 @@ Initializes a new instance of the Chat class.
 
 ```
 let chatInstance = Talkshoplive.Chat(jwtToken: "YourJWTToken", isGuest:true/false, showKey: "YourShowKey")
+chatInstance.delegate = someContentViewModel
 
 ```
 
@@ -142,15 +143,11 @@ Use initialized instance of the Chat class and sends a message using that instan
 
 - Send Message
 ```
-self.chatInstance.sendMessage(message: "Your Message Here") { status, error in
-    if let error = error {
-        print("Error occurred: \(error.localizedDescription)")
+self.chatInstance.sendMessage(message: newMessage, completion: {status, error in
+    if status {
+        print("Message Send Successfully", status)
     } else {
-        if status {
-            print("Message sent successfully!")
-        } else {
-            print("Failed to send message.")
-        }
+        print("Error occurred: \(error.localizedDescription)")
     }
 }
 ```
@@ -164,6 +161,38 @@ class ContentViewModel: ObservableObject, ChatDelegate {
 }
 
 ```
+
+#### `deleteMessage(timeToken:)`
+
+
+- Parameters:
+  - `timeToken `: The time token when message was published.
+  
+- Completion:
+  - `status`: A boolean value indicating whether the message was deleted successfully or not.
+  - `error`: An optional error that occurred during the deletion process, if any.
+
+- Delete Message
+```
+self.chatInstance.deleteMessage(timeToken: timetoken, completion: { status, error in
+        if status {
+            print("Message deleted successfully!")
+        } else {
+            print("Failed to delete message : “\(error.localizedDescription))
+        }
+}
+```
+
+- Recieve Delete message event listener
+```
+class ContentViewModel: ObservableObject, ChatDelegate {
+    func onDeleteMessage(_ message: Talkshoplive.MessageBase) {
+        // Handle the deleted message.
+    }
+}
+
+```
+
 #### `getChatMessages(page:includeActions:includeMeta:includeUUID:completion:)`
 
 Use to retrieve messages for a specific page, including or excluding actions, metadata, and UUID in the response.
@@ -203,6 +232,7 @@ Use to clear all resources associated with the chat instance, including connecti
 
 ```
 self.chatInstance.clean()
+```
 
 
 #### `updateUser(jwtToken:isGuest:completion:)`
