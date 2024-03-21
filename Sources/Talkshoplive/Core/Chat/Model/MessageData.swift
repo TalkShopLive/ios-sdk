@@ -77,7 +77,7 @@ public struct MessageBase: JSONCodable {
         self.actions = self.toMessageActions(actions: pubNubMessage.actions)
     }
     
-    public func toMessageActions(actions : [PubNubMessageAction]) -> [MessageAction]{
+    public func toMessageActions(actions: [PubNubMessageAction]) -> [MessageAction]{
         var actionsArray = [MessageAction]()
         for i in actions {
             let actionObject = MessageAction(action: i)
@@ -238,7 +238,7 @@ public struct MessageData: JSONCodable {
     }
     
     /// Custom initializer with parameters for all properties.
-    public init(id: Int? = nil, createdAt: String? = nil, sender: Sender? = nil, text: String? = nil, type: MessageType? = nil, platform: String? = nil,key:MessagePayloadKey? = nil, payload:String? = nil) {
+    public init(id: Int? = nil, createdAt: String? = nil, sender: Sender? = nil, text: String? = nil, type: MessageType? = nil, platform: String? = nil,key: MessagePayloadKey? = nil, payload: String? = nil) {
         self.id = id
         self.createdAt = createdAt
         self.sender = sender
@@ -323,7 +323,7 @@ public struct MessagePage: JSONCodable {
     }
     
     /// Custom initializer to create a MessagePage object from a PubNubBoundedPageBase.
-    public init(page : PubNubBoundedPageBase) {
+    public init(page: PubNubBoundedPageBase) {
         self.start = page.start.map { Int($0) }
         self.limit = page.limit
     }
@@ -381,7 +381,7 @@ public struct MessageAction : JSONCodable{
     }
     
     /// Custom initializer to create a MessagePage object from a PubNubBoundedPageBase.
-    public init(action : PubNubMessageAction) {
+    public init(action: PubNubMessageAction) {
         actionType = action.actionType
         actionValue = action.actionValue
         actionTimetoken = Int(action.actionTimetoken)

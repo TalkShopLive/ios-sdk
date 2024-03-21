@@ -110,7 +110,7 @@ public class ChatProvider {
                 
             case .failure(let error):
                 // Handle token retrieval failure
-                Config.shared.isDebugMode() ? print("Token retrieval failure. Error: \(error.localizedDescription)") : ()
+                Config.shared.isDebugMode() ? print("Token retrieval Failed: \(error.localizedDescription)") : ()
                 // You might want to handle the error appropriately, e.g., show an alert to the user or log it.
                 break
             }
@@ -279,7 +279,7 @@ public class ChatProvider {
         // Check if the message length is within the specified limit
         guard message.count <= 200 else {
             // Handle the case where the message exceeds the maximum length
-            print("Publishing Error:: Message exceeds maximum length of 200 characters.")
+            print("Message Sending Failed: Message exceeds maximum length of 200 characters.")
             return
         }
         
@@ -299,11 +299,11 @@ public class ChatProvider {
                 pubnub?.publish(channel: channel, message: messageObject) { result in
                     switch result {
                     case let .success(timetoken):
-                        Config.shared.isDebugMode() ? print("Publish Response at \(timetoken)") : ()
+                        Config.shared.isDebugMode() ? print("Message Sent!") : ()
                         completion(true, nil) // Indicate success with status true and no error
                     case let .failure(error):
                         // Print an error message in case of a failure during publishing
-                        print("Publishing Error: \(error.localizedDescription)")
+                        Config.shared.isDebugMode() ? print("Message Sending Failed: \(error.localizedDescription)") : ()
                         completion(false, error) // Indicate failure with status false and pass the error
                     }
                 }
@@ -319,7 +319,7 @@ public class ChatProvider {
     ///   - start: timestamp of last fetched message or now
     ///   - completion: A closure to be called upon completion, providing a Result with an array of MessageBase objects,
     ///                 an optional MessagePage for pagination, or an error if the operation fails.
-    internal func fetchPastMessages(limit:Int = 25, start: Int? = nil, includeActions:Bool = true, includeMeta:Bool = true, includeUUID:Bool = true, completion: @escaping (Result<([MessageBase], MessagePage?), Error>) -> Void) {
+    internal func fetchPastMessages(limit: Int = 25, start: Int? = nil, includeActions: Bool = true, includeMeta: Bool = true, includeUUID: Bool = true, completion: @escaping (Result<([MessageBase], MessagePage?), Error>) -> Void) {
          // Use PubNub's fetchMessageHistory method to retrieve message history for specified channels
         pubnub?.fetchMessageHistory(for: self.channels, includeActions: includeActions, includeMeta: includeMeta, includeUUID: includeUUID, page: PubNubBoundedPageBase(start: start != nil ? UInt64(start!) : nil, limit: limit), completion: { result in
              do {
@@ -341,7 +341,7 @@ public class ChatProvider {
                             }
                             return convertedMessage
                          }
-                         
+                         print("SDK : Fetch History: \(messageArray)")
                          // Create a MessagePage object based on the next page information
                          let page = MessagePage(page: response.next as! PubNubBoundedPageBase)
                                                   
@@ -352,7 +352,7 @@ public class ChatProvider {
                      
                  case let .failure(error):
                      // Print an error message in case of a failure and invoke the completion closure with the error
-                     print("Failed History Fetch Response: \(error.localizedDescription)")
+                     print("Fetch History Failed: \(error.localizedDescription)")
                      completion(.failure(error))
                  }
              }
@@ -378,6 +378,36 @@ public class ChatProvider {
         self.eventsChannel = nil
     }
     
+    // MARK: - Messages count for specific channel
+    internal func count(completion: @escaping (Int, Error?) -> Void?) {
+          // Check if a channel is provided for counting messages
+          if let channel = self.publishChannel {
+              // Use PubNub to retrieve message counts for the specified channel
+              self.pubnub?.messageCounts(channels: [channel], completion: { result in
+                  switch result {
+                  case let .success(response):
+                      // If the count is available for the channel, handle it
+                      if let count = response[channel] {
+                          // Call the completion handler with the count
+                          completion(count, nil)
+                      } else {
+                          // No count found for the channel, handle this case
+                          completion(0, nil)
+                      }
+                  case let .failure(error):
+                      // Handle the failure case when retrieving message counts
+                      Config.shared.isDebugMode() ? print("Message Count Failed: \(error.localizedDescription)") : ()
+                      completion(0,error)
+                  }
+              })
+          } else {
+              // Handle the case when no channel is provided
+              Config.shared.isDebugMode() ? print("Message Count Failed: \(APIClientError.somethingWentWrong)") : ()
+              completion(0,APIClientError.somethingWentWrong)
+          }
+          
+      }
+    
     // MARK: - Delete Message
 
     /// Unpublishes a message of specified timetoken.
@@ -388,11 +418,19 @@ public class ChatProvider {
         // Check if the publish channel and JWT token are available
         if let channel = publishChannel, let jwtToken = self.getJwtToken() {
             // Call the Networking's deletMessage method to delete the message
-            Networking.deletMessage(jwtToken: jwtToken, eventId: channel, timeToken: timetoken) { result in
+            Networking.deleteMessage(jwtToken: jwtToken, eventId: channel, timeToken: timetoken) { result in
                 // Invoke the completion handler with the result of the deletion operation
-                completion(result)
+                switch result {
+                case .success(let status):
+                    Config.shared.isDebugMode() ? print("Message Deleted!") : ()
+                    completion(.success(status))
+                case .failure(let error):
+                    Config.shared.isDebugMode() ? print("Message Deletion Failed: \(error.localizedDescription)") : ()
+                    completion(.failure(error))
+                }
             }
         }
+        
     }
 
 }

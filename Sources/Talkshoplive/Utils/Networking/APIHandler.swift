@@ -129,7 +129,7 @@ public class APIHandler {
         task.resume()
     }
     
-    public func requestToRegister<T: Decodable>(clientKey:String, endpoint: APIEndpoint, method: HTTPMethod, body: Encodable?, responseType: T.Type, completion: @escaping (Result<T, Error>) -> Void) {
+    public func requestToRegister<T: Decodable>(clientKey: String, endpoint: APIEndpoint, method: HTTPMethod, body: Encodable?, responseType: T.Type, completion: @escaping (Result<T, Error>) -> Void) {
         
         let fullURL = endpoint.baseURL + endpoint.path
         
@@ -145,6 +145,7 @@ public class APIHandler {
         // Add x-tsl-sdk-key header
         request.addValue(clientKey, forHTTPHeaderField: "x-tsl-sdk-key")
 
+        print("URL", url)
         
         if let param = body {
             do {
@@ -183,7 +184,7 @@ public class APIHandler {
         task.resume()
     }
     
-    public func requestToken<T: Decodable>(jwtToken:String, endpoint: APIEndpoint, method: HTTPMethod, body: Encodable?, responseType: T.Type, completion: @escaping (Result<T, Error>) -> Void) {
+    public func requestToken<T: Decodable>(jwtToken: String, endpoint: APIEndpoint, method: HTTPMethod, body: Encodable?, responseType: T.Type, completion: @escaping (Result<T, Error>) -> Void) {
         
         // Check if the SDK is initialized or not
         guard Config.shared.isInitialized() else {
@@ -248,7 +249,7 @@ public class APIHandler {
         task.resume()
     }
     
-    public func requestDelete(jwtToken:String, endpoint: APIEndpoint, method: HTTPMethod, body: Encodable?, completion: @escaping (Result<Bool, Error>) -> Void) {
+    public func requestDelete(jwtToken: String, endpoint: APIEndpoint, method: HTTPMethod, body: Encodable?, completion: @escaping (Result<Bool, Error>) -> Void) {
         
         // Check if the SDK is initialized or not
         guard Config.shared.isInitialized() else {

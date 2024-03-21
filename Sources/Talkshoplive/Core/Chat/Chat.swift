@@ -75,7 +75,7 @@ public class Chat {
     ///   - includeMeta: A boolean indicating whether to include message metadata. Default is true.
     ///   - includeUUID: A boolean indicating whether to include UUID in the message. Default is true.
     ///   - completion: A closure to be called after the message retrieval operation completes. It receives a `Result` enum with an array of `MessageBase` objects and an optional `MessagePage` for pagination.
-    public func getChatMessages(limit: Int? = 25, start: Int? = nil, includeActions:Bool = true, includeMeta:Bool = true, includeUUID:Bool = true, completion: @escaping (Result<([MessageBase], MessagePage?), Error>) -> Void) {
+    public func getChatMessages(limit: Int? = 25, start: Int? = nil, includeActions: Bool = true, includeMeta: Bool = true, includeUUID: Bool = true, completion: @escaping (Result<([MessageBase], MessagePage?), Error>) -> Void) {
         // Call the fetchPastMessages method in ChatProvider to retrieve past messages
         self.chatProvider?.fetchPastMessages(limit: limit ?? 25, start: start, includeActions: includeActions, includeMeta: includeMeta, includeUUID: includeUUID, completion: { result in
             completion(result)
@@ -143,9 +143,15 @@ public class Chat {
             }
         }
     }
+
+    //Methos to count the total number of messages using the chat provider.
+    public func countMessages(_ completion: @escaping (Int, Error?) -> Void?) {
+        // Call the count method of the chat provider, passing the completion closure
+        self.chatProvider?.count(completion: completion)
+    }
 }
 
-// MARK: - Chat Extension
+// MARK: - Chat Listeners
 
 // Extend Chat to conform to _ChatProviderDelegate for handling messages received from ChatProvider
 extension Chat: _ChatProviderDelegate {

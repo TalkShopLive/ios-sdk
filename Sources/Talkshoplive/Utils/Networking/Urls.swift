@@ -9,14 +9,14 @@ import Foundation
 
 public enum APIEndpoint {
     case messagingToken
-    case getShows(showKey:String)
-    case getCurrentEvent(showKey:String)
-    case getClosedCaptions(fileName:String)
+    case getShows(showKey: String)
+    case getCurrentEvent(showKey: String)
+    case getClosedCaptions(fileName: String)
     case register
     case getGuestUserToken
     case getFederatedUserToken
-    case getHlsUrl(fileName:String)
-    case deleteMessage(eventId:String,timetoken:String)
+    case getHlsUrl(fileName: String)
+    case deleteMessage(eventId: String,timetoken: String)
     
     var baseURL: String {
         do {

@@ -7,7 +7,7 @@
 
 import Foundation
 
-func convertToModel<T: Decodable>(from:String, responseType: T.Type) -> T? {
+func convertToModel<T: Decodable>(from: String, responseType: T.Type) -> T? {
     if let jsonData = from.data(using: .utf8) {
         do {
             // Decode JSON data into MessageData object
