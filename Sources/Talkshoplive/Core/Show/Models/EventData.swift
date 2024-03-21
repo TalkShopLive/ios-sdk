@@ -25,6 +25,7 @@ public struct EventData: Codable {
     var isTest: Bool?
     public var endedAt: String?
     public var streamInCloud: Bool?
+    public var totalViews: Int?
 
     // MARK: Coding Keys
 
@@ -42,6 +43,7 @@ public struct EventData: Codable {
         case endedAt
         case hlsUrl = "hls_url"
         case streamInCloud = "stream_in_cloud"
+        case totalViews = "total_views"
     }
     
     // MARK: Initializers
@@ -61,6 +63,7 @@ public struct EventData: Codable {
         endedAt = nil
         hlsUrl = nil
         streamInCloud = false
+        totalViews = nil
     }
 
     /// Custom initializer to create an instance of EventData from a decoder.
@@ -79,6 +82,7 @@ public struct EventData: Codable {
         isTest = try? container.decodeIfPresent(Bool.self, forKey: .isTest)
         endedAt = try? container.decodeIfPresent(String.self, forKey: .endedAt)
         streamInCloud = try container.decodeIfPresent(Bool.self, forKey: .streamInCloud)
+        totalViews = try? container.decodeIfPresent(Int.self, forKey: .totalViews)
 
         // Generate hlsUrl if filename is available
         if let fileName = filename {

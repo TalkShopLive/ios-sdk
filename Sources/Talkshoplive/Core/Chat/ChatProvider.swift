@@ -329,7 +329,7 @@ public class ChatProvider {
                      
                  case let .failure(error):
                      // Print an error message in case of a failure and invoke the completion closure with the error
-                     print("Failed History Fetch Response: \(error.localizedDescription)")
+                     Config.shared.isDebugMode() ? print("Failed History Fetch Response: \(error.localizedDescription)") : ()
                      completion(.failure(error))
                  }
              }
@@ -351,6 +351,39 @@ public class ChatProvider {
         // Reset specific channels to nil
         self.publishChannel = nil
         self.eventsChannel = nil
+    }
+    
+    // MARK: - Messages count for specific channel
+    internal func count(completion: @escaping (Int, Error?) -> Void?) {
+        // Check if a channel is provided for counting messages
+        if let channel = self.publishChannel {
+            // Use PubNub to retrieve message counts for the specified channel
+            self.pubnub?.messageCounts(channels: [channel], completion: { result in
+                switch result {
+                case let .success(response):
+                    // If the count is available for the channel, handle it
+                    if let count = response[channel] {
+                        // Handle the count, for example, print it
+                        print("Message count for channel \(channel): \(count)")
+                        // Call the completion handler with the count
+                        completion(count, nil)
+                    } else {
+                        // No count found for the channel, handle this case
+                        print("No message count found for channel \(channel)")
+                        completion(0, nil)
+                    }
+                case let .failure(error):
+                    // Handle the failure case when retrieving message counts
+                    Config.shared.isDebugMode() ? print("Failed Message Count Response: \(error.localizedDescription)") : ()
+                    completion(0,error)
+                }
+            })
+        } else {
+            // Handle the case when no channel is provided
+            Config.shared.isDebugMode() ? print("Failed Message Count Response: \(APIClientError.somethingWentWrong)") : ()
+            completion(0,APIClientError.somethingWentWrong)
+        }
+        
     }
 
 }
