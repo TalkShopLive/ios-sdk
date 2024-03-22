@@ -10,7 +10,6 @@ import Foundation
 class Networking {
     
     //MARK: Initialize SDK
-    // SDK initialization :- false
     static func register(clientKey: String, completion: @escaping (Result<Void, Error>) -> Void) {
         APIHandler().requestToRegister(clientKey:clientKey,endpoint: APIEndpoint.register, method: .get, body:nil, responseType:RegisteredClientData.self) { result in
             switch result {
@@ -54,9 +53,7 @@ class Networking {
     }
     
     //MARK: Chat
-    //SDK : true
     static func createMessagingToken(jwtToken: String,isGuest: Bool, completion: @escaping (Result<MessagingTokenResponse, Error>) -> Void) {
-    
         let endpoint = isGuest ? APIEndpoint.getGuestUserToken : APIEndpoint.getFederatedUserToken
         APIHandler().requestToken(jwtToken: jwtToken, endpoint: endpoint, method: .post, body: nil, responseType: MessagingTokenResponse.self) { result in
             switch result {
@@ -68,7 +65,6 @@ class Networking {
         }
     }
     
-    //Sdk : true
     static func deleteMessage(jwtToken: String, eventId: String, timeToken: String, completion: @escaping (Result<Bool, Error>) -> Void) {
         APIHandler().requestDelete(jwtToken: jwtToken, endpoint: APIEndpoint.deleteMessage(eventId: eventId, timetoken: timeToken), method: .delete, body: nil) { result in
             switch result {
@@ -76,6 +72,50 @@ class Networking {
                 completion(.success(true))
             case .failure(let error):
                 completion(.failure(APIClientError.somethingWentWrong))
+            }
+        }
+    }
+    
+    //MARK: Collector
+    static func collect(userId:String? = nil, 
+                        category:CollectorRequest.CollectorCategory? = nil,
+                        version:String? = nil,
+                        action:CollectorRequest.CollectorActionType? = nil,
+                        eventId:Int? = nil,
+                        showKey:String? = nil,
+                        storeId:Int? = nil,
+                        videoStatus:String? = nil,
+                        videoTime:Int? = nil,
+                        screenResolution:String? = nil,
+                        _ completion: ((Bool, Error?) -> Void)? = nil) {
+        // Creating an instance of CollectorRequest
+        let payload = CollectorRequest(timestampUtc: Int(Date().milliseconds),
+                                        userId: userId ?? "NOT_SET",
+                                        category: category,
+                                        version: version,
+                                        action: action,
+                                        application: "ios",
+                                        meta: Meta(external: true,
+                                                   eventId: eventId,
+                                                   streamingContentKey: showKey ?? "NOT_SET",
+                                                   storeId: storeId,
+                                                   videoStatus: videoStatus ?? "NOT_SET",
+                                                   videoTime: videoTime),
+                                        utm: UTM(source: "NOT_SET",
+                                                 campaign: "NOT_SET",
+                                                 medium: "NOT_SET",
+                                                 term: "NOT_SET",
+                                                 content: "NOT_SET"),
+                                        aspect: Aspect(screenResolution: screenResolution ?? "NOT_SET"))
+        APIHandler().request(endpoint: APIEndpoint.getCollector, method: .post, body: payload, responseType: NoResponse.self) { result in
+            let actionType = payload.action!.rawValue
+            switch result {
+            case .success(let apiResponse):
+                Config.shared.isDebugMode() ? print("Collector-\(actionType) :: Analytics Succeeded") : ()
+                completion?(true,nil)
+            case .failure(let error):
+                Config.shared.isDebugMode() ? print("Collector-\(actionType)::Analytics Failed with error: \(error)") : ()
+                completion?(false,error)
             }
         }
     }

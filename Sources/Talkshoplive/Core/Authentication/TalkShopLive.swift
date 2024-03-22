@@ -33,10 +33,17 @@ public class TalkShopLive {
         // Set the debug mode in the shared configuration
         Config.shared.setDebugMode(debugMode)
         
+        // Set the debug mode in the shared configuration
+        Config.shared.setDntMode(dnt)
+        
         // Register the SDK using the provided client key
         Networking.register(clientKey: self.clientKey) { result in
             completion?(result)
+            //Analytics
+            Collector.shared.collect(category: .interaction,action: .sdkInitialized)
         }
+        
+        
+        
     }
-    
 }

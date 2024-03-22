@@ -36,6 +36,7 @@ public class Chat {
     ///   - isGuest: A flag indicating whether the user is a guest or fedarated user.
     ///   - showKey: The unique key associated with the show using that to subscribe channel for specific event.
     public init(jwtToken: String, isGuest: Bool, showKey: String,_ completion: ((Bool, Error?) -> Void)? = nil) {
+
         // Set the showKey property
         self.showKey = showKey
         
@@ -111,12 +112,16 @@ public class Chat {
             if existingToken != jwtToken {
                 // Create a new ChatProvider instance with updated parameters
                 let newChatProvider = ChatProvider(jwtToken: jwtToken, isGuest: isGuest, showKey: self.showKey)
+                
+                newChatProvider.isUpdateUser = true
+                
                 // Set the delegate to receive chat events from the new ChatProvider
                 newChatProvider.delegate = self
                 // Update the chatProvider property with the new instance
                 self.chatProvider = newChatProvider
                 // Call completion handler indicating success
                 completion(true,nil)
+                
             } else {
                 // If the new token is the same as the existing one, indicate failure with sameToken error
                 completion(false,APIClientError.sameToken)

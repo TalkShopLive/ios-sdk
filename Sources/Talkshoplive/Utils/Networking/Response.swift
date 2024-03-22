@@ -39,3 +39,9 @@ public struct GetShowsResponse: Codable {
     let product : ShowData
 }
 
+public struct NoResponse: Codable {
+    public init() {
+        
+    }
+}
+

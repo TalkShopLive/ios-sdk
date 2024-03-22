@@ -17,6 +17,7 @@ public enum APIEndpoint {
     case getFederatedUserToken
     case getHlsUrl(fileName: String)
     case deleteMessage(eventId: String,timetoken: String)
+    case getCollector
     
     var baseURL: String {
         do {
@@ -25,6 +26,8 @@ public enum APIEndpoint {
                 return try Config.loadAPIConfig().BASE_URL
             case .getClosedCaptions,.getHlsUrl:
                 return try Config.loadAPIConfig().ASSETS_URL
+            case .getCollector:
+                return try Config.loadAPIConfig().COLLECTOR_BASE_URL
             }
         } catch {
             fatalError("Failed to load configuration: \(error)")
@@ -51,6 +54,8 @@ public enum APIEndpoint {
             return "/events/\(fileName)"
         case .deleteMessage(eventId: let eventId, timetoken: let timetoken):
             return "/api2/v1/sdk/chat/messages/\(eventId)/\(timetoken)"
+        case .getCollector:
+            return "/collect"
         }
     }
 }
