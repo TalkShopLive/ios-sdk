@@ -114,7 +114,7 @@ The TSL iOS SDK provides methods for fetching details of a specific current even
 
 ### Methods
 
-#### `init(jwtToken:isGuest:showKey)`
+#### `init(jwtToken:isGuest:showKey:completion:)`
 
 Initializes a new instance of the Chat class and confirm the delegate to recieve chat events.
 
@@ -123,6 +123,9 @@ Initializes a new instance of the Chat class and confirm the delegate to recieve
     - Example: eyJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJzZGtfMmVhMjFkZTE5Y2M4YmM1ZTg2NDBjN2IyMjdmZWYyZjMiLCJleHAiOjE3MTAwMjM0NDEsImp0aSI6InRXc3NBd1Nvb2VoaHp5UTA5NUV1eXk9PSJ9.XtPM3iibdTt-fp8fhm2Gh2T7X0XXuUuIPY17bW648Gk
   - `isGuest`: A boolean indicating whether the user is a guest user (true) or a federated user (false).
   - `showKey`: show_key for which you want to subscribe to the channel.  
+  - `completion`: (optional)
+      - `status`: A boolean value indicating whether token created successfully or not.
+      - `error`: An optional error that occurred during the token creation process, if any.
 
 ```
 let chatInstance = Talkshoplive.Chat(jwtToken: "YourJWTToken", isGuest:true/false, showKey: "YourShowKey")

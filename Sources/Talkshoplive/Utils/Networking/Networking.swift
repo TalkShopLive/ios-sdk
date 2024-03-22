@@ -10,6 +10,7 @@ import Foundation
 class Networking {
     
     //MARK: Initialize SDK
+    // SDK initialization :- false
     static func register(clientKey: String, completion: @escaping (Result<Void, Error>) -> Void) {
         APIHandler().requestToRegister(clientKey:clientKey,endpoint: APIEndpoint.register, method: .get, body:nil, responseType:RegisteredClientData.self) { result in
             switch result {
@@ -36,7 +37,7 @@ class Networking {
             case .success(let apiResponse):
                 completion(.success(apiResponse.product))
             case .failure(let error):
-                completion(.failure(error))
+                completion(.failure(APIClientError.invalidShowKey))
             }
         }
     }
@@ -47,12 +48,13 @@ class Networking {
             case .success(let apiResponse):
                 completion(.success(apiResponse))
             case .failure(let error):
-                completion(.failure(error))
+                completion(.failure(APIClientError.invalidShowKey))
             }
         }
     }
     
     //MARK: Chat
+    //SDK : true
     static func createMessagingToken(jwtToken: String,isGuest: Bool, completion: @escaping (Result<MessagingTokenResponse, Error>) -> Void) {
     
         let endpoint = isGuest ? APIEndpoint.getGuestUserToken : APIEndpoint.getFederatedUserToken
@@ -61,18 +63,19 @@ class Networking {
             case .success(let apiResponse):
                 completion(.success(apiResponse))
             case .failure(let error):
-                completion(.failure(error))
+                completion(.failure(APIClientError.tokenRetrievalFailed))
             }
         }
     }
     
+    //Sdk : true
     static func deleteMessage(jwtToken: String, eventId: String, timeToken: String, completion: @escaping (Result<Bool, Error>) -> Void) {
         APIHandler().requestDelete(jwtToken: jwtToken, endpoint: APIEndpoint.deleteMessage(eventId: eventId, timetoken: timeToken), method: .delete, body: nil) { result in
             switch result {
             case .success(let apiResponse):
                 completion(.success(true))
             case .failure(let error):
-                completion(.failure(error))
+                completion(.failure(APIClientError.somethingWentWrong))
             }
         }
     }
