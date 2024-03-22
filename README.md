@@ -114,18 +114,22 @@ The TSL iOS SDK provides methods for fetching details of a specific current even
 
 ### Methods
 
-#### `init(jwtToken:isGuest:showKey:mode:refresh:)`
+#### `init(jwtToken:isGuest:showKey:completion:)`
 
-Initializes a new instance of the Chat class.
+Initializes a new instance of the Chat class and confirm the delegate to recieve chat events.
 
 - Parameters:
   - `jwtToken`: Generated JWT token
     - Example: eyJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJzZGtfMmVhMjFkZTE5Y2M4YmM1ZTg2NDBjN2IyMjdmZWYyZjMiLCJleHAiOjE3MTAwMjM0NDEsImp0aSI6InRXc3NBd1Nvb2VoaHp5UTA5NUV1eXk9PSJ9.XtPM3iibdTt-fp8fhm2Gh2T7X0XXuUuIPY17bW648Gk
   - `isGuest`: A boolean indicating whether the user is a guest user (true) or a federated user (false).
   - `showKey`: show_key for which you want to subscribe to the channel.  
+  - `completion`: (optional)
+      - `status`: A boolean value indicating whether token created successfully or not.
+      - `error`: An optional error that occurred during the token creation process, if any.
 
 ```
 let chatInstance = Talkshoplive.Chat(jwtToken: "YourJWTToken", isGuest:true/false, showKey: "YourShowKey")
+chatInstance.delegate = someContentViewModel
 
 ```
 
@@ -142,15 +146,11 @@ Use initialized instance of the Chat class and sends a message using that instan
 
 - Send Message
 ```
-self.chatInstance.sendMessage(message: "Your Message Here") { status, error in
-    if let error = error {
-        print("Error occurred: \(error.localizedDescription)")
+self.chatInstance.sendMessage(message: newMessage, completion: {status, error in
+    if status {
+        print("Message Sent!", status)
     } else {
-        if status {
-            print("Message sent successfully!")
-        } else {
-            print("Failed to send message.")
-        }
+        print("Message Sending Failed: \(error.localizedDescription)")
     }
 }
 ```
@@ -164,6 +164,38 @@ class ContentViewModel: ObservableObject, ChatDelegate {
 }
 
 ```
+
+#### `deleteMessage(timeToken:)`
+
+
+- Parameters:
+  - `timeToken `: The time token when message was published.
+  
+- Completion:
+  - `status`: A boolean value indicating whether the message was deleted successfully or not.
+  - `error`: An optional error that occurred during the deletion process, if any.
+
+- Delete Message
+```
+self.chatInstance.deleteMessage(timeToken: timetoken, completion: { status, error in
+        if status {
+            print("Message Deleted!")
+        } else {
+            print("Message Deletion Failed : “\(error.localizedDescription))
+        }
+}
+```
+
+- Recieve Delete message event listener
+```
+class ContentViewModel: ObservableObject, ChatDelegate {
+    func onDeleteMessage(_ message: Talkshoplive.MessageBase) {
+        // Handle the deleted message.
+    }
+}
+
+```
+
 #### `getChatMessages(page:includeActions:includeMeta:includeUUID:completion:)`
 
 Use to retrieve messages for a specific page, including or excluding actions, metadata, and UUID in the response.
@@ -203,7 +235,6 @@ Use to clear all resources associated with the chat instance, including connecti
 
 ```
 self.chatInstance.clean()
-
 ```
 
 #### `updateUser(jwtToken:isGuest:completion:)`

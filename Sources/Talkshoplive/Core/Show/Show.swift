@@ -18,13 +18,23 @@ public class Show {
     }
     // MARK: - Public Methods
     /// Get the details of the show.
-    public func getDetails(showKey:String, completion: @escaping (Result<ShowData, Error>) -> Void) {
+    public func getDetails(showKey: String, completion: @escaping (Result<ShowData, Error>) -> Void) {
+        
         ShowProvider().fetchShow(showKey: showKey) { result in
             switch result {
             case .success(let showData):
                 self.showInstance = showData
                 // Set the details and invoke the completion with success.
                 completion(.success(showData))
+                
+                //Analytics
+                Collector.shared.collect(category: .interaction,
+                                         action: .selectViewShowDetails,
+                                         eventId: self.showInstance.eventId ?? nil,
+                                         showKey: self.showInstance.showKey ?? nil,
+                                         storeId: self.showInstance.currentEvent?.storeId ?? nil,
+                                         videoStatus: self.showInstance.status,
+                                         videoTime: self.showInstance.duration ?? nil)
             case .failure(let error):
                 // Invoke the completion with failure if an error occurs.
                 completion(.failure(error))

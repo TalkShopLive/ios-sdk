@@ -13,7 +13,7 @@ import Foundation
 
 public struct EventData: Codable {
     var id: Int?
-    var storeId: Int?
+    public var storeId: Int?
     var productId: Int?
     var filename: String?
     public var name: String?

@@ -17,7 +17,7 @@ public class ShowProvider {
 
     /// Fetch show details from the network.
     /// - Parameter completion: A closure to be executed once the fetching is complete.
-    internal func fetchShow(showKey:String, completion: @escaping (Result<ShowData, Error>) -> Void) {
+    internal func fetchShow(showKey: String, completion: @escaping (Result<ShowData, Error>) -> Void) {
         Networking.getShows(showKey: showKey, completion: { result in
             completion(result)
         })

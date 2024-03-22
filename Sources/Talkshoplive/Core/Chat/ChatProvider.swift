@@ -13,6 +13,7 @@ import PubNub
 // Protocol for the chat provider delegate to handle different chat events
 public protocol _ChatProviderDelegate: AnyObject {
     func onMessageReceived(_ message: MessageBase)
+    func onMessageRemoved(_ message: MessageBase)
     // Add more methods for other events if needed
 }
 
@@ -32,17 +33,25 @@ public class ChatProvider {
     private var eventsChannel: String?
     public var delegate: _ChatProviderDelegate?
     private var jwtToken: String?
+    private var eventInstance: EventData?
+    var isUpdateUser: Bool = false
 
     // MARK: - Initializer
     
     // Initialize ChatProvider with a JWT token and show key
-    public init(jwtToken: String, isGuest: Bool, showKey: String) {
+    /// - Parameters:
+    ///   - jwtToken: The JWT token used for authentication.
+    ///   - isGuest: A boolean indicating whether the user is a guest.
+    ///   - showKey: The show key used to configure the chat provider.
+    public init(jwtToken: String, isGuest: Bool, showKey: String,_ completion: ((Bool, Error?) -> Void)? = nil) {
         // Load configuration from ConfigLoader
         do {
             self.isGuest = isGuest
             self.showKey = showKey
             self.setJwtToken(jwtToken)
-            self.createMessagingToken(jwtToken:jwtToken)
+            self.createMessagingToken(jwtToken: jwtToken){result,error  in
+                completion?(result,error)
+            }
         } catch {
             // Handle configuration loading failure
             fatalError("Failed to load configuration: \(error)")
@@ -57,12 +66,16 @@ public class ChatProvider {
         Config.shared.isDebugMode() ? print("ChatProvider instance is being deallocated.") : ()
     }
 
-    // Save the messaging token
+    // MARK: - JWT Token
+    
+    // Save the JWT token.
+    /// - Parameter token: The JWT token to be saved.
     func setJwtToken(_ token: String) {
         self.jwtToken = token
     }
     
-    // Get the saved messaging token
+    /// Get the saved JWT token.
+    /// - Returns: The saved JWT token, if available.
     public func getJwtToken() -> String? {
         return self.jwtToken
     }
@@ -70,17 +83,34 @@ public class ChatProvider {
     // MARK: - Messaging Token
     
     // Save the messaging token
+    /// - Parameter token: The messaging token to be saved.
     func setMessagingToken(_ token: MessagingTokenResponse) {
         self.messageToken = token
     }
     
     // Get the saved messaging token
+    /// - Returns: The saved messaging token, if available.
     public func getMessagingToken() -> MessagingTokenResponse? {
         return self.messageToken
     }
+    
+    // MARK: - Current Event
+    
+    // Save the messaging token
+    /// - Parameter token: The messaging token to be saved.
+    func setCurrentEvent(_ event: EventData) {
+        self.eventInstance = event
+    }
+    
+    // Get the saved messaging token
+    /// - Returns: The saved messaging token, if available.
+    public func getCurrentEvent() -> EventData? {
+        return self.eventInstance
+    }
 
     // Create a messaging token asynchronously
-    private func createMessagingToken(jwtToken: String) {
+    /// - Parameter jwtToken: The JWT token used for authentication.
+    private func createMessagingToken(jwtToken: String,_ completion: ((Bool, Error?) -> Void)? = nil) {
         // Call Networking to fetch the messaging token
         Networking.createMessagingToken(jwtToken: jwtToken, isGuest: self.isGuest) { result in
             switch result {
@@ -89,17 +119,17 @@ public class ChatProvider {
                 // Set the retrieved token for later use
                 self.setMessagingToken(result)
                 
-                // Initialize PubNub with the obtained token
-                self.initializePubNub()
-                
-                DispatchQueue.main.asyncAfter(deadline: DispatchTime.now() + 1.0, execute: {
-                    self.subscribeChannels(showKey: self.showKey)
-                })
-                
+                // Initialize PubNub following with the steps :
+                // Get eventId based on showKey
+                // Initialize pubnub with needed data.
+                self.initializePubNub{result,error in
+                    completion?(result,error)
+                }
             case .failure(let error):
                 // Handle token retrieval failure
-                Config.shared.isDebugMode() ? print("Token retrieval failure. Error: \(error.localizedDescription)") : ()
+                Config.shared.isDebugMode() ? print("Token retrieval Failed: \(error.localizedDescription)") : ()
                 // You might want to handle the error appropriately, e.g., show an alert to the user or log it.
+                completion?(false,error)
                 break
             }
         }
@@ -129,21 +159,57 @@ public class ChatProvider {
     
     // MARK: - Channel Subscription
 
-    // Subscribe to channels based on the showKey
-    private func subscribeChannels(showKey: String) {
-        Networking.getCurrentEvent(showKey: showKey, completion: { result in
+    /// Subscribe to channels based on the showKey.
+    /// - Parameter showKey: The show key used to determine which channels to subscribe to.
+    private func initializePubNub(_ completion: ((Bool, Error?) -> Void)? = nil) {
+        Networking.getCurrentEvent(showKey: self.showKey, completion: { result in
             switch result {
-            case .success(let apiResponse):
+            case .success(let eventData):
+                self.setCurrentEvent(eventData)
                 // Set the details and invoke the completion with success.
-                if let eventId = apiResponse.id {
+                if let event = self.eventInstance, let eventId = event.id {
                     self.publishChannel = "chat.\(eventId)"
                     self.eventsChannel = "events.\(eventId)"
                     self.channels = [self.publishChannel!, self.eventsChannel!]
-                    self.subscribe()
+                    
+                    if let messageToken = self.messageToken {
+                        let configuration = PubNubConfiguration(
+                            publishKey: messageToken.publishKey,
+                            subscribeKey: messageToken.subscribeKey,
+                            userId: messageToken.userId,
+                            authKey: messageToken.token
+                            // Add more configuration parameters as needed
+                        )
+                        // Initialize PubNub instance
+                        self.pubnub = PubNub(configuration: configuration)
+                        // Log the initialization
+                        Config.shared.isDebugMode() ? print("Initialized Pubnub", self.pubnub!) : ()
+                        
+                        // Initialize PubNub with the obtained token
+                        DispatchQueue.main.asyncAfter(deadline: DispatchTime.now() + 1.0, execute: {
+                            self.subscribe()
+                            completion?(true,nil)
+                            //Analytics
+                            Collector.shared.collect(userId: self.messageToken?.userId,
+                                                     category: .interaction,
+                                                     action: self.isUpdateUser ? .updateUser : .selectViewChat,
+                                                     eventId: eventId,
+                                                     showKey: self.showKey,
+                                                     storeId: event.storeId ?? nil,
+                                                     videoStatus: event.status ?? nil,
+                                                     videoTime: event.duration ?? nil)
+                            if self.isUpdateUser {
+                                self.isUpdateUser = false
+                            }
+                        })
+                    } else {
+                        completion?(false,APIClientError.tokenRetrievalFailed)
+                    }
                 }
             case .failure(let error):
                 // Invoke the completion with failure if an error occurs.
                 Config.shared.isDebugMode() ? print("\(error.localizedDescription)") : ()
+                completion?(false,APIClientError.invalidShowKey)
             }
         })
     }
@@ -163,23 +229,29 @@ public class ChatProvider {
             switch event {
             case .messageReceived(let message):
                 // Handle message received event
-                Config.shared.isDebugMode() ? print("The \(message.channel) channel received a message at \(message.published)") : ()
+                Config.shared.isDebugMode() ? print("messageReceived:=> The \(message.channel) channel received a listener event at \(message.published)") : ()
                 
-                // Check if there is a subscription info
-                if let subscription = message.subscription {
-                    Config.shared.isDebugMode() ? print("The channel-group or wildcard that matched this channel was \(subscription)") : ()
-                }
+                // Convert the received message into a MessageBase object
+                let convertedMessage = MessageBase(pubNubMessage: message)
                 
                 // Check the channel type
                 switch message.channel {
                 case self.publishChannel :
-                    let convertedMessage = MessageBase(pubNubMessage: message)
+                    // If the message is from the publish channel, notify the delegate asynchronously
                     DispatchQueue.main.async {
                         self.delegate?.onMessageReceived(convertedMessage)
                     }
+                    
                 case self.eventsChannel:
-                    // Handle events channel if needed
-                    break
+                    // If the message is from the events channel
+                    if let payloadKey = convertedMessage.payload?.key, payloadKey == .messageDeleted {
+                        // If the payload key is "messageDeleted", notify the delegate asynchronously
+                        DispatchQueue.main.async {
+                            self.delegate?.onMessageRemoved(convertedMessage)
+                        }
+                    }
+                    // Handle other scenarios related to the events channel if needed
+
                 default :
                     // Handle other channels
                     Config.shared.isDebugMode() ? print("The message is \(message.payload) and was sent by \(message.publisher ?? "")") : ()
@@ -248,15 +320,19 @@ public class ChatProvider {
     }
 
 
-    // MARK: - Message Publishing
+    // MARK: - Publish Message
     
     /// Publishes a message to the configured channel.
-    /// - Parameter message: The message to be published.
+    /// - Parameters:
+    ///   - message: The message to be published.
+    ///   - completion: A closure to be called after the publishing operation completes. It receives two parameters:
+    ///                 - success: A boolean value indicating whether the publishing operation was successful.
+    ///                 - error: An optional Error object indicating any error that occurred during the publishing operation.
     internal func publish(message: String, completion: @escaping (Bool, Error?) -> Void)  {
         // Check if the message length is within the specified limit
         guard message.count <= 200 else {
             // Handle the case where the message exceeds the maximum length
-            print("Publishing Error:: Message exceeds maximum length of 200 characters.")
+            print("Message Sending Failed: Message exceeds maximum length of 200 characters.")
             return
         }
         
@@ -276,11 +352,11 @@ public class ChatProvider {
                 pubnub?.publish(channel: channel, message: messageObject) { result in
                     switch result {
                     case let .success(timetoken):
-                        Config.shared.isDebugMode() ? print("Publish Response at \(timetoken)") : ()
+                        Config.shared.isDebugMode() ? print("Message Sent!") : ()
                         completion(true, nil) // Indicate success with status true and no error
                     case let .failure(error):
                         // Print an error message in case of a failure during publishing
-                        print("Publishing Error: \(error.localizedDescription)")
+                        Config.shared.isDebugMode() ? print("Message Sending Failed: \(error.localizedDescription)") : ()
                         completion(false, error) // Indicate failure with status false and pass the error
                     }
                 }
@@ -296,7 +372,7 @@ public class ChatProvider {
     ///   - start: timestamp of last fetched message or now
     ///   - completion: A closure to be called upon completion, providing a Result with an array of MessageBase objects,
     ///                 an optional MessagePage for pagination, or an error if the operation fails.
-    internal func fetchPastMessages(limit:Int = 25, start: Int? = nil, includeActions:Bool = true, includeMeta:Bool = true, includeUUID:Bool = true, completion: @escaping (Result<([MessageBase], MessagePage?), Error>) -> Void) {
+    internal func fetchPastMessages(limit: Int = 25, start: Int? = nil, includeActions: Bool = true, includeMeta: Bool = true, includeUUID: Bool = true, completion: @escaping (Result<([MessageBase], MessagePage?), Error>) -> Void) {
          // Use PubNub's fetchMessageHistory method to retrieve message history for specified channels
         pubnub?.fetchMessageHistory(for: self.channels, includeActions: includeActions, includeMeta: includeMeta, includeUUID: includeUUID, page: PubNubBoundedPageBase(start: start != nil ? UInt64(start!) : nil, limit: limit), completion: { result in
              do {
@@ -318,7 +394,7 @@ public class ChatProvider {
                             }
                             return convertedMessage
                          }
-                         
+                         print("SDK : Fetch History: \(messageArray)")
                          // Create a MessagePage object based on the next page information
                          let page = MessagePage(page: response.next as! PubNubBoundedPageBase)
                                                   
@@ -329,7 +405,7 @@ public class ChatProvider {
                      
                  case let .failure(error):
                      // Print an error message in case of a failure and invoke the completion closure with the error
-                     Config.shared.isDebugMode() ? print("Failed History Fetch Response: \(error.localizedDescription)") : ()
+                     print("Fetch History Failed: \(error.localizedDescription)")
                      completion(.failure(error))
                  }
              }
@@ -337,6 +413,8 @@ public class ChatProvider {
      }
     
     // MARK: - Clears the connection
+    
+    /// Clears the connection by unsubscribing from all channels, resetting instance variables to nil, and removing channels from the list.
     internal func clearConnection() {
         // Unsubscribe from all channels
         self.unSubscribeChannels()
@@ -355,35 +433,56 @@ public class ChatProvider {
     
     // MARK: - Messages count for specific channel
     internal func count(completion: @escaping (Int, Error?) -> Void?) {
-        // Check if a channel is provided for counting messages
-        if let channel = self.publishChannel {
-            // Use PubNub to retrieve message counts for the specified channel
-            self.pubnub?.messageCounts(channels: [channel], completion: { result in
+          // Check if a channel is provided for counting messages
+          if let channel = self.publishChannel {
+              // Use PubNub to retrieve message counts for the specified channel
+              self.pubnub?.messageCounts(channels: [channel], completion: { result in
+                  switch result {
+                  case let .success(response):
+                      // If the count is available for the channel, handle it
+                      if let count = response[channel] {
+                          // Call the completion handler with the count
+                          completion(count, nil)
+                      } else {
+                          // No count found for the channel, handle this case
+                          completion(0, nil)
+                      }
+                  case let .failure(error):
+                      // Handle the failure case when retrieving message counts
+                      Config.shared.isDebugMode() ? print("Message Count Failed: \(error.localizedDescription)") : ()
+                      completion(0,error)
+                  }
+              })
+          } else {
+              // Handle the case when no channel is provided
+              Config.shared.isDebugMode() ? print("Message Count Failed: \(APIClientError.somethingWentWrong)") : ()
+              completion(0,APIClientError.somethingWentWrong)
+          }
+          
+      }
+    
+    // MARK: - Delete Message
+
+    /// Unpublishes a message of specified timetoken.
+    /// - Parameters:
+    ///   - timetoken: The timetoken of the message when it's published.
+    ///   - completion: A closure that receives the result of the deletion operation as a `Result` enum with a `Bool` indicating success or failure and an `Error` in case of failure.
+    internal func unPublishMessage(timetoken: String, completion: @escaping (Result<Bool, Error>) -> Void) {
+        // Check if the publish channel and JWT token are available
+        if let channel = publishChannel, let jwtToken = self.getJwtToken() {
+            // Call the Networking's deletMessage method to delete the message
+            Networking.deleteMessage(jwtToken: jwtToken, eventId: channel, timeToken: timetoken) { result in
+                // Invoke the completion handler with the result of the deletion operation
                 switch result {
-                case let .success(response):
-                    // If the count is available for the channel, handle it
-                    if let count = response[channel] {
-                        // Handle the count, for example, print it
-                        print("Message count for channel \(channel): \(count)")
-                        // Call the completion handler with the count
-                        completion(count, nil)
-                    } else {
-                        // No count found for the channel, handle this case
-                        print("No message count found for channel \(channel)")
-                        completion(0, nil)
-                    }
-                case let .failure(error):
-                    // Handle the failure case when retrieving message counts
-                    Config.shared.isDebugMode() ? print("Failed Message Count Response: \(error.localizedDescription)") : ()
-                    completion(0,error)
+                case .success(let status):
+                    Config.shared.isDebugMode() ? print("Message Deleted!") : ()
+                    completion(.success(status))
+                case .failure(let error):
+                    Config.shared.isDebugMode() ? print("Message Deletion Failed: \(error.localizedDescription)") : ()
+                    completion(.failure(error))
                 }
-            })
-        } else {
-            // Handle the case when no channel is provided
-            Config.shared.isDebugMode() ? print("Failed Message Count Response: \(APIClientError.somethingWentWrong)") : ()
-            completion(0,APIClientError.somethingWentWrong)
+            }
         }
         
     }
-
 }
