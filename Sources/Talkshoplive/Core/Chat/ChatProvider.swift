@@ -33,6 +33,8 @@ public class ChatProvider {
     private var eventsChannel: String?
     public var delegate: _ChatProviderDelegate?
     private var jwtToken: String?
+    private var eventInstance: EventData?
+    var isUpdateUser: Bool = false
 
     // MARK: - Initializer
     
@@ -91,6 +93,20 @@ public class ChatProvider {
     public func getMessagingToken() -> MessagingTokenResponse? {
         return self.messageToken
     }
+    
+    // MARK: - Current Event
+    
+    // Save the messaging token
+    /// - Parameter token: The messaging token to be saved.
+    func setCurrentEvent(_ event: EventData) {
+        self.eventInstance = event
+    }
+    
+    // Get the saved messaging token
+    /// - Returns: The saved messaging token, if available.
+    public func getCurrentEvent() -> EventData? {
+        return self.eventInstance
+    }
 
     // Create a messaging token asynchronously
     /// - Parameter jwtToken: The JWT token used for authentication.
@@ -148,9 +164,10 @@ public class ChatProvider {
     private func initializePubNub(_ completion: ((Bool, Error?) -> Void)? = nil) {
         Networking.getCurrentEvent(showKey: self.showKey, completion: { result in
             switch result {
-            case .success(let apiResponse):
+            case .success(let eventData):
+                self.setCurrentEvent(eventData)
                 // Set the details and invoke the completion with success.
-                if let eventId = apiResponse.id {
+                if let event = self.eventInstance, let eventId = event.id {
                     self.publishChannel = "chat.\(eventId)"
                     self.eventsChannel = "events.\(eventId)"
                     self.channels = [self.publishChannel!, self.eventsChannel!]
@@ -172,6 +189,18 @@ public class ChatProvider {
                         DispatchQueue.main.asyncAfter(deadline: DispatchTime.now() + 1.0, execute: {
                             self.subscribe()
                             completion?(true,nil)
+                            //Analytics
+                            Collector.shared.collect(userId: self.messageToken?.userId,
+                                                     category: .interaction,
+                                                     action: self.isUpdateUser ? .updateUser : .selectViewChat,
+                                                     eventId: eventId,
+                                                     showKey: self.showKey,
+                                                     storeId: event.storeId ?? nil,
+                                                     videoStatus: event.status ?? nil,
+                                                     videoTime: event.duration ?? nil)
+                            if self.isUpdateUser {
+                                self.isUpdateUser = false
+                            }
                         })
                     } else {
                         completion?(false,APIClientError.tokenRetrievalFailed)
@@ -456,5 +485,4 @@ public class ChatProvider {
         }
         
     }
-
 }

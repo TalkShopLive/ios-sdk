@@ -20,6 +20,7 @@ public class Config {
     private var debugMode: Bool = false // Print all console logs
     private var testMode: Bool = false // Switch to staging if true
     private var hasInitialized: Bool = false // SDK initialization
+    private var dntMode: Bool = false // Print all console logs
     
     
     // MARK: - Debug Mode Methods
@@ -60,6 +61,15 @@ public class Config {
         return self.hasInitialized
     }
     
+    // MARK: - Debug Mode Methods
+    func setDntMode(_ isDntMode: Bool) {
+        dntMode = isDntMode
+    }
+    
+    func isDntMode() -> Bool {
+        return self.dntMode
+    }
+    
     // MARK: - Configuration Loading Methods
     
     /// Load environment configuration from the "env.json" file in the module's bundle.
@@ -85,7 +95,7 @@ public class Config {
         }
         
         guard let fileURL = Bundle.module.url(forResource: fileName, withExtension: "json") else {
-            return APIConfig.init(BASE_URL: "", ASSETS_URL: "")
+            return APIConfig.init(BASE_URL: "", ASSETS_URL: "", COLLECTOR_BASE_URL: "")
         }
 
         let data = try Data(contentsOf: fileURL)

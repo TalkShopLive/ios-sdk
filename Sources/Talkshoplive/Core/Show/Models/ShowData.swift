@@ -24,7 +24,7 @@ public struct ShowData: Codable {
     public let cc: String?
     public let endedAt: String?
     public let duration: Int?
-    private let currentEvent: EventData?
+    public let currentEvent: EventData?
     private let events: [EventData]?
     private let streamingContent: StreamingContent?
     private let owningStore: OwningStore?

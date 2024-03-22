@@ -16,11 +16,5 @@ extension Date {
         dateFormatter.dateFormat = format
         return dateFormatter.string(from: self)
     }
-    
-    func getPubnubTimeToken() -> Int {
-        let precision = 10000
-        let timetoken = Int64(self.milliseconds * Double(precision))
-        return Int(timetoken)
-    }
 }
 
