@@ -17,6 +17,10 @@ public enum APIClientError: Error {
     case authenticationInvalid
     case sameToken
     case somethingWentWrong
+    case httpError(Int)
+    case tokenRetrievalFailed
+    case invalidShowKey
+
 }
 
 extension APIClientError: LocalizedError {
@@ -40,6 +44,12 @@ extension APIClientError: LocalizedError {
             return "Same token error"
         case .somethingWentWrong:
             return "Something went wrong"
+        case .httpError(let statusCode):
+            return "HTTP error with status code: \(statusCode)"
+        case .tokenRetrievalFailed:
+            return "Token retrieval failed"
+        case .invalidShowKey:
+            return "Invalid showKey"
         }
     }
 }
@@ -102,6 +112,18 @@ public class APIHandler {
                 completion(.failure(APIClientError.requestFailed(error)))
                 return
             }
+            guard let httpResponse = response as? HTTPURLResponse else {
+                    completion(.failure(APIClientError.invalidData))
+                    return
+                }
+                
+                // Check for HTTP status code indicating an error
+                let statusCode = httpResponse.statusCode
+                if statusCode >= 400 {
+                    let statusCodeError = APIClientError.httpError(statusCode)
+                    completion(.failure(statusCodeError))
+                    return
+                }
             
             guard let data = data else {
                 completion(.failure(APIClientError.noData))
@@ -161,6 +183,19 @@ public class APIHandler {
         let task = URLSession.shared.dataTask(with: request) { (data, response, error) in
             if let error = error {
                 completion(.failure(APIClientError.requestFailed(error)))
+                return
+            }
+            
+            guard let httpResponse = response as? HTTPURLResponse else {
+                    completion(.failure(APIClientError.invalidData))
+                    return
+                }
+                
+            // Check for HTTP status code indicating an error
+            let statusCode = httpResponse.statusCode
+            if statusCode >= 400 {
+                let statusCodeError = APIClientError.httpError(statusCode)
+                completion(.failure(statusCodeError))
                 return
             }
             
@@ -226,6 +261,19 @@ public class APIHandler {
         let task = URLSession.shared.dataTask(with: request) { (data, response, error) in
             if let error = error {
                 completion(.failure(APIClientError.requestFailed(error)))
+                return
+            }
+            
+            guard let httpResponse = response as? HTTPURLResponse else {
+                    completion(.failure(APIClientError.invalidData))
+                    return
+                }
+                
+            // Check for HTTP status code indicating an error
+            let statusCode = httpResponse.statusCode
+            if statusCode >= 400 {
+                let statusCodeError = APIClientError.httpError(statusCode)
+                completion(.failure(statusCodeError))
                 return
             }
             
@@ -299,10 +347,18 @@ public class APIHandler {
                 return
             }
             
-            if httpResponse.statusCode == 204 { // Assuming 204 means successful deletion
+            // Check for HTTP status code indicating an error
+            let statusCode = httpResponse.statusCode
+            if statusCode >= 400 {
+                let statusCodeError = APIClientError.httpError(statusCode)
+                completion(.failure(statusCodeError))
+                return
+            }else if statusCode == 204 { // Assuming 204 means successful deletion
                 completion(.success(true))
+                return
             } else {
-                completion(.failure(APIClientError.somethingWentWrong))
+                completion(.failure(error ?? APIClientError.somethingWentWrong))
+                return
             }
         }
         

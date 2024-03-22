@@ -35,12 +35,15 @@ public class Chat {
     ///   - jwtToken: The JWT token for authentication.
     ///   - isGuest: A flag indicating whether the user is a guest or fedarated user.
     ///   - showKey: The unique key associated with the show using that to subscribe channel for specific event.
-    public init(jwtToken: String, isGuest: Bool, showKey: String) {
+    public init(jwtToken: String, isGuest: Bool, showKey: String,_ completion: ((Bool, Error?) -> Void)? = nil) {
         // Set the showKey property
         self.showKey = showKey
         
         // Initialize ChatProvider for handling chat functionality using JWT Token
-        self.chatProvider = ChatProvider(jwtToken: jwtToken, isGuest: isGuest, showKey: showKey)
+        self.chatProvider = ChatProvider(jwtToken: jwtToken, isGuest: isGuest, showKey: showKey) {result,error in
+            Config.shared.isDebugMode() ? (result ? print("Token Created!") : print(error?.localizedDescription)) : ()
+            completion?(result,error)
+        }
         
         // Set the delegate to receive chat events from ChatProvider
         self.chatProvider?.delegate = self
