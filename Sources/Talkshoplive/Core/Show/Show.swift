@@ -49,10 +49,7 @@ public class Show {
             case .success(let eventInstance):
                 // Set the details and invoke the completion with success.
                 completion(.success(eventInstance))
-                if self.incrementedView[showKey] == nil {
-                    self.incrementedView[showKey] = false
-                }
-                if self.incrementedView[showKey] == false ,
+                if let incremented = self.incrementedView[showKey], !incremented,
                    let eventId = eventInstance.id,
                     eventInstance.streamInCloud == true,
                     eventInstance.status == "live"
