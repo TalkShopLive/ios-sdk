@@ -18,6 +18,7 @@ public enum APIEndpoint {
     case getHlsUrl(fileName: String)
     case deleteMessage(eventId: String,timetoken: String)
     case getCollector
+    case getIncrementViewCount(eventId: Int)
     
     var baseURL: String {
         do {
@@ -28,6 +29,8 @@ public enum APIEndpoint {
                 return try Config.loadAPIConfig().ASSETS_URL
             case .getCollector:
                 return try Config.loadAPIConfig().COLLECTOR_BASE_URL
+            case .getIncrementViewCount:
+                return try Config.loadAPIConfig().EVENTS_BASE_URL
             }
         } catch {
             fatalError("Failed to load configuration: \(error)")
@@ -56,6 +59,8 @@ public enum APIEndpoint {
             return "/api2/v1/sdk/chat/messages/\(eventId)/\(timetoken)"
         case .getCollector:
             return "/collect"
+        case .getIncrementViewCount(eventId: let eventId):
+            return "/event/\(eventId)/increment"
         }
     }
 }

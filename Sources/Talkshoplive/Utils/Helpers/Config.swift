@@ -95,7 +95,7 @@ public class Config {
         }
         
         guard let fileURL = Bundle.module.url(forResource: fileName, withExtension: "json") else {
-            return APIConfig.init(BASE_URL: "", ASSETS_URL: "", COLLECTOR_BASE_URL: "")
+            return APIConfig.init(BASE_URL: "", ASSETS_URL: "", COLLECTOR_BASE_URL: "", EVENTS_BASE_URL: "")
         }
 
         let data = try Data(contentsOf: fileURL)
