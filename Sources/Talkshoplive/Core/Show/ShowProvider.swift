@@ -28,4 +28,10 @@ public class ShowProvider {
             completion(result)
         })
     }
+    
+    internal func incrementView(eventId:Int, _ completion: ((Bool, Error?) -> Void)? = nil) {
+        Networking.getIncrementView(eventId: eventId) { status,error  in
+            completion?(status,error)
+        }
+    }
 }

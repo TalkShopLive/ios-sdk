@@ -45,3 +45,23 @@ public struct NoResponse: Codable {
     }
 }
 
+public struct IncrementViewResponse: Codable {
+    let status: String?
+    
+    public init() {
+        status = nil
+    }
+    
+    // Define CodingKeys to map keys to properties
+    enum CodingKeys: String, CodingKey {
+        case status
+    }
+    
+    // Implement Decodable initializer
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        status = try container.decodeIfPresent(String.self, forKey: .status)
+    }
+    
+}
+

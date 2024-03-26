@@ -64,6 +64,7 @@ public struct APIConfig: Codable {
     public let BASE_URL: String
     public let ASSETS_URL: String
     public let COLLECTOR_BASE_URL: String
+    public let EVENTS_BASE_URL: String
 }
 public enum HTTPMethod: String {
     case get = "GET"
