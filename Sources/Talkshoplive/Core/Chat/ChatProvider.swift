@@ -238,20 +238,31 @@ public class ChatProvider {
                 // Check the channel type
                 switch message.channel {
                 case self.publishChannel :
-                    // If the message is from the publish channel, notify the delegate asynchronously
-                    DispatchQueue.main.async {
+                    // Check if the sender ID exists in the converted message payload.
                         if let senderId = convertedMessage.payload?.sender?.id {
+                            // Fetch user metadata using the sender ID.
                             Users().fetchUserMetaData(uuid: senderId) { result in
                                 switch result {
                                 case .success(let senderData):
-                                    self.delegate?.onMessageReceived(convertedMessage)
+                                    // Update the sender information in the converted message payload.
+                                    convertedMessage.payload?.sender = senderData
+                                    
+                                    // Notify the delegate on the main thread about the received message.
+                                    DispatchQueue.main.async {
+                                        self.delegate?.onMessageReceived(convertedMessage)
+                                    }
+                                    
                                 case .failure(let error):
-                                    // Invoke the completion with failure if an error occurs.
+                                    // Print the error if debug mode is enabled.
                                     Config.shared.isDebugMode() ? print("Error fetching user metadata: \(error.localizedDescription)") : ()
+                                    
+                                    // Notify the delegate on the main thread about the received message even if there's an error.
+                                    DispatchQueue.main.async {
+                                        self.delegate?.onMessageReceived(convertedMessage)
+                                    }
                                 }
                             }
                         }
-                    }
                     
                 case self.eventsChannel:
                     // If the message is from the events channel
@@ -398,34 +409,52 @@ public class ChatProvider {
                     if let myChannelMessages = response.messagesByChannel[self.publishChannel!] {
                         // Convert the dictionary into an array of MessageBase
                         var messageArray: [MessageBase] = []
+                        
+                        // Dispatch group to handle asynchronous tasks completion
                         let dispatchGroup = DispatchGroup()
                         
                         for message in myChannelMessages {
+                            // Enter the dispatch group for each message
                             dispatchGroup.enter()
+                            
+                            // Convert the PubNub message to a MessageBase object
                             var convertedMessage = MessageBase(pubNubMessage: message)
+                            
+                            // Check if the converted message has text content
                             guard convertedMessage.payload?.text != nil else {
                                 // Skip converted messages without text
                                 dispatchGroup.leave()
                                 continue
                             }
                             
+                            // Fetch user metadata for the sender of the message
                             if let senderId = convertedMessage.payload?.sender?.id {
                                 self.usersProvider.fetchUserMetaData(uuid: senderId) { result in
                                     switch result {
                                     case .success(let senderData):
+                                        // Update the sender information in the converted message payload
                                         convertedMessage.payload?.sender = senderData
+                                        
+                                        // Append the converted message to the message array
                                         messageArray.append(convertedMessage)
+                                        
+                                        // Leave the dispatch group as message processing is complete
                                         dispatchGroup.leave()
                                     case .failure(let error):
-                                        // Invoke the completion with failure if an error occurs.
+                                        //Append the converted message with original sender data, as there is an error fetching info
+                                        messageArray.append(convertedMessage)
+                                        
+                                        // Leave the dispatch group as message processing is complete
                                         dispatchGroup.leave()
                                     }
                                 }
                             } else {
+                                // If sender ID is not available, leave the dispatch group
                                 dispatchGroup.leave()
                             }
                         }
                         
+                        // Notify when all message processing is complete
                         dispatchGroup.notify(queue: .main) {
                            Config.shared.isDebugMode() ? print("History : Fetched successfully!") : ()
                             // Create a MessagePage object based on the next page information
