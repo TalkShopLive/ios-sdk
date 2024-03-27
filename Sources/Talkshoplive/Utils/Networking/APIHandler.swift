@@ -31,7 +31,7 @@ extension APIClientError: LocalizedError {
         case .requestFailed(let error):
             return "Request failed: \(error.localizedDescription)"
         case .noData:
-            return "No data received"
+            return "No data found"
         case .responseDecodingFailed(let error):
             return "Response decoding failed: \(error.localizedDescription)"
         case .invalidData:

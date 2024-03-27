@@ -14,11 +14,11 @@ func convertToModel<T: Decodable>(from: String, responseType: T.Type) -> T? {
             let messageData = try JSONDecoder().decode(responseType, from: jsonData)
             return messageData
         } catch {
-            print("Error decoding JSON: \(error)")
+//            print("Error decoding JSON: \(error)")
             return nil
         }
     } else {
-        print("Error converting payload to Data.")
+//        print("Error converting payload to Data.")
         return nil
     }
 }

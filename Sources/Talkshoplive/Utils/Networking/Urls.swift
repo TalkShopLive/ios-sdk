@@ -19,11 +19,12 @@ public enum APIEndpoint {
     case deleteMessage(eventId: String,timetoken: String)
     case getCollector
     case getIncrementViewCount(eventId: Int)
+    case getUserMetadata(uuid: String)
     
     var baseURL: String {
         do {
             switch self {
-            case .messagingToken, .getShows, .getCurrentEvent,.register,.getGuestUserToken,.getFederatedUserToken,.deleteMessage:
+            case .messagingToken, .getShows, .getCurrentEvent,.register,.getGuestUserToken,.getFederatedUserToken,.deleteMessage,.getUserMetadata:
                 return try Config.loadAPIConfig().BASE_URL
             case .getClosedCaptions,.getHlsUrl:
                 return try Config.loadAPIConfig().ASSETS_URL
@@ -61,6 +62,8 @@ public enum APIEndpoint {
             return "/collect"
         case .getIncrementViewCount(eventId: let eventId):
             return "/event/\(eventId)/increment"
+        case .getUserMetadata(uuid: let uuid):
+            return "/api/messaging/senders/\(uuid)"
         }
     }
 }
