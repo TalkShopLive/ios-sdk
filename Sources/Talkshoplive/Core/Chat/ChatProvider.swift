@@ -35,6 +35,7 @@ public class ChatProvider {
     private var jwtToken: String?
     private var eventInstance: EventData?
     var isUpdateUser: Bool = false
+    private var usersProvider = UsersProvider.shared
 
     // MARK: - Initializer
     
@@ -232,19 +233,40 @@ public class ChatProvider {
                 Config.shared.isDebugMode() ? print("messageReceived:=> The \(message.channel) channel received a listener event at \(message.published)") : ()
                 
                 // Convert the received message into a MessageBase object
-                let convertedMessage = MessageBase(pubNubMessage: message)
+                var convertedMessage = MessageBase(pubNubMessage: message)
                 
                 // Check the channel type
                 switch message.channel {
                 case self.publishChannel :
-                    // If the message is from the publish channel, notify the delegate asynchronously
-                    DispatchQueue.main.async {
-                        self.delegate?.onMessageReceived(convertedMessage)
-                    }
+                    // Check if the sender ID exists in the converted message payload.
+                        if let senderId = convertedMessage.payload?.sender?.id {
+                            // Fetch user metadata using the sender ID.
+                            Users().fetchUserMetaData(uuid: senderId) { result in
+                                switch result {
+                                case .success(let senderData):
+                                    // Update the sender information in the converted message payload.
+                                    convertedMessage.payload?.sender = senderData
+                                    
+                                    // Notify the delegate on the main thread about the received message.
+                                    DispatchQueue.main.async {
+                                        self.delegate?.onMessageReceived(convertedMessage)
+                                    }
+                                    
+                                case .failure(let error):
+                                    // Print the error if debug mode is enabled.
+                                    Config.shared.isDebugMode() ? print("Error fetching user metadata: \(error.localizedDescription)") : ()
+                                    
+                                    // Notify the delegate on the main thread about the received message even if there's an error.
+                                    DispatchQueue.main.async {
+                                        self.delegate?.onMessageReceived(convertedMessage)
+                                    }
+                                }
+                            }
+                        }
                     
                 case self.eventsChannel:
                     // If the message is from the events channel
-                    if let payloadKey = convertedMessage.payload?.key, payloadKey == .messageDeleted {
+                    if let payloadKey = convertedMessage.payload?.key, payloadKey.isEqual(to: .messageDeleted){
                         // If the payload key is "messageDeleted", notify the delegate asynchronously
                         DispatchQueue.main.async {
                             self.delegate?.onMessageRemoved(convertedMessage)
@@ -373,44 +395,84 @@ public class ChatProvider {
     ///   - completion: A closure to be called upon completion, providing a Result with an array of MessageBase objects,
     ///                 an optional MessagePage for pagination, or an error if the operation fails.
     internal func fetchPastMessages(limit: Int = 25, start: Int? = nil, includeActions: Bool = true, includeMeta: Bool = true, includeUUID: Bool = true, completion: @escaping (Result<([MessageBase], MessagePage?), Error>) -> Void) {
-         // Use PubNub's fetchMessageHistory method to retrieve message history for specified channels
+        // Use PubNub's fetchMessageHistory method to retrieve message history for specified channels
         pubnub?.fetchMessageHistory(for: self.channels, includeActions: includeActions, includeMeta: includeMeta, includeUUID: includeUUID, page: PubNubBoundedPageBase(start: start != nil ? UInt64(start!) : nil, limit: limit), completion: { result in
-             do {
-                 switch result {
-                 case let .success(response):
-                     // Check if there is a next page for pagination and print it in debug mode
-                     if let nextPage = response.next {
-                         Config.shared.isDebugMode() ? print("The next page used for pagination: \(nextPage)") : ()
-                     }
-                     
-                     // Check if the messages for the specified channel exist in the response
-                     if let myChannelMessages = response.messagesByChannel[self.publishChannel!] {
-                         // Convert the dictionary into an array of MessageBase
-                         let messageArray : [MessageBase] = myChannelMessages.compactMap { message in
-                             let convertedMessage = MessageBase(pubNubMessage: message)
-                             guard convertedMessage.payload?.text != nil else {
-                                    // Skip converted messages without text
-                                    return nil
+            do {
+                switch result {
+                case let .success(response):
+                    // Check if there is a next page for pagination and print it in debug mode
+                    if let nextPage = response.next {
+                        Config.shared.isDebugMode() ? print("History : Next page used for pagination: \(nextPage)") : ()
+                    }
+                    
+                    // Check if the messages for the specified channel exist in the response
+                    if let myChannelMessages = response.messagesByChannel[self.publishChannel!] {
+                        // Convert the dictionary into an array of MessageBase
+                        var messageArray: [MessageBase] = []
+                        
+                        // Dispatch group to handle asynchronous tasks completion
+                        let dispatchGroup = DispatchGroup()
+                        
+                        for message in myChannelMessages {
+                            // Enter the dispatch group for each message
+                            dispatchGroup.enter()
+                            
+                            // Convert the PubNub message to a MessageBase object
+                            var convertedMessage = MessageBase(pubNubMessage: message)
+                            
+                            // Check if the converted message has text content
+                            guard convertedMessage.payload?.text != nil else {
+                                // Skip converted messages without text
+                                dispatchGroup.leave()
+                                continue
                             }
-                            return convertedMessage
-                         }
-                         print("SDK : Fetch History: \(messageArray)")
-                         // Create a MessagePage object based on the next page information
-                         let page = MessagePage(page: response.next as! PubNubBoundedPageBase)
-                                                  
-                         // Invoke the completion closure with success and the obtained messages and page
-                         completion(.success((messageArray,page)))
-                         
-                     }
-                     
-                 case let .failure(error):
-                     // Print an error message in case of a failure and invoke the completion closure with the error
-                     print("Fetch History Failed: \(error.localizedDescription)")
-                     completion(.failure(error))
-                 }
-             }
-         })
-     }
+                            
+                            // Fetch user metadata for the sender of the message
+                            if let senderId = convertedMessage.payload?.sender?.id {
+                                self.usersProvider.fetchUserMetaData(uuid: senderId) { result in
+                                    switch result {
+                                    case .success(let senderData):
+                                        // Update the sender information in the converted message payload
+                                        convertedMessage.payload?.sender = senderData
+                                        
+                                        // Append the converted message to the message array
+                                        messageArray.append(convertedMessage)
+                                        
+                                        // Leave the dispatch group as message processing is complete
+                                        dispatchGroup.leave()
+                                    case .failure(let error):
+                                        //Append the converted message with original sender data, as there is an error fetching info
+                                        messageArray.append(convertedMessage)
+                                        
+                                        // Leave the dispatch group as message processing is complete
+                                        dispatchGroup.leave()
+                                    }
+                                }
+                            } else {
+                                // If sender ID is not available, leave the dispatch group
+                                dispatchGroup.leave()
+                            }
+                        }
+                        
+                        // Notify when all message processing is complete
+                        dispatchGroup.notify(queue: .main) {
+                           Config.shared.isDebugMode() ? print("History : Fetched successfully!") : ()
+                            // Create a MessagePage object based on the next page information
+                            let page = MessagePage(page: response.next as! PubNubBoundedPageBase)
+                            // Invoke the completion closure with success and the obtained messages and page
+                            completion(.success((messageArray, page)))
+                        }
+                    }
+                    
+                case let .failure(error):
+                    // Print an error message in case of a failure and invoke the completion closure with the error
+                    Config.shared.isDebugMode() ? print("History : Fetch History Failed: \(error.localizedDescription)") : ()
+                    completion(.failure(error))
+                }
+            }
+        })
+    }
+
     
     // MARK: - Clears the connection
     

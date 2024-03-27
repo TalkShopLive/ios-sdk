@@ -44,7 +44,7 @@ class Networking {
             case .success(let apiResponse):
                 // Successfully retrieved shows data
                 completion(.success(apiResponse.product))
-            case .failure(let error):
+            case .failure(_):
                 // Error occurred due to invalid show key
                 completion(.failure(APIClientError.invalidShowKey))
             }
@@ -58,7 +58,7 @@ class Networking {
             case .success(let apiResponse):
                 // Successfully retrieved current event data
                 completion(.success(apiResponse))
-            case .failure(let error):
+            case .failure(_):
                 // Error occurred due to invalid show key
                 completion(.failure(APIClientError.invalidShowKey))
             }
@@ -78,7 +78,7 @@ class Networking {
             case .success(let apiResponse):
                 // Successfully retrieved messaging token
                 completion(.success(apiResponse))
-            case .failure(let error):
+            case .failure(_):
                 // Failed to retrieve messaging token
                 completion(.failure(APIClientError.tokenRetrievalFailed))
             }
@@ -90,10 +90,10 @@ class Networking {
         // Make a request to delete the message
         APIHandler().requestDelete(jwtToken: jwtToken, endpoint: APIEndpoint.deleteMessage(eventId: eventId, timetoken: timeToken), method: .delete, body: nil) { result in
             switch result {
-            case .success(let apiResponse):
+            case .success(_):
                 // Successfully deleted the message
                 completion(.success(true))
-            case .failure(let error):
+            case .failure(_):
                 // Failed to delete the message
                 completion(.failure(APIClientError.somethingWentWrong))
             }
@@ -138,7 +138,7 @@ class Networking {
         APIHandler().request(endpoint: APIEndpoint.getCollector, method: .post, body: payload, responseType: NoResponse.self) { result in
             let actionType = payload.action!.rawValue
             switch result {
-            case .success(let apiResponse):
+            case .success(_):
                 // Analytics data sent successfully
                 Config.shared.isDebugMode() ? print("Collector-\(actionType) :: Analytics Succeeded") : ()
                 completion?(true, nil)
@@ -155,12 +155,33 @@ class Networking {
         // Make a request to increment the view count
         APIHandler().request(endpoint: APIEndpoint.getIncrementViewCount(eventId: eventId), method: .post, body: nil, responseType: IncrementViewResponse.self) { result in
             switch result {
-            case .success(let apiResponse):
+            case .success(_):
                 // View count incremented successfully
                 completion?(true, nil)
             case .failure(let error):
                 // Failed to increment view count
                 completion?(false, error)
+            }
+        }
+    }
+    
+    //MARK: Users
+    
+    // Fetches user metadata from the server using the provided UUID.
+    static func getUserMetadata(uuid: String, _ completion: @escaping (Result<Sender, Error>) -> Void) {
+        // Make a request to the APIHandler to fetch user metadata.
+        APIHandler().request(endpoint: APIEndpoint.getUserMetadata(uuid: uuid), method: .get, body: nil, responseType: UserMeataResponse.self) { result in
+            switch result {
+            case .success(let apiResponse):
+                // User's metadata fetched successfully
+                if let sender = apiResponse.sender {
+                    completion(.success(sender))
+                } else {
+                    completion(.failure(APIClientError.noData))
+                }
+            case .failure(let error):
+                // Failed to get user metadata
+                completion(.failure(APIClientError.somethingWentWrong))
             }
         }
     }

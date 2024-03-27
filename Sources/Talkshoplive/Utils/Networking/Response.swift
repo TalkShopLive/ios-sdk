@@ -65,3 +65,28 @@ public struct IncrementViewResponse: Codable {
     
 }
 
+public struct UserMeataResponse: Codable {
+    let sender: Sender?
+    
+    public init() {
+        sender = nil
+    }
+    
+    // Define CodingKeys to map keys to properties
+    enum CodingKeys: String, CodingKey {
+        case sender
+    }
+    
+    // Implement Decodable initializer
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        sender = try container.decodeIfPresent(Sender.self, forKey: .sender)
+    }
+    
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encodeIfPresent(self.sender, forKey: .sender)
+    }
+    
+}
+

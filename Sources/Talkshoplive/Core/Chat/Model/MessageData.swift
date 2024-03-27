@@ -122,6 +122,7 @@ public struct Sender : JSONCodable{
     public let id: String? //User ID obtained from the backend after creating a messaging token.
     public let name: String?
     public let profileUrl: String?
+    public let externalId: String?
     
     // MARK: - Coding Keys
     
@@ -130,6 +131,7 @@ public struct Sender : JSONCodable{
         case id
         case name
         case profileUrl
+        case externalId
     }
     
     // MARK: - Initializers
@@ -139,13 +141,15 @@ public struct Sender : JSONCodable{
         self.id = nil
         self.name = nil
         self.profileUrl = nil
+        self.externalId = nil
     }
     
     /// Custom initializer with parameters for all properties.
-    public init(id: String? = nil, name: String? = nil, profileUrl:String? = nil) {
+    public init(id: String? = nil, name: String? = nil, profileUrl:String? = nil,externalId:String? = nil) {
         self.id = id
         self.name = name
         self.profileUrl = profileUrl
+        self.externalId = externalId
     }
     
     // MARK: - Codable
@@ -161,7 +165,7 @@ public struct Sender : JSONCodable{
         } else {
             profileUrl = nil
         }
-
+        externalId = try container.decodeIfPresent(String.self, forKey: .externalId)
     }
     
     /// Encoder method to convert the struct to an encoded format.
@@ -171,6 +175,7 @@ public struct Sender : JSONCodable{
         try container.encode(id, forKey: .id)
         try container.encode(name, forKey: .name)
         try container.encode(profileUrl, forKey: .profileUrl)
+        try container.encode(externalId, forKey: .externalId)
 
     }
 }
@@ -191,9 +196,46 @@ public struct MessageData: JSONCodable {
     public var key: MessagePayloadKey? // Platform identifier, e.g., "sdk".
     public var timeToken: String?
     
-    public enum MessagePayloadKey: String, Codable {
-        case messageDeleted = "message_deleted"
+    public enum MessagePayloadKey: Codable {
+        case messageDeleted
+        case custom(String) // Handle any custom message types
         // Add more cases as needed
+        
+        public init(from decoder: Decoder) throws {
+            let container = try decoder.singleValueContainer()
+            if let rawValue = try? container.decode(String.self) {
+                switch rawValue {
+                case "message_deleted":
+                    self = .messageDeleted
+                default:
+                    self = .custom(rawValue)
+                }
+            } else {
+                throw DecodingError.dataCorruptedError(in: container, debugDescription: "Invalid payload key")
+            }
+        }
+        
+        public func encode(to encoder: Encoder) throws {
+            var container = encoder.singleValueContainer()
+            switch self {
+            case .messageDeleted:
+                try container.encode("message_deleted")
+            case .custom(let value):
+                try container.encode(value)
+            }
+        }
+        
+        // Function to check equality
+        public func isEqual(to other: MessagePayloadKey) -> Bool {
+            switch (self, other) {
+            case (.messageDeleted, .messageDeleted):
+                return true
+            case let (.custom(value1), .custom(value2)):
+                return value1 == value2
+            default:
+                return false
+            }
+        }
     }
     
     /// Enum defining different types of messages.
