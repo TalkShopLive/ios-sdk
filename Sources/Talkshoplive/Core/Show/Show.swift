@@ -19,7 +19,7 @@ public class Show {
     }
     // MARK: - Public Methods
     /// Get the details of the show.
-    public func getDetails(showKey: String, completion: @escaping (Result<ShowData, Error>) -> Void) {
+    public func getDetails(showKey: String, completion: @escaping (Result<ShowData, APIClientError>) -> Void) {
         
         ShowProvider().fetchShow(showKey: showKey) { result in
             switch result {
@@ -43,7 +43,7 @@ public class Show {
         }
     }
     
-    public func getStatus(showKey: String, completion: @escaping (Result<EventData, Error>) -> Void) {
+    public func getStatus(showKey: String, completion: @escaping (Result<EventData, APIClientError>) -> Void) {
         ShowProvider().fetchCurrentEvent(showKey: showKey) { result in
             switch result {
             case .success(let eventInstance):

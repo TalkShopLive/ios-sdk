@@ -44,7 +44,7 @@ public class ChatProvider {
     ///   - jwtToken: The JWT token used for authentication.
     ///   - isGuest: A boolean indicating whether the user is a guest.
     ///   - showKey: The show key used to configure the chat provider.
-    public init(jwtToken: String, isGuest: Bool, showKey: String,_ completion: ((Bool, Error?) -> Void)? = nil) {
+    public init(jwtToken: String, isGuest: Bool, showKey: String,_ completion: ((Bool, APIClientError?) -> Void)? = nil) {
         // Load configuration from ConfigLoader
         do {
             self.isGuest = isGuest
@@ -111,7 +111,7 @@ public class ChatProvider {
 
     // Create a messaging token asynchronously
     /// - Parameter jwtToken: The JWT token used for authentication.
-    private func createMessagingToken(jwtToken: String,_ completion: ((Bool, Error?) -> Void)? = nil) {
+    private func createMessagingToken(jwtToken: String,_ completion: ((Bool, APIClientError?) -> Void)? = nil) {
         // Call Networking to fetch the messaging token
         Networking.createMessagingToken(jwtToken: jwtToken, isGuest: self.isGuest) { result in
             switch result {
@@ -162,7 +162,7 @@ public class ChatProvider {
 
     /// Subscribe to channels based on the showKey.
     /// - Parameter showKey: The show key used to determine which channels to subscribe to.
-    private func initializePubNub(_ completion: ((Bool, Error?) -> Void)? = nil) {
+    private func initializePubNub(_ completion: ((Bool, APIClientError?) -> Void)? = nil) {
         Networking.getCurrentEvent(showKey: self.showKey, completion: { result in
             switch result {
             case .success(let eventData):
@@ -204,13 +204,13 @@ public class ChatProvider {
                             }
                         })
                     } else {
-                        completion?(false,APIClientError.tokenRetrievalFailed)
+                        completion?(false,APIClientError.USER_TOKEN_EXCEPTION)
                     }
                 }
             case .failure(let error):
                 // Invoke the completion with failure if an error occurs.
                 Config.shared.isDebugMode() ? print("\(error.localizedDescription)") : ()
-                completion?(false,APIClientError.invalidShowKey)
+                completion?(false,APIClientError.SHOW_NOT_FOUND)
             }
         })
     }
@@ -350,7 +350,7 @@ public class ChatProvider {
     ///   - completion: A closure to be called after the publishing operation completes. It receives two parameters:
     ///                 - success: A boolean value indicating whether the publishing operation was successful.
     ///                 - error: An optional Error object indicating any error that occurred during the publishing operation.
-    internal func publish(message: String, completion: @escaping (Bool, Error?) -> Void)  {
+    internal func publish(message: String, completion: @escaping (Bool, APIClientError?) -> Void)  {
         // Check if the message length is within the specified limit
         guard message.count <= 200 else {
             // Handle the case where the message exceeds the maximum length
@@ -379,7 +379,7 @@ public class ChatProvider {
                     case let .failure(error):
                         // Print an error message in case of a failure during publishing
                         Config.shared.isDebugMode() ? print("Message Sending Failed: \(error.localizedDescription)") : ()
-                        completion(false, error) // Indicate failure with status false and pass the error
+                        completion(false, APIClientError.MESSAGE_SENDING_FAILED) // Indicate failure with status false and pass the error
                     }
                 }
             }
@@ -394,7 +394,7 @@ public class ChatProvider {
     ///   - start: timestamp of last fetched message or now
     ///   - completion: A closure to be called upon completion, providing a Result with an array of MessageBase objects,
     ///                 an optional MessagePage for pagination, or an error if the operation fails.
-    internal func fetchPastMessages(limit: Int = 25, start: Int? = nil, includeActions: Bool = true, includeMeta: Bool = true, includeUUID: Bool = true, completion: @escaping (Result<([MessageBase], MessagePage?), Error>) -> Void) {
+    internal func fetchPastMessages(limit: Int = 25, start: Int? = nil, includeActions: Bool = true, includeMeta: Bool = true, includeUUID: Bool = true, completion: @escaping (Result<([MessageBase], MessagePage?), APIClientError>) -> Void) {
         // Use PubNub's fetchMessageHistory method to retrieve message history for specified channels
         pubnub?.fetchMessageHistory(for: self.channels, includeActions: includeActions, includeMeta: includeMeta, includeUUID: includeUUID, page: PubNubBoundedPageBase(start: start != nil ? UInt64(start!) : nil, limit: limit), completion: { result in
             do {
@@ -467,7 +467,7 @@ public class ChatProvider {
                 case let .failure(error):
                     // Print an error message in case of a failure and invoke the completion closure with the error
                     Config.shared.isDebugMode() ? print("History : Fetch History Failed: \(error.localizedDescription)") : ()
-                    completion(.failure(error))
+                    completion(.failure(APIClientError.MESSAGE_LIST_FAILED))
                 }
             }
         })
@@ -494,7 +494,7 @@ public class ChatProvider {
     }
     
     // MARK: - Messages count for specific channel
-    internal func count(completion: @escaping (Int, Error?) -> Void?) {
+    internal func count(completion: @escaping (Int, APIClientError?) -> Void?) {
           // Check if a channel is provided for counting messages
           if let channel = self.publishChannel {
               // Use PubNub to retrieve message counts for the specified channel
@@ -512,13 +512,13 @@ public class ChatProvider {
                   case let .failure(error):
                       // Handle the failure case when retrieving message counts
                       Config.shared.isDebugMode() ? print("Message Count Failed: \(error.localizedDescription)") : ()
-                      completion(0,error)
+                      completion(0,APIClientError.UNKNOWN_EXCEPTION)
                   }
               })
           } else {
               // Handle the case when no channel is provided
-              Config.shared.isDebugMode() ? print("Message Count Failed: \(APIClientError.somethingWentWrong)") : ()
-              completion(0,APIClientError.somethingWentWrong)
+              Config.shared.isDebugMode() ? print("Message Count Failed: \(APIClientError.UNKNOWN_EXCEPTION)") : ()
+              completion(0,APIClientError.UNKNOWN_EXCEPTION)
           }
           
       }
@@ -529,7 +529,7 @@ public class ChatProvider {
     /// - Parameters:
     ///   - timetoken: The timetoken of the message when it's published.
     ///   - completion: A closure that receives the result of the deletion operation as a `Result` enum with a `Bool` indicating success or failure and an `Error` in case of failure.
-    internal func unPublishMessage(timetoken: String, completion: @escaping (Result<Bool, Error>) -> Void) {
+    internal func unPublishMessage(timetoken: String, completion: @escaping (Result<Bool, APIClientError>) -> Void) {
         // Check if the publish channel and JWT token are available
         if let channel = publishChannel, let jwtToken = self.getJwtToken() {
             // Call the Networking's deletMessage method to delete the message

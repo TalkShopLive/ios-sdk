@@ -19,7 +19,7 @@ public class Users {
         
     }
     
-    internal func fetchUserMetaData(uuid:String,completion: @escaping (Result<Sender, Error>) -> Void) {
+    internal func fetchUserMetaData(uuid:String,completion: @escaping (Result<Sender, APIClientError>) -> Void) {
         UsersProvider().fetchUserMetaData(uuid: uuid) { result in
             switch result {
             case .success(let userMetadata):
