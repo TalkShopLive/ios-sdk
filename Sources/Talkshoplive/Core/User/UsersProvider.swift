@@ -29,7 +29,7 @@ public class UsersProvider {
     }
     
     // MARK: - Private Methods
-    internal func fetchUserMetaData(uuid: String, completion: @escaping (Result<Sender, Error>) -> Void) {
+    internal func fetchUserMetaData(uuid: String, completion: @escaping (Result<Sender, APIClientError>) -> Void) {
         if let userMetadata = self.getUserMetadata(forUser: uuid) {
             completion(.success(userMetadata))
         } else {

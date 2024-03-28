@@ -7,53 +7,6 @@
 
 import Foundation
 
-public enum APIClientError: Error {
-    case invalidURL
-    case requestFailed(Error)
-    case noData
-    case responseDecodingFailed(Error)
-    case invalidData
-    case requestDisabled
-    case authenticationInvalid
-    case sameToken
-    case somethingWentWrong
-    case httpError(Int)
-    case tokenRetrievalFailed
-    case invalidShowKey
-
-}
-
-extension APIClientError: LocalizedError {
-    public var errorDescription: String? {
-        switch self {
-        case .invalidURL:
-            return "Invalid URL"
-        case .requestFailed(let error):
-            return "Request failed: \(error.localizedDescription)"
-        case .noData:
-            return "No data found"
-        case .responseDecodingFailed(let error):
-            return "Response decoding failed: \(error.localizedDescription)"
-        case .invalidData:
-            return "Invalid data"
-        case .requestDisabled:
-            return "Request is disabled"
-        case .authenticationInvalid:
-            return "Authentication is invalid"
-        case .sameToken:
-            return "Same token error"
-        case .somethingWentWrong:
-            return "Something went wrong"
-        case .httpError(let statusCode):
-            return "HTTP error with status code: \(statusCode)"
-        case .tokenRetrievalFailed:
-            return "Token retrieval failed"
-        case .invalidShowKey:
-            return "Invalid showKey"
-        }
-    }
-}
-
 public struct EnvConfig: Codable {
     public let PUBLISH_KEY: String
     public let SUBSCRIBE_KEY: String
@@ -78,19 +31,19 @@ public class APIHandler {
         
     }
     
-    public func request<T: Decodable>(endpoint: APIEndpoint, method: HTTPMethod, body: Encodable?, responseType: T.Type, completion: @escaping (Result<T, Error>) -> Void) {
+    public func request<T: Decodable>(endpoint: APIEndpoint, method: HTTPMethod, body: Encodable?, responseType: T.Type, completion: @escaping (Result<T, APIClientError>) -> Void) {
         
         // Check if the SDK is initialized or not
         guard Config.shared.isInitialized() else {
             print("SDK is not initialized")
-            completion(.failure(APIClientError.requestDisabled))
+            completion(.failure(APIClientError.AUTHENTICATION_EXCEPTION))
             return
         }
         
         let fullURL = endpoint.baseURL + endpoint.path
         
         guard let url = URL(string: fullURL) else {
-            completion(.failure(APIClientError.invalidURL))
+            completion(.failure(APIClientError.INVALID_URL))
             return
         }
         
@@ -103,25 +56,25 @@ public class APIHandler {
                 let requestBody = try JSONEncoder().encode(param)
                 request.httpBody = requestBody
             } catch {
-                completion(.failure(APIClientError.requestFailed(error)))
+                completion(.failure(APIClientError.REQUEST_FAILED(error)))
                 return
             }
         }
         
         let task = URLSession.shared.dataTask(with: request) { (data, response, error) in
             if let error = error {
-                completion(.failure(APIClientError.requestFailed(error)))
+                completion(.failure(APIClientError.REQUEST_FAILED(error)))
                 return
             }
             guard let httpResponse = response as? HTTPURLResponse else {
-                completion(.failure(APIClientError.invalidData))
+                completion(.failure(APIClientError.UNKNOWN_EXCEPTION))
                 return
             }
             
             // Check for HTTP status code indicating an error
             let statusCode = httpResponse.statusCode
             if statusCode >= 400 {
-                let statusCodeError = APIClientError.httpError(statusCode)
+                let statusCodeError = APIClientError.HTTP_ERROR(statusCode)
                 completion(.failure(statusCodeError))
                 return
             }else if (200..<299).contains(statusCode) {
@@ -139,7 +92,7 @@ public class APIHandler {
                         let apiResponse = try JSONDecoder().decode(responseType, from: data)
                         completion(.success(apiResponse))
                     } catch {
-                        completion(.failure(APIClientError.responseDecodingFailed(error)))
+                        completion(.failure(APIClientError.UNKNOWN_EXCEPTION))
                     }
                 } else {
                     // Handle the case where the response data is empty
@@ -153,12 +106,12 @@ public class APIHandler {
         task.resume()
     }
     
-    public func requestToRegister<T: Decodable>(clientKey: String, endpoint: APIEndpoint, method: HTTPMethod, body: Encodable?, responseType: T.Type, completion: @escaping (Result<T, Error>) -> Void) {
+    public func requestToRegister<T: Decodable>(clientKey: String, endpoint: APIEndpoint, method: HTTPMethod, body: Encodable?, responseType: T.Type, completion: @escaping (Result<T, APIClientError>) -> Void) {
         
         let fullURL = endpoint.baseURL + endpoint.path
         
         guard let url = URL(string: fullURL) else {
-            completion(.failure(APIClientError.invalidURL))
+            completion(.failure(APIClientError.INVALID_URL))
             return
         }
         
@@ -168,15 +121,13 @@ public class APIHandler {
         
         // Add x-tsl-sdk-key header
         request.addValue(clientKey, forHTTPHeaderField: "x-tsl-sdk-key")
-
-        print("URL", url)
         
         if let param = body {
             do {
                 let requestBody = try JSONEncoder().encode(param)
                 request.httpBody = requestBody
             } catch {
-                completion(.failure(APIClientError.requestFailed(error)))
+                completion(.failure(APIClientError.REQUEST_FAILED(error)))
                 return
             }
         }
@@ -184,25 +135,25 @@ public class APIHandler {
         
         let task = URLSession.shared.dataTask(with: request) { (data, response, error) in
             if let error = error {
-                completion(.failure(APIClientError.requestFailed(error)))
+                completion(.failure(APIClientError.REQUEST_FAILED(error)))
                 return
             }
             
             guard let httpResponse = response as? HTTPURLResponse else {
-                    completion(.failure(APIClientError.invalidData))
+                    completion(.failure(APIClientError.UNKNOWN_EXCEPTION))
                     return
                 }
                 
             // Check for HTTP status code indicating an error
             let statusCode = httpResponse.statusCode
             if statusCode >= 400 {
-                let statusCodeError = APIClientError.httpError(statusCode)
+                let statusCodeError = APIClientError.HTTP_ERROR(statusCode)
                 completion(.failure(statusCodeError))
                 return
             }
             
             guard let data = data else {
-                completion(.failure(APIClientError.noData))
+                completion(.failure(APIClientError.NO_DATA))
                 return
             }
             
@@ -214,26 +165,26 @@ public class APIHandler {
                 let apiResponse = try JSONDecoder().decode(responseType, from: data)
                 completion(.success(apiResponse))
             } catch {
-                completion(.failure(APIClientError.responseDecodingFailed(error)))
+                completion(.failure(APIClientError.UNKNOWN_EXCEPTION))
             }
         }
         
         task.resume()
     }
     
-    public func requestToken<T: Decodable>(jwtToken: String, endpoint: APIEndpoint, method: HTTPMethod, body: Encodable?, responseType: T.Type, completion: @escaping (Result<T, Error>) -> Void) {
+    public func requestToken<T: Decodable>(jwtToken: String, endpoint: APIEndpoint, method: HTTPMethod, body: Encodable?, responseType: T.Type, completion: @escaping (Result<T, APIClientError>) -> Void) {
         
         // Check if the SDK is initialized or not
         guard Config.shared.isInitialized() else {
             print("SDK is not initialized")
-            completion(.failure(APIClientError.requestDisabled))
+            completion(.failure(APIClientError.AUTHENTICATION_EXCEPTION))
             return
         }
         
         let fullURL = endpoint.baseURL + endpoint.path
         
         guard let url = URL(string: fullURL) else {
-            completion(.failure(APIClientError.invalidURL))
+            completion(.failure(APIClientError.INVALID_URL))
             return
         }
         
@@ -254,7 +205,7 @@ public class APIHandler {
                 let requestBody = try JSONEncoder().encode(param)
                 request.httpBody = requestBody
             } catch {
-                completion(.failure(APIClientError.requestFailed(error)))
+                completion(.failure(APIClientError.REQUEST_FAILED(error)))
                 return
             }
         }
@@ -262,25 +213,25 @@ public class APIHandler {
         
         let task = URLSession.shared.dataTask(with: request) { (data, response, error) in
             if let error = error {
-                completion(.failure(APIClientError.requestFailed(error)))
+                completion(.failure(APIClientError.REQUEST_FAILED(error)))
                 return
             }
             
             guard let httpResponse = response as? HTTPURLResponse else {
-                    completion(.failure(APIClientError.invalidData))
+                    completion(.failure(APIClientError.UNKNOWN_EXCEPTION))
                     return
                 }
                 
             // Check for HTTP status code indicating an error
             let statusCode = httpResponse.statusCode
             if statusCode >= 400 {
-                let statusCodeError = APIClientError.httpError(statusCode)
+                let statusCodeError = APIClientError.HTTP_ERROR(statusCode)
                 completion(.failure(statusCodeError))
                 return
             }
             
             guard let data = data else {
-                completion(.failure(APIClientError.noData))
+                completion(.failure(APIClientError.NO_DATA))
                 return
             }
             
@@ -292,26 +243,26 @@ public class APIHandler {
                 let apiResponse = try JSONDecoder().decode(responseType, from: data)
                 completion(.success(apiResponse))
             } catch {
-                completion(.failure(APIClientError.responseDecodingFailed(error)))
+                completion(.failure(APIClientError.UNKNOWN_EXCEPTION))
             }
         }
         
         task.resume()
     }
     
-    public func requestDelete(jwtToken: String? = nil, endpoint: APIEndpoint, method: HTTPMethod, body: Encodable?, completion: @escaping (Result<Bool, Error>) -> Void) {
+    public func requestDelete(jwtToken: String? = nil, endpoint: APIEndpoint, method: HTTPMethod, body: Encodable?, completion: @escaping (Result<Bool, APIClientError>) -> Void) {
         
         // Check if the SDK is initialized or not
         guard Config.shared.isInitialized() else {
             print("SDK is not initialized")
-            completion(.failure(APIClientError.requestDisabled))
+            completion(.failure(APIClientError.AUTHENTICATION_EXCEPTION))
             return
         }
         
         let fullURL = endpoint.baseURL + endpoint.path
         
         guard let url = URL(string: fullURL) else {
-            completion(.failure(APIClientError.invalidURL))
+            completion(.failure(APIClientError.INVALID_URL))
             return
         }
         
@@ -336,7 +287,7 @@ public class APIHandler {
                 let requestBody = try JSONEncoder().encode(param)
                 request.httpBody = requestBody
             } catch {
-                completion(.failure(APIClientError.requestFailed(error)))
+                completion(.failure(APIClientError.REQUEST_FAILED(error)))
                 return
             }
         }
@@ -344,26 +295,26 @@ public class APIHandler {
         
         let task = URLSession.shared.dataTask(with: request) { (data, response, error) in
             if let error = error {
-                completion(.failure(APIClientError.requestFailed(error)))
+                completion(.failure(APIClientError.REQUEST_FAILED(error)))
                 return
             }
             
             guard let httpResponse = response as? HTTPURLResponse else {
-                completion(.failure(APIClientError.invalidData))
+                completion(.failure(APIClientError.UNKNOWN_EXCEPTION))
                 return
             }
             
             // Check for HTTP status code indicating an error
             let statusCode = httpResponse.statusCode
             if statusCode >= 400 {
-                let statusCodeError = APIClientError.httpError(statusCode)
+                let statusCodeError = APIClientError.HTTP_ERROR(statusCode)
                 completion(.failure(statusCodeError))
                 return
             }else if (200..<299).contains(statusCode) {
                 completion(.success(true))
                 return
             } else {
-                completion(.failure(error ?? APIClientError.somethingWentWrong))
+                completion(.failure(APIClientError.UNKNOWN_EXCEPTION))
                 return
             }
         }
