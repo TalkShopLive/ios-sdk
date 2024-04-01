@@ -15,7 +15,7 @@ let package = Package(
             targets: ["Talkshoplive"]),
     ],
     dependencies: [
-            .package(url: "https://github.com/pubnub/swift.git", from: "7.0.0"),
+            .package(url: "https://github.com/pubnub/swift.git", from: "7.1.0"),
             // Add other dependencies if needed
     ],
     targets: [
@@ -26,16 +26,13 @@ let package = Package(
             dependencies: [
                 .product(name: "PubNub", package: "swift")
             ],
+            path: "Sources/Talkshoplive",
             resources: [
-                .process("Resources/Keys/env.json"),
-                .process("Resources/Keys/Development.json"),
-                .process("Resources/Keys/Staging.json"),
-                .process("Resources/Keys/Production.json"),
-
                 // Add other resource files as needed
             ]),
         .testTarget(
             name: "TalkshopliveTests",
             dependencies: ["Talkshoplive"]),
-    ]
+    ],
+    swiftLanguageVersions: [.v5]
 )

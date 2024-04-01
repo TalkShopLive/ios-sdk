@@ -17,7 +17,7 @@ public class TalkShopLive {
         debugMode: Bool = false, //Print console logs if true
         testMode: Bool = false, //Switch to staging if true
         dnt: Bool = false,
-        completion: ((Result<Void, Error>) -> Void)? = nil)
+        completion: ((Result<Void, APIClientError>) -> Void)? = nil)
     {
         self.clientKey = clientKey
         self.debugMode = debugMode
@@ -40,10 +40,12 @@ public class TalkShopLive {
         Networking.register(clientKey: self.clientKey) { result in
             completion?(result)
             //Analytics
-            Collector.shared.collect(category: .interaction,action: .sdkInitialized)
+            switch result {
+            case .success():
+                Collector.shared.collect(category: .interaction,action: .sdkInitialized)
+            case .failure(_):
+                break
+            }
         }
-        
-        
-        
     }
 }

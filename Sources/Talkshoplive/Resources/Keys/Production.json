@@ -1,7 +1,0 @@
-{
-    "BASE_URL": "https://cms.talkshop.live",
-    "ASSETS_URL" : "https://assets.talkshop.live",
-    "COLLECTOR_BASE_URL" : "https://collector.talkshop.live",
-    "EVENTS_BASE_URL" : "https://staging.events-api.talkshop.live"
-}
-
