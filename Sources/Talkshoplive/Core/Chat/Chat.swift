@@ -42,7 +42,13 @@ public class Chat {
         
         // Initialize ChatProvider for handling chat functionality using JWT Token
         self.chatProvider = ChatProvider(jwtToken: jwtToken, isGuest: isGuest, showKey: showKey) {result,error in
-            Config.shared.isDebugMode() ? (result ? print("Token Created!") : print(error?.localizedDescription)) : ()
+            if  Config.shared.isDebugMode() {
+                if let error = error {
+                    print(error.localizedDescription)
+                } else {
+                    print("Token Created!")
+                }
+            }
             completion?(result,error)
         }
         

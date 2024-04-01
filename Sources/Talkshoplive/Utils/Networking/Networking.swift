@@ -179,7 +179,7 @@ class Networking {
                 } else {
                     completion(.failure(APIClientError.NO_DATA))
                 }
-            case .failure(let error):
+            case .failure(_):
                 // Failed to get user metadata
                 completion(.failure(APIClientError.UNKNOWN_EXCEPTION))
             }

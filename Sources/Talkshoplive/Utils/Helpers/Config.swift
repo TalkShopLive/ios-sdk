@@ -9,6 +9,12 @@ import Foundation
 
 // MARK: - Configuration Singleton
 
+
+public enum Environment {
+    case staging
+    case production
+}
+
 public class Config {
     
     // MARK: - Singleton
@@ -72,35 +78,31 @@ public class Config {
     
     // MARK: - Configuration Loading Methods
     
-    /// Load environment configuration from the "env.json" file in the module's bundle.
-    /// - Returns: An instance of EnvConfig with loaded configuration.
-    public static func loadConfig() throws -> EnvConfig {
-        guard let fileURL = Bundle.module.url(forResource: "env", withExtension: "json") else {
-            return EnvConfig.init(PUBLISH_KEY: "", SUBSCRIBE_KEY: "", USER_ID: "")
-        }
-        
-        let data = try Data(contentsOf:fileURL)
-        let decoder = JSONDecoder()
-        return try decoder.decode(EnvConfig.self, from: data)
-    }
-    
     /// Load API configuration based on the test mode ("Staging.json" for testMode=true, "Production.json" otherwise).
     /// - Returns: An instance of APIConfig with loaded configuration.
     public static func loadAPIConfig() throws -> APIConfig {
-        var fileName = ""
+        var environment : Environment
         if Config.shared.isTestMode() {
-            fileName = "Staging"
+            environment = .staging
         } else {
-            fileName = "Production"
+            environment = .production
         }
-        
-        guard let fileURL = Bundle.module.url(forResource: fileName, withExtension: "json") else {
-            return APIConfig.init(BASE_URL: "", ASSETS_URL: "", COLLECTOR_BASE_URL: "", EVENTS_BASE_URL: "")
-        }
-
-        let data = try Data(contentsOf: fileURL)
-        let decoder = JSONDecoder()
-        return try decoder.decode(APIConfig.self, from: data)
+        switch environment {
+                case .staging:
+                    return APIConfig(
+                        BASE_URL: "https://staging.cms.talkshop.live",
+                        ASSETS_URL: "https://assets-dev.talkshop.live",
+                        COLLECTOR_BASE_URL: "https://staging.collector.talkshop.live",
+                        EVENTS_BASE_URL: "https://staging.events-api.talkshop.live"
+                    )
+                case .production:
+                    return APIConfig(
+                        BASE_URL: "https://cms.talkshop.live",
+                        ASSETS_URL: "https://assets.talkshop.live",
+                        COLLECTOR_BASE_URL: "https://collector.talkshop.live",
+                        EVENTS_BASE_URL: "https://events-api.talkshop.live"
+                    )
+                }
     }
 }
 
