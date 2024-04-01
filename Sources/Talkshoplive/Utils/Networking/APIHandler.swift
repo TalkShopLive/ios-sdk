@@ -7,12 +7,6 @@
 
 import Foundation
 
-public struct EnvConfig: Codable {
-    public let PUBLISH_KEY: String
-    public let SUBSCRIBE_KEY: String
-    public let USER_ID: String
-}
-
 public struct APIConfig: Codable {
     public let BASE_URL: String
     public let ASSETS_URL: String

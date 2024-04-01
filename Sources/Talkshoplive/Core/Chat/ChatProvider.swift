@@ -46,16 +46,11 @@ public class ChatProvider {
     ///   - showKey: The show key used to configure the chat provider.
     public init(jwtToken: String, isGuest: Bool, showKey: String,_ completion: ((Bool, APIClientError?) -> Void)? = nil) {
         // Load configuration from ConfigLoader
-        do {
-            self.isGuest = isGuest
-            self.showKey = showKey
-            self.setJwtToken(jwtToken)
-            self.createMessagingToken(jwtToken: jwtToken){result,error  in
-                completion?(result,error)
-            }
-        } catch {
-            // Handle configuration loading failure
-            fatalError("Failed to load configuration: \(error)")
+        self.isGuest = isGuest
+        self.showKey = showKey
+        self.setJwtToken(jwtToken)
+        self.createMessagingToken(jwtToken: jwtToken){result,error  in
+            completion?(result,error)
         }
     }
     
@@ -305,13 +300,13 @@ public class ChatProvider {
             case .uuidMetadataSet(_):
                 Config.shared.isDebugMode() ? print("The uuidMetadataSet") : ()
                 
-            case .uuidMetadataRemoved(metadataId: let metadataId):
+            case .uuidMetadataRemoved(_):
                 Config.shared.isDebugMode() ? print("The uuidMetadataRemoved") : ()
                 
             case .channelMetadataSet(_):
                 Config.shared.isDebugMode() ? print("The channelMetadataSet") : ()
                 
-            case .channelMetadataRemoved(metadataId: let metadataId):
+            case .channelMetadataRemoved(_):
                 Config.shared.isDebugMode() ? print("The channelMetadataRemoved") : ()
                 
             case .membershipMetadataSet(_):
@@ -373,7 +368,7 @@ public class ChatProvider {
                 // Use PubNub's publish method to send the message
                 pubnub?.publish(channel: channel, message: messageObject) { result in
                     switch result {
-                    case let .success(timetoken):
+                    case .success(_):
                         Config.shared.isDebugMode() ? print("Message Sent!") : ()
                         completion(true, nil) // Indicate success with status true and no error
                     case let .failure(error):
@@ -440,7 +435,7 @@ public class ChatProvider {
                                         
                                         // Leave the dispatch group as message processing is complete
                                         dispatchGroup.leave()
-                                    case .failure(let error):
+                                    case .failure(_):
                                         //Append the converted message with original sender data, as there is an error fetching info
                                         messageArray.append(convertedMessage)
                                         

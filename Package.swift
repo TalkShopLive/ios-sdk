@@ -27,11 +27,6 @@ let package = Package(
                 .product(name: "PubNub", package: "swift")
             ],
             resources: [
-                .process("Resources/Keys/env.json"),
-                .process("Resources/Keys/Development.json"),
-                .process("Resources/Keys/Staging.json"),
-                .process("Resources/Keys/Production.json"),
-
                 // Add other resource files as needed
             ]),
         .testTarget(
