@@ -15,7 +15,8 @@ let package = Package(
             targets: ["Talkshoplive"]),
     ],
     dependencies: [
-            .package(url: "https://github.com/pubnub/swift.git", from: "7.1.0"),
+            // Run "git submodule add https://github.com/pubnub/swift.git" in root to add pubnub as a dependency
+            .package(path: "swift"),
             // Add other dependencies if needed
     ],
     targets: [
