@@ -14,10 +14,15 @@
 			<key>orderHint</key>
 			<integer>0</integer>
 		</dict>
-		<key>Talkshoplive.xcscheme_^#shared#^_</key>
+		<key>Talkshoplive-Package.xcscheme_^#shared#^_</key>
 		<dict>
 			<key>orderHint</key>
 			<integer>0</integer>
+		</dict>
+		<key>Talkshoplive.xcscheme_^#shared#^_</key>
+		<dict>
+			<key>orderHint</key>
+			<integer>1</integer>
 		</dict>
 		<key>ios-sdk-Package.xcscheme_^#shared#^_</key>
 		<dict>
@@ -32,6 +37,21 @@
 	</dict>
 	<key>SuppressBuildableAutocreation</key>
 	<dict>
+		<key>Talkshoplive</key>
+		<dict>
+			<key>primary</key>
+			<true/>
+		</dict>
+		<key>TalkshopliveTests</key>
+		<dict>
+			<key>primary</key>
+			<true/>
+		</dict>
+		<key>ios-sdk</key>
+		<dict>
+			<key>primary</key>
+			<true/>
+		</dict>
 		<key>tsl-ios-sdk</key>
 		<dict>
 			<key>primary</key>

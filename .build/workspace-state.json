@@ -1,0 +1,24 @@
+{
+  "object" : {
+    "artifacts" : [
+
+    ],
+    "dependencies" : [
+      {
+        "basedOn" : null,
+        "packageRef" : {
+          "identity" : "pubnub",
+          "kind" : "fileSystem",
+          "location" : "/Users/mayuri/Desktop/ios-sdk/Frameworks/PubNub",
+          "name" : "PubNub"
+        },
+        "state" : {
+          "name" : "fileSystem",
+          "path" : "/Users/mayuri/Desktop/ios-sdk/Frameworks/PubNub"
+        },
+        "subpath" : "pubnub"
+      }
+    ]
+  },
+  "version" : 6
+}
