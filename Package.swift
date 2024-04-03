@@ -6,7 +6,7 @@ import PackageDescription
 let package = Package(
     name: "Talkshoplive",
     platforms: [
-            .iOS(.v14),
+        .iOS(.v14),
     ],
     products: [
         // Products define the executables and libraries a package produces, making them visible to other packages.
@@ -15,7 +15,7 @@ let package = Package(
             targets: ["Talkshoplive"]),
     ],
     dependencies: [
-            .package(url: "https://github.com/pubnub/swift.git", from: "7.0.0"),
+        .package(path: "Frameworks/PubNub")
             // Add other dependencies if needed
     ],
     targets: [
@@ -24,7 +24,7 @@ let package = Package(
         .target(
             name: "Talkshoplive",
             dependencies: [
-                .product(name: "PubNub", package: "swift")
+                .product(name: "PubNub", package: "PubNub")
             ],
             resources: [
                 // Add other resource files as needed
