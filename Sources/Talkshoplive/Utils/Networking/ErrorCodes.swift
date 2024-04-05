@@ -27,6 +27,7 @@ public enum APIClientError: Error{
     case MESSAGE_SENDING_FAILED
     case MESSAGE_LIST_FAILED
     case UNKNOWN_EXCEPTION
+    case PERMISSION_DENIED
 }
 
 extension APIClientError: LocalizedError {
@@ -68,6 +69,9 @@ extension APIClientError: LocalizedError {
             return "Message list failed"
         case .UNKNOWN_EXCEPTION:
             return "Unknown exception"
+        case .PERMISSION_DENIED:
+            //If token is expired/revoked
+            return "Permission Denied"
         }
     }
 }

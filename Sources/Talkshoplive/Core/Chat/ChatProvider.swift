@@ -14,6 +14,7 @@ import PubNub
 public protocol _ChatProviderDelegate: AnyObject {
     func onMessageReceived(_ message: MessageBase)
     func onMessageRemoved(_ message: MessageBase)
+    func onPermissionDenied(error:APIClientError)
     // Add more methods for other events if needed
 }
 
@@ -130,28 +131,6 @@ public class ChatProvider {
             }
         }
     }
-
-    // MARK: - PubNub Initialization
-
-    // Initialize PubNub with the obtained token and other settings
-    private func initializePubNub() {
-        // Configure PubNub with the obtained token and other settings
-       
-        if let messageToken = self.messageToken {
-            let configuration = PubNubConfiguration(
-                publishKey: messageToken.publishKey,
-                subscribeKey: messageToken.subscribeKey,
-                userId: messageToken.userId,
-                authKey: messageToken.token
-                // Add more configuration parameters as needed
-            )
-            // Initialize PubNub instance
-            self.pubnub = PubNub(configuration: configuration)
-            // Log the initialization
-            Config.shared.isDebugMode() ? print("Initialized Pubnub", pubnub!) : ()
-        }
-    }
-    
     
     // MARK: - Channel Subscription
 
@@ -324,8 +303,11 @@ public class ChatProvider {
             case .fileUploaded(_):
                 Config.shared.isDebugMode() ? print("The fileUploaded") : ()
                 
-            case .subscribeError(_):
-                Config.shared.isDebugMode() ? print("The subscribeError") :()
+            case .subscribeError(let error):
+                Config.shared.isDebugMode() ? print("The subscribeError", error.localizedDescription , "Code", error.reason.rawValue) :()
+                if (error as? PubNubError)?.reason.rawValue == 403 {
+                    self.delegate?.onPermissionDenied(error: APIClientError.PERMISSION_DENIED)
+                }
             }
         }
         
@@ -374,7 +356,11 @@ public class ChatProvider {
                     case let .failure(error):
                         // Print an error message in case of a failure during publishing
                         Config.shared.isDebugMode() ? print("Message Sending Failed: \(error.localizedDescription)") : ()
-                        completion(false, APIClientError.MESSAGE_SENDING_FAILED) // Indicate failure with status false and pass the error
+                        if (error as? PubNubError)?.reason.rawValue == 403 {
+                            completion(false, APIClientError.PERMISSION_DENIED)
+                        } else {
+                            completion(false, APIClientError.MESSAGE_SENDING_FAILED) // Indicate failure with status false and pass the error
+                        }
                     }
                 }
             }
@@ -462,7 +448,11 @@ public class ChatProvider {
                 case let .failure(error):
                     // Print an error message in case of a failure and invoke the completion closure with the error
                     Config.shared.isDebugMode() ? print("History : Fetch History Failed: \(error.localizedDescription)") : ()
-                    completion(.failure(APIClientError.MESSAGE_LIST_FAILED))
+                    if (error as? PubNubError)?.reason.rawValue == 403 {
+                        completion(.failure(APIClientError.PERMISSION_DENIED))
+                    } else {
+                        completion(.failure(APIClientError.MESSAGE_LIST_FAILED))
+                    }
                 }
             }
         })
@@ -506,13 +496,17 @@ public class ChatProvider {
                       }
                   case let .failure(error):
                       // Handle the failure case when retrieving message counts
-                      Config.shared.isDebugMode() ? print("Message Count Failed: \(error.localizedDescription)") : ()
-                      completion(0,APIClientError.UNKNOWN_EXCEPTION)
+                      Config.shared.isDebugMode() ? print("Message Count Failed1: \(error.localizedDescription)") : ()
+                      if (error as? PubNubError)?.reason.rawValue == 403 {
+                          completion(0,APIClientError.PERMISSION_DENIED)
+                      } else {
+                          completion(0,APIClientError.UNKNOWN_EXCEPTION)
+                      }
                   }
               })
           } else {
               // Handle the case when no channel is provided
-              Config.shared.isDebugMode() ? print("Message Count Failed: \(APIClientError.UNKNOWN_EXCEPTION)") : ()
+              Config.shared.isDebugMode() ? print("Message Count Failed2: \(APIClientError.UNKNOWN_EXCEPTION)") : ()
               completion(0,APIClientError.UNKNOWN_EXCEPTION)
           }
           
