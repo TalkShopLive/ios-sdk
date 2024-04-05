@@ -14,6 +14,7 @@ import PubNub
 public protocol ChatDelegate: AnyObject {
     func onNewMessage(_ message: MessageBase)
     func onDeleteMessage(_ message: MessageBase)
+    func onStatusChanged(error:APIClientError)
     // Add more methods for other events if needed
 }
 
@@ -180,5 +181,11 @@ extension Chat: _ChatProviderDelegate {
     public func onMessageRemoved(_ message: MessageBase) {
         // Forward the removed message to the ChatDelegate
         self.delegate?.onDeleteMessage(message)
+    }
+    
+    // Delegate method called when a token is expired/revoked
+    public func onStatusChanged(error: APIClientError) {
+        // Forward the permission denied to the ChatDelegate
+        self.delegate?.onStatusChanged(error: error)
     }
 }
