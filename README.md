@@ -150,7 +150,7 @@ self.chatInstance.sendMessage(message: newMessage, completion: {status, error in
     if status {
         print("Message Sent!", status)
     } else {
-        //If token is expired/revoked, it will return "PERMISSION_DENIED"
+        //If Token is revoked, it will return "PERMISSION_DENIED"
         print("Message Sending Failed: \(error.localizedDescription)")
     }
 }
@@ -182,7 +182,7 @@ self.chatInstance.deleteMessage(timeToken: timetoken, completion: { status, erro
         if status {
             print("Message Deleted!")
         } else {
-            //If token is expired/revoked, it will return "PERMISSION_DENIED"
+            //If Token is revoked, it will return "PERMISSION_DENIED"
             print("Message Deletion Failed : “\(error.localizedDescription))
         }
 }
@@ -226,7 +226,7 @@ self.chatInstance.getChatMessages(page: page, completion: { result in
         }            
     case .failure(let error):
         // Handle error case
-        //If token is expired/revoked, it will return "PERMISSION_DENIED"
+        //If Token is revoked, it will return "PERMISSION_DENIED"
         print("Error: \(error.localizedDescription)")
     }
 })
@@ -272,13 +272,23 @@ Use to retrieve the count of messages using a chat instance.
 ```
 self.chat?.countMessages({ count, error in
     if let error = error {
-        //If token is expired/revoked, it will return "PERMISSION_DENIED"
+        //If Token is revoked, it will return "PERMISSION_DENIED"
         print(error.localizedDescription)
         print("Error fetching messages count: \(error.localizedDescription))"
     } else {
         print("Message Count : \(count)")
     }
 })
+```
+
+#### `onStatusChanged(error:)`
+
+Use to listen event when token is revoked.
+
+```
+func onStatusChanged(error: Talkshoplive.APIClientError) {
+    //If Token is revoked
+}
 ```
     
 ## Run the Tests: 
