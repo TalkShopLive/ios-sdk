@@ -9,7 +9,7 @@ import Foundation
 
 extension Date {
     var milliseconds: TimeInterval {
-        return self.timeIntervalSince1970 * 1000.0
+        return self.timeIntervalSince1970 * 10000000
     }
     func toString(format: String = "yyyy-MM-dd'T'HH:mm:ssZ") -> String {
         let dateFormatter = DateFormatter()

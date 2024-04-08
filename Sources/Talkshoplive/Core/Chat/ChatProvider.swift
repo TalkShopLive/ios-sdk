@@ -377,7 +377,8 @@ public class ChatProvider {
     ///                 an optional MessagePage for pagination, or an error if the operation fails.
     internal func fetchPastMessages(limit: Int = 25, start: Int? = nil, includeActions: Bool = true, includeMeta: Bool = true, includeUUID: Bool = true, completion: @escaping (Result<([MessageBase], MessagePage?), APIClientError>) -> Void) {
         // Use PubNub's fetchMessageHistory method to retrieve message history for specified channels
-        pubnub?.fetchMessageHistory(for: self.channels, includeActions: includeActions, includeMeta: includeMeta, includeUUID: includeUUID, page: PubNubBoundedPageBase(start: start != nil ? UInt64(start!) : nil, limit: limit), completion: { result in
+        let startTimeToken = start != nil ? UInt64(start!) : UInt64(Date().milliseconds)
+        pubnub?.fetchMessageHistory(for: self.channels, includeActions: includeActions, includeMeta: includeMeta, includeUUID: includeUUID, page: PubNubBoundedPageBase(start: startTimeToken, limit: limit), completion: { result in
             do {
                 switch result {
                 case let .success(response):
@@ -438,6 +439,15 @@ public class ChatProvider {
                         // Notify when all message processing is complete
                         dispatchGroup.notify(queue: .main) {
                            Config.shared.isDebugMode() ? print("History : Fetched successfully!") : ()
+                            //Sort data according to published timeinterval
+                            messageArray.sort(by: {
+                                guard let publishedFirst = $0.published, let timeIntervalFirst = Int(publishedFirst),
+                                      let publishedSecond = $1.published, let timeIntervalSecond = Int(publishedSecond)
+                                else {
+                                    return false // Handle the case where conversion fails
+                                }
+                                return timeIntervalFirst < timeIntervalSecond
+                            })
                             // Create a MessagePage object based on the next page information
                             let page = MessagePage(page: response.next as! PubNubBoundedPageBase)
                             // Invoke the completion closure with success and the obtained messages and page
