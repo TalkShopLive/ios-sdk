@@ -411,21 +411,25 @@ public class ChatProvider {
                             
                             // Fetch user metadata for the sender of the message
                             if let senderId = convertedMessage.payload?.sender?.id {
+                                // Append the message to the message array
+                                messageArray.append(convertedMessage)
+
                                 self.usersProvider.fetchUserMetaData(uuid: senderId) { result in
                                     switch result {
                                     case .success(let senderData):
                                         // Update the sender information in the converted message payload
                                         convertedMessage.payload?.sender = senderData
                                         
-                                        // Append the converted message to the message array
-                                        messageArray.append(convertedMessage)
-                                        
+                                        // Fetch the index of specific message
+                                        if let index = messageArray.firstIndex(where: { objMessage in
+                                            objMessage.published == convertedMessage.published
+                                        }) {
+                                            // If index is found, replace it with the updated message
+                                            messageArray[index] = convertedMessage
+                                        }
                                         // Leave the dispatch group as message processing is complete
                                         dispatchGroup.leave()
                                     case .failure(_):
-                                        //Append the converted message with original sender data, as there is an error fetching info
-                                        messageArray.append(convertedMessage)
-                                        
                                         // Leave the dispatch group as message processing is complete
                                         dispatchGroup.leave()
                                     }
@@ -439,15 +443,6 @@ public class ChatProvider {
                         // Notify when all message processing is complete
                         dispatchGroup.notify(queue: .main) {
                            Config.shared.isDebugMode() ? print("History : Fetched successfully!") : ()
-                            //Sort data according to published timeinterval
-                            messageArray.sort(by: {
-                                guard let publishedFirst = $0.published, let timeIntervalFirst = Int(publishedFirst),
-                                      let publishedSecond = $1.published, let timeIntervalSecond = Int(publishedSecond)
-                                else {
-                                    return false // Handle the case where conversion fails
-                                }
-                                return timeIntervalFirst < timeIntervalSecond
-                            })
                             // Create a MessagePage object based on the next page information
                             let page = MessagePage(page: response.next as! PubNubBoundedPageBase)
                             // Invoke the completion closure with success and the obtained messages and page
