@@ -377,7 +377,7 @@ public class ChatProvider {
     ///                 an optional MessagePage for pagination, or an error if the operation fails.
     internal func fetchPastMessages(limit: Int = 25, start: Int? = nil, includeActions: Bool = true, includeMeta: Bool = true, includeUUID: Bool = true, completion: @escaping (Result<([MessageBase], MessagePage?), APIClientError>) -> Void) {
         // Use PubNub's fetchMessageHistory method to retrieve message history for specified channels
-        let startTimeToken = start != nil ? UInt64(start!) : UInt64(Date().milliseconds)
+        let startTimeToken = start != nil ? UInt64(start!) : UInt64(Date().nanoseconds)
         pubnub?.fetchMessageHistory(for: self.channels, includeActions: includeActions, includeMeta: includeMeta, includeUUID: includeUUID, page: PubNubBoundedPageBase(start: startTimeToken, limit: limit), completion: { result in
             do {
                 switch result {
