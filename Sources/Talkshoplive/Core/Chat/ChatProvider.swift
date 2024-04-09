@@ -377,7 +377,8 @@ public class ChatProvider {
     ///                 an optional MessagePage for pagination, or an error if the operation fails.
     internal func fetchPastMessages(limit: Int = 25, start: Int? = nil, includeActions: Bool = true, includeMeta: Bool = true, includeUUID: Bool = true, completion: @escaping (Result<([MessageBase], MessagePage?), APIClientError>) -> Void) {
         // Use PubNub's fetchMessageHistory method to retrieve message history for specified channels
-        pubnub?.fetchMessageHistory(for: self.channels, includeActions: includeActions, includeMeta: includeMeta, includeUUID: includeUUID, page: PubNubBoundedPageBase(start: start != nil ? UInt64(start!) : nil, limit: limit), completion: { result in
+        let startTimeToken = start != nil ? UInt64(start!) : UInt64(Date().nanoseconds)
+        pubnub?.fetchMessageHistory(for: self.channels, includeActions: includeActions, includeMeta: includeMeta, includeUUID: includeUUID, page: PubNubBoundedPageBase(start: startTimeToken, limit: limit), completion: { result in
             do {
                 switch result {
                 case let .success(response):
@@ -410,21 +411,25 @@ public class ChatProvider {
                             
                             // Fetch user metadata for the sender of the message
                             if let senderId = convertedMessage.payload?.sender?.id {
+                                // Append the message to the message array
+                                messageArray.append(convertedMessage)
+
                                 self.usersProvider.fetchUserMetaData(uuid: senderId) { result in
                                     switch result {
                                     case .success(let senderData):
                                         // Update the sender information in the converted message payload
                                         convertedMessage.payload?.sender = senderData
                                         
-                                        // Append the converted message to the message array
-                                        messageArray.append(convertedMessage)
-                                        
+                                        // Fetch the index of specific message
+                                        if let index = messageArray.firstIndex(where: { objMessage in
+                                            objMessage.published == convertedMessage.published
+                                        }) {
+                                            // If index is found, replace it with the updated message
+                                            messageArray[index] = convertedMessage
+                                        }
                                         // Leave the dispatch group as message processing is complete
                                         dispatchGroup.leave()
                                     case .failure(_):
-                                        //Append the converted message with original sender data, as there is an error fetching info
-                                        messageArray.append(convertedMessage)
-                                        
                                         // Leave the dispatch group as message processing is complete
                                         dispatchGroup.leave()
                                     }
