@@ -206,8 +206,24 @@ public class ChatProvider {
                 // Handle message received event
                 Config.shared.isDebugMode() ? print("messageReceived:=> The \(message.channel) channel received a listener event at \(message.published)") : ()
                 
-                // Convert the received message into a MessageBase object
-                var convertedMessage = MessageBase(pubNubMessage: message)
+                var actionsArray : [MessageAction] = []
+                                            for action in message.actions {
+                                                let actionObject = MessageAction(
+                                                    actionType: action.actionType,
+                                                    actionValue: action.actionValue,
+                                                    actionTimetoken: Int(action.actionTimetoken),
+                                                    publisher: action.publisher)
+                                                actionsArray.append(actionObject)
+                                            }
+                                            
+                                            var convertedMessage = MessageBase(publisher: message.publisher,
+                                                                               channel: message.channel,
+                                                                               subscription: message.subscription,
+                                                                               published: String(message.published),
+                                                                               messageType: MessageType(rawValue: message.messageType.rawValue) ?? .unknown,
+                                                                               payload: message.payload.jsonStringify,
+                                                                               actions: actionsArray,
+                                                                               metaData: message.metadata?.jsonStringify)
                 
                 // Check the channel type
                 switch message.channel {
@@ -345,25 +361,34 @@ public class ChatProvider {
                 type: (message.contains("?") ? .question : .comment),
                 platform: "mobile")
             
-            // Check if the publish channel is configured
-            if let channel = self.publishChannel {
-                // Use PubNub's publish method to send the message
-                pubnub?.publish(channel: channel, message: messageObject) { result in
-                    switch result {
-                    case .success(_):
-                        Config.shared.isDebugMode() ? print("Message Sent!") : ()
-                        completion(true, nil) // Indicate success with status true and no error
-                    case let .failure(error):
-                        // Print an error message in case of a failure during publishing
-                        Config.shared.isDebugMode() ? print("Message Sending Failed: \(error.localizedDescription)") : ()
-                        if (error as? PubNubError)?.reason.rawValue == 403 {
-                            completion(false, APIClientError.PERMISSION_DENIED)
-                        } else {
-                            completion(false, APIClientError.MESSAGE_SENDING_FAILED) // Indicate failure with status false and pass the error
+            let message = [
+                "id" : String(Date().milliseconds), //in milliseconds
+                "createdAt": Date().toString(), //Current Date Object
+                "sender" : "{id: \(messageToken.userId),name: \(messageToken.userId)}",
+                "text": message,
+                "type": (message.contains("?") ? MessagePayloadType.question.rawValue : MessagePayloadType.comment.rawValue),
+                "platform": "mobile"
+            ]
+                    // Check if the publish channel is configured
+                    if let channel = self.publishChannel {
+                        // Use PubNub's publish method to send the message
+                        pubnub?.publish(channel: channel, message: message) { result in
+                            switch result {
+                            case .success(_):
+                                Config.shared.isDebugMode() ? print("Message Sent!") : ()
+                                completion(true, nil) // Indicate success with status true and no error
+                            case let .failure(error):
+                                // Print an error message in case of a failure during publishing
+                                Config.shared.isDebugMode() ? print("Message Sending Failed: \(error.localizedDescription)") : ()
+                                if (error as? PubNubError)?.reason.rawValue == 403 {
+                                    completion(false, APIClientError.PERMISSION_DENIED)
+                                } else {
+                                    completion(false, APIClientError.MESSAGE_SENDING_FAILED) // Indicate failure with status false and pass the error
+                                }
+                            }
                         }
                     }
-                }
-            }
+
         }
     }
     
@@ -399,8 +424,24 @@ public class ChatProvider {
                             // Enter the dispatch group for each message
                             dispatchGroup.enter()
                             
-                            // Convert the PubNub message to a MessageBase object
-                            var convertedMessage = MessageBase(pubNubMessage: message)
+                            var actionsArray : [MessageAction] = []
+                                                        for action in message.actions {
+                                                            let actionObject = MessageAction(
+                                                                actionType: action.actionType,
+                                                                actionValue: action.actionValue,
+                                                                actionTimetoken: Int(action.actionTimetoken),
+                                                                publisher: action.publisher)
+                                                            actionsArray.append(actionObject)
+                                                        }
+                                                        
+                                                        var convertedMessage = MessageBase(publisher: message.publisher,
+                                                                                           channel: message.channel,
+                                                                                           subscription: message.subscription,
+                                                                                           published: String(message.published),
+                                                                                           messageType: MessageType(rawValue: message.messageType.rawValue) ?? .unknown,
+                                                                                           payload: message.payload.jsonStringify,
+                                                                                           actions: actionsArray,
+                                                                                           metaData: message.metadata?.jsonStringify)
                             
                             // Check if the converted message has text content
                             guard convertedMessage.payload?.text != nil else {
@@ -439,12 +480,11 @@ public class ChatProvider {
                                 dispatchGroup.leave()
                             }
                         }
-                        
                         // Notify when all message processing is complete
                         dispatchGroup.notify(queue: .main) {
                            Config.shared.isDebugMode() ? print("History : Fetched successfully!") : ()
                             // Create a MessagePage object based on the next page information
-                            let page = MessagePage(page: response.next as! PubNubBoundedPageBase)
+                            let page = MessagePage(start: response.next?.start.map { Int($0) }, limit: response.next?.limit)
                             // Invoke the completion closure with success and the obtained messages and page
                             completion(.success((messageArray, page)))
                         }

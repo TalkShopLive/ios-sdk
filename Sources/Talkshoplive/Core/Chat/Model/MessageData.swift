@@ -6,11 +6,74 @@
 //
 
 import Foundation
-import PubNub
 
 // MARK: Base Class
 
-public struct MessageBase: JSONCodable {
+/// Enum defining different types of messages.
+public enum MessagePayloadType: String, Codable {
+    case comment
+    case question
+    case giphy
+    
+    public init(from decoder: Decoder) throws {
+            let stringValue = try decoder.singleValueContainer().decode(String.self)
+            self = MessagePayloadType(rawValue: stringValue.lowercased()) ?? .comment
+    }
+}
+
+/// Enum representing the type of the message.
+public enum MessageType: Int, Codable, Hashable {
+  case message = 0
+  case signal = 1
+  case object = 2
+  case messageAction = 3
+  case file = 4
+  case unknown = 999
+}
+
+public enum MessagePayloadKey: Codable {
+    case messageDeleted
+    case custom(String) // Handle any custom message types
+    // Add more cases as needed
+    
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        if let rawValue = try? container.decode(String.self) {
+            switch rawValue {
+            case "message_deleted":
+                self = .messageDeleted
+            default:
+                self = .custom(rawValue)
+            }
+        } else {
+            throw DecodingError.dataCorruptedError(in: container, debugDescription: "Invalid payload key")
+        }
+    }
+    
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.singleValueContainer()
+        switch self {
+        case .messageDeleted:
+            try container.encode("message_deleted")
+        case .custom(let value):
+            try container.encode(value)
+        }
+    }
+    
+    // Function to check equality
+    public func isEqual(to other: MessagePayloadKey) -> Bool {
+        switch (self, other) {
+        case (.messageDeleted, .messageDeleted):
+            return true
+        case let (.custom(value1), .custom(value2)):
+            return value1 == value2
+        default:
+            return false
+        }
+    }
+}
+
+public struct MessageBase: Codable {
     
     public var publisher: String?
     public var channel: String?
@@ -20,19 +83,7 @@ public struct MessageBase: JSONCodable {
     public var payload: MessageData?
     public var actions: [MessageAction]?
     public var metaData: String?
-    
-    // MARK: - Enums
-    
-    /// Enum representing the type of the message.
-    public enum MessageType: Int, Codable, Hashable {
-      case message = 0
-      case signal = 1
-      case object = 2
-      case messageAction = 3
-      case file = 4
-      case unknown = 999
-    }
-    
+        
     // MARK: - CodingKeys
     
     /// Enum defining the coding keys for encoding and decoding.
@@ -61,29 +112,20 @@ public struct MessageBase: JSONCodable {
         metaData = nil
     }
     
-    /// Custom initializer to create a MessageBase object from a PubNubMessage.
-    public init(pubNubMessage: PubNubMessage) {
-        if let payloadString = pubNubMessage.payload.jsonStringify {
+    public init(publisher: String? = nil,channel: String? = nil,subscription: String? = nil,published: String? = nil,messageType: MessageType? = nil,payload: String? = nil,actions: [MessageAction]? = nil,metaData: String? = nil)
+    {
+        self.publisher = publisher
+        self.channel = channel
+        self.subscription = subscription
+        self.published = published
+        self.messageType = messageType
+        self.actions = actions
+        self.metaData = metaData
+        if let payloadString = payload{
             if let payload = convertToModel(from: payloadString, responseType: MessageData.self) {
                 self.payload = payload
             }
         }
-        self.publisher = pubNubMessage.publisher
-        self.channel = pubNubMessage.channel
-        self.subscription = pubNubMessage.subscription
-        self.published = String(pubNubMessage.published)
-        self.messageType = MessageType(rawValue: pubNubMessage.messageType.rawValue) ?? .unknown
-        self.metaData = pubNubMessage.metadata?.jsonStringify
-        self.actions = self.toMessageActions(actions: pubNubMessage.actions)
-    }
-    
-    public func toMessageActions(actions: [PubNubMessageAction]) -> [MessageAction]{
-        var actionsArray = [MessageAction]()
-        for i in actions {
-            let actionObject = MessageAction(action: i)
-            actionsArray.append(actionObject)
-        }
-        return actionsArray
     }
     
     // MARK: - Codable
@@ -118,7 +160,7 @@ public struct MessageBase: JSONCodable {
 }
 
 // MARK: Sender Object
-public struct Sender : JSONCodable{
+public struct Sender : Codable{
     public let id: String? //User ID obtained from the backend after creating a messaging token.
     public let name: String?
     public let profileUrl: String?
@@ -172,10 +214,10 @@ public struct Sender : JSONCodable{
     public func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         
-        try container.encode(id, forKey: .id)
-        try container.encode(name, forKey: .name)
-        try container.encode(profileUrl, forKey: .profileUrl)
-        try container.encode(externalId, forKey: .externalId)
+        try container.encodeIfPresent(id, forKey: .id)
+        try container.encodeIfPresent(name, forKey: .name)
+        try container.encodeIfPresent(profileUrl, forKey: .profileUrl)
+        try container.encodeIfPresent(externalId, forKey: .externalId)
 
     }
 }
@@ -183,7 +225,7 @@ public struct Sender : JSONCodable{
 // MARK: Message Data Class
 
 /// A struct representing the data structure for chat messages.
-public struct MessageData: JSONCodable {
+public struct MessageData: Codable {
     
     // MARK: - Properties
     
@@ -191,65 +233,10 @@ public struct MessageData: JSONCodable {
     public var createdAt: String? // Represents the current timestamp in seconds.
     public var sender: Sender? //
     public var text: String? //The message to be sent.
-    public var type: MessageType? // Enum representing the MessageType. Use .question if the text contains "?".
+    public var type: MessagePayloadType? // Enum representing the MessageType. Use .question if the text contains "?".
     public var platform: String? // Platform identifier, e.g., "sdk".
     public var key: MessagePayloadKey? // Platform identifier, e.g., "sdk".
     public var timeToken: String?
-    
-    public enum MessagePayloadKey: Codable {
-        case messageDeleted
-        case custom(String) // Handle any custom message types
-        // Add more cases as needed
-        
-        public init(from decoder: Decoder) throws {
-            let container = try decoder.singleValueContainer()
-            if let rawValue = try? container.decode(String.self) {
-                switch rawValue {
-                case "message_deleted":
-                    self = .messageDeleted
-                default:
-                    self = .custom(rawValue)
-                }
-            } else {
-                throw DecodingError.dataCorruptedError(in: container, debugDescription: "Invalid payload key")
-            }
-        }
-        
-        public func encode(to encoder: Encoder) throws {
-            var container = encoder.singleValueContainer()
-            switch self {
-            case .messageDeleted:
-                try container.encode("message_deleted")
-            case .custom(let value):
-                try container.encode(value)
-            }
-        }
-        
-        // Function to check equality
-        public func isEqual(to other: MessagePayloadKey) -> Bool {
-            switch (self, other) {
-            case (.messageDeleted, .messageDeleted):
-                return true
-            case let (.custom(value1), .custom(value2)):
-                return value1 == value2
-            default:
-                return false
-            }
-        }
-    }
-    
-    /// Enum defining different types of messages.
-    public enum MessageType: String, Codable {
-        case comment
-        case question
-        case giphy
-        
-        public init(from decoder: Decoder) throws {
-                let stringValue = try decoder.singleValueContainer().decode(String.self)
-                self = MessageType(rawValue: stringValue.lowercased()) ?? .comment
-        }
-    }
-
     
     // MARK: - Coding Keys
     
@@ -280,7 +267,7 @@ public struct MessageData: JSONCodable {
     }
     
     /// Custom initializer with parameters for all properties.
-    public init(id: Int? = nil, createdAt: String? = nil, sender: Sender? = nil, text: String? = nil, type: MessageType? = nil, platform: String? = nil,key: MessagePayloadKey? = nil, payload: String? = nil) {
+    public init(id: Int? = nil, createdAt: String? = nil, sender: Sender? = nil, text: String? = nil, type: MessagePayloadType? = nil, platform: String? = nil,key: MessagePayloadKey? = nil, payload: String? = nil) {
         self.id = id
         self.createdAt = createdAt
         self.sender = sender
@@ -300,7 +287,7 @@ public struct MessageData: JSONCodable {
         id = try? container.decodeIfPresent(Int.self, forKey: .id)
         createdAt = try container.decodeIfPresent(String.self, forKey: .createdAt)
         text = try container.decodeIfPresent(String.self, forKey: .text)
-        type = try container.decodeIfPresent(MessageType.self, forKey: .type)
+        type = try container.decodeIfPresent(MessagePayloadType.self, forKey: .type)
         platform = try container.decodeIfPresent(String.self, forKey: .platform)
         key = try container.decodeIfPresent(MessagePayloadKey.self, forKey: .key)
         timeToken = try container.decodeIfPresent(String.self, forKey: .timeToken)
@@ -321,21 +308,21 @@ public struct MessageData: JSONCodable {
     public func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         
-        try container.encode(id, forKey: .id)
-        try container.encode(createdAt, forKey: .createdAt)
-        try container.encode(sender, forKey: .sender)
-        try container.encode(text, forKey: .text)
-        try container.encode(type, forKey: .type)
-        try container.encode(platform, forKey: .platform)
-        try container.encode(key, forKey: .key)
-        try container.encode(timeToken, forKey: .timeToken)
+        try container.encodeIfPresent(id, forKey: .id)
+        try container.encodeIfPresent(createdAt, forKey: .createdAt)
+        try container.encodeIfPresent(sender, forKey: .sender)
+        try container.encodeIfPresent(text, forKey: .text)
+        try container.encodeIfPresent(type, forKey: .type)
+        try container.encodeIfPresent(platform, forKey: .platform)
+        try container.encodeIfPresent(key, forKey: .key)
+        try container.encodeIfPresent(timeToken, forKey: .timeToken)
     }
 }
 
 
 // MARK: MessagePage Class
 
-public struct MessagePage: JSONCodable {
+public struct MessagePage: Codable {
     
     // MARK: - Properties
     public var start: Int?
@@ -364,12 +351,6 @@ public struct MessagePage: JSONCodable {
         self.limit = limit
     }
     
-    /// Custom initializer to create a MessagePage object from a PubNubBoundedPageBase.
-    public init(page: PubNubBoundedPageBase) {
-        self.start = page.start.map { Int($0) }
-        self.limit = page.limit
-    }
-    
     // MARK: - Codable Protocol
     
     /// Decoder initializer for creating an instance from encoded data.
@@ -387,14 +368,10 @@ public struct MessagePage: JSONCodable {
         try container.encode(start, forKey: .start)
         try container.encode(limit, forKey: .limit)
     }
-    
-    /// Converts the MessagePage object to a PubNubBoundedPageBase object.
-    func toPubNubBoundedPageBase() -> PubNubBoundedPageBase {
-        return PubNubBoundedPageBase(start: UInt64(start ?? 0), limit: limit) ?? PubNubBoundedPageBase.init()!
-    }
+
 }
 
-public struct MessageAction : JSONCodable{
+public struct MessageAction : Codable{
    
     // MARK: - Properties
     public var actionType: String?
@@ -422,13 +399,16 @@ public struct MessageAction : JSONCodable{
         publisher = nil
     }
     
-    /// Custom initializer to create a MessagePage object from a PubNubBoundedPageBase.
-    public init(action: PubNubMessageAction) {
-        actionType = action.actionType
-        actionValue = action.actionValue
-        actionTimetoken = Int(action.actionTimetoken)
-        publisher = action.publisher
-    }
+    // MARK: - Initializer
+        public init(actionType: String? = nil,
+                    actionValue: String? = nil,
+                    actionTimetoken: Int? = nil,
+                    publisher: String? = nil) {
+            self.actionType = actionType
+            self.actionValue = actionValue
+            self.actionTimetoken = actionTimetoken
+            self.publisher = publisher
+        }
     
     // MARK: - Codable Protocol
     
@@ -451,4 +431,33 @@ public struct MessageAction : JSONCodable{
         try container.encode(publisher, forKey: .publisher)
     }
     
+}
+
+/// A struct representing the data structure for chat messages.
+public struct PublishMessageData : Codable {
+    
+    // MARK: - Properties
+    
+    public var id: Int? // Represents the current date converted to String.
+    public var createdAt: String? // Represents the current timestamp in seconds.
+    public var sender: Sender? //
+    public var text: String? //The message to be sent.
+    public var type: MessagePayloadType? // Enum representing the MessageType. Use .question if the text contains "?".
+    public var platform: String? // Platform identifier, e.g., "sdk".
+
+   
+    // Initialize with default values or use a custom initializer as needed
+        public init(id: Int? = nil,
+                    createdAt: String? = nil,
+                    sender: Sender? = nil,
+                    text: String? = nil,
+                    type: MessagePayloadType? = nil,
+                    platform: String? = nil) {
+            self.id = id
+            self.createdAt = createdAt
+            self.sender = sender
+            self.text = text
+            self.type = type
+            self.platform = platform
+        }
 }
