@@ -180,6 +180,8 @@ public class ChatProvider {
                     } else {
                         completion?(false,APIClientError.USER_TOKEN_EXCEPTION)
                     }
+                } else {
+                    completion?(false,APIClientError.SHOW_NOT_LIVE)
                 }
             case .failure(let error):
                 // Invoke the completion with failure if an error occurs.
@@ -305,7 +307,9 @@ public class ChatProvider {
                 
             case .subscribeError(let error):
                 Config.shared.isDebugMode() ? print("The subscribeError", error.localizedDescription , "Code", error.reason.rawValue) :()
-                if error.reason.rawValue == 403 {
+                if error.reason == .timedOut {
+                    self.delegate?.onStatusChanged(error: APIClientError.CHAT_TIMEOUT)
+                } else if error.reason.rawValue == 403 {
                     self.delegate?.onStatusChanged(error: APIClientError.PERMISSION_DENIED)
                 }
             }
@@ -363,7 +367,11 @@ public class ChatProvider {
                         }
                     }
                 }
+            } else {
+                completion(false,APIClientError.SHOW_NOT_LIVE)
             }
+        } else {
+            completion(false,APIClientError.USER_TOKEN_EXCEPTION)
         }
     }
     
@@ -387,10 +395,10 @@ public class ChatProvider {
                         Config.shared.isDebugMode() ? print("History : Next page used for pagination: \(nextPage)") : ()
                     }
                     
+                    var messageArray: [MessageBase] = []
+
                     // Check if the messages for the specified channel exist in the response
                     if let myChannelMessages = response.messagesByChannel[self.publishChannel!] {
-                        // Convert the dictionary into an array of MessageBase
-                        var messageArray: [MessageBase] = []
                         
                         // Dispatch group to handle asynchronous tasks completion
                         let dispatchGroup = DispatchGroup()
@@ -448,6 +456,9 @@ public class ChatProvider {
                             // Invoke the completion closure with success and the obtained messages and page
                             completion(.success((messageArray, page)))
                         }
+                    } else {
+                        // Invoke the completion closure with success and the obtained messages and page
+                        completion(.success((messageArray,  response.next != nil ? MessagePage(page: response.next as! PubNubBoundedPageBase) : nil)))
                     }
                     
                 case let .failure(error):
@@ -512,7 +523,7 @@ public class ChatProvider {
           } else {
               // Handle the case when no channel is provided
               Config.shared.isDebugMode() ? print("Message Count Failed2: \(APIClientError.UNKNOWN_EXCEPTION)") : ()
-              completion(0,APIClientError.UNKNOWN_EXCEPTION)
+              completion(0,APIClientError.SHOW_NOT_LIVE)
           }
           
       }
@@ -538,7 +549,8 @@ public class ChatProvider {
                     completion(.failure(error))
                 }
             }
+        } else {
+            completion(.failure(APIClientError.SHOW_NOT_LIVE))
         }
-        
     }
 }
