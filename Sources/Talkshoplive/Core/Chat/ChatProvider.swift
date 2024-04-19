@@ -14,7 +14,7 @@ import PubNub
 public protocol _ChatProviderDelegate: AnyObject {
     func onMessageReceived(_ message: MessageBase)
     func onMessageRemoved(_ message: MessageBase)
-    func onStatusChanged(error:APIClientError)
+    func onStatusChange(error:APIClientError)
     // Add more methods for other events if needed
 }
 
@@ -308,9 +308,9 @@ public class ChatProvider {
             case .subscribeError(let error):
                 Config.shared.isDebugMode() ? print("The subscribeError", error.localizedDescription , "Code", error.reason.rawValue) :()
                 if error.reason == .timedOut {
-                    self.delegate?.onStatusChanged(error: APIClientError.CHAT_TIMEOUT)
+                    self.delegate?.onStatusChange(error: APIClientError.CHAT_TIMEOUT)
                 } else if error.reason.rawValue == 403 {
-                    self.delegate?.onStatusChanged(error: APIClientError.PERMISSION_DENIED)
+                    self.delegate?.onStatusChange(error: APIClientError.PERMISSION_DENIED)
                 }
             }
         }
