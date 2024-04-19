@@ -281,12 +281,12 @@ self.chat?.countMessages({ count, error in
 })
 ```
 
-#### `onStatusChanged(error:)`
+#### `onStatusChange(error:)`
 
 Use to listen event when token is revoked.
 
 ```
-func onStatusChanged(error: Talkshoplive.APIClientError) {
+func onStatusChange(error: Talkshoplive.APIClientError) {
     
     switch error {
     case .PERMISSION_DENIED:
