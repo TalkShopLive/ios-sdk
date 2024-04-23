@@ -161,6 +161,11 @@ self.chatInstance.sendMessage(message: newMessage, completion: {status, error in
 class ContentViewModel: ObservableObject, ChatDelegate {
     func onNewMessage(_ message: MessageData) {
         // Handle the received message
+        //If it's threaded message, it will have original message details
+        if let originalMessage = message.payload?.original?.message {
+            print("Original message's sender details", originalMessage.sender)
+            print("Original message details", originalMessage.text)
+        }
     }
 }
 
@@ -218,6 +223,12 @@ self.chatInstance.getChatMessages(page: page, completion: { result in
         
         // Access the actions if 'includeActions' is set to true
         for message in messageArray {
+            //If it's threaded message, it will have original message details
+            if let originalMessage = message.payload?.original?.message {
+                print("Original message's sender details", originalMessage.sender)
+                print("Original message details", originalMessage.text)
+            }
+            
             if let actions = message.actions, actions.count > 0 {
                 for action in actions {
                     print("Message Action:", action)
