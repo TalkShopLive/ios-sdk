@@ -306,6 +306,9 @@ func onStatusChange(error: Talkshoplive.APIClientError) {
     case .CHAT_TIMEOUT:
         //Chat got idle
         print("Chat Timeout")
+    case .CHAT_CONNECTION_ERROR:
+        //connection get dismiss and tried to reconnect and fails
+        print("Chat connection error")
     default:
         break
     }

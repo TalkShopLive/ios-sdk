@@ -37,6 +37,7 @@ public class ChatProvider {
     private var eventInstance: EventData?
     var isUpdateUser: Bool = false
     private var usersProvider = UsersProvider.shared
+    private var triedToReconnectBefore = false
 
     // MARK: - Initializer
     
@@ -217,29 +218,6 @@ public class ChatProvider {
                     // Check if the sender ID exists in the converted message payload.
                         if let senderId = convertedMessage.payload?.sender?.id {
                             // Fetch user metadata using the sender ID.
-                            if let threadedMessage = convertedMessage.payload?.original?.message,let threadedMessageSenderId = threadedMessage.sender?.id   {
-                                self.usersProvider.fetchUserMetaData(uuid: threadedMessageSenderId) { result in
-                                    switch result {
-                                    case .success(let senderData):
-                                        // Update the sender information in the converted message payload
-                                        convertedMessage.payload?.original?.message?.sender = senderData
-                                        
-                                        // Notify the delegate on the main thread about the received message.
-                                        DispatchQueue.main.async {
-                                            self.delegate?.onMessageReceived(convertedMessage)
-                                        }
-                                    case .failure(let error):
-                                        // Print the error if debug mode is enabled.
-                                        Config.shared.isDebugMode() ? print("Error fetching threaded user metadata: \(error.localizedDescription)") : ()
-
-                                        // Notify the delegate on the main thread about the received message even if there's an error.
-                                        DispatchQueue.main.async {
-                                            self.delegate?.onMessageReceived(convertedMessage)
-                                        }
-                                    }
-                                }
-                            }
-                            
                             self.usersProvider.fetchUserMetaData(uuid: senderId) { result in
                                 switch result {
                                 case .success(let senderData):
@@ -292,8 +270,22 @@ public class ChatProvider {
                 Config.shared.isDebugMode() ? print("The signal is \(signal.payload) and was sent by \(signal.publisher ?? "")") : ()
                 
             // Handle other events
-            case .connectionStatusChanged(_):
+            case .connectionStatusChanged(let connection):
                 Config.shared.isDebugMode() ? print("The connectionStatusChanged") : ()
+                if connection == .connected {
+                    self.triedToReconnectBefore = false
+                } else if connection == .disconnected {
+                    if self.triedToReconnectBefore {
+                        self.delegate?.onStatusChange(error: APIClientError.CHAT_CONNECTION_ERROR)
+                    } else {
+                        self.triedToReconnectBefore = true
+                        self.pubnub?.reconnect()
+                    }
+                } else {
+                    if self.triedToReconnectBefore {
+                        self.delegate?.onStatusChange(error: APIClientError.CHAT_CONNECTION_ERROR)
+                    }
+                }
                 
             case .subscriptionChanged(_):
                 Config.shared.isDebugMode() ? print("The subscriptionChanged") : ()
@@ -334,6 +326,10 @@ public class ChatProvider {
                     self.delegate?.onStatusChange(error: APIClientError.CHAT_TIMEOUT)
                 } else if error.reason.rawValue == 403 {
                     self.delegate?.onStatusChange(error: APIClientError.PERMISSION_DENIED)
+                }  else {
+                    if self.triedToReconnectBefore {
+                        self.delegate?.onStatusChange(error: APIClientError.CHAT_CONNECTION_ERROR)
+                    }
                 }
             }
         }
@@ -444,31 +440,6 @@ public class ChatProvider {
                             if let senderId = convertedMessage.payload?.sender?.id {
                                 // Append the message to the message array
                                 messageArray.append(convertedMessage)
-                                
-                                if let threadedMessage = convertedMessage.payload?.original?.message,let threadedMessageSenderId = threadedMessage.sender?.id   {
-                                    // Enter the dispatch group for each message
-                                    dispatchGroup.enter()
-                                    self.usersProvider.fetchUserMetaData(uuid: threadedMessageSenderId) { result in
-                                        switch result {
-                                        case .success(let senderData):
-                                            // Update the sender information in the converted message payload
-                                            convertedMessage.payload?.original?.message?.sender = senderData
-                                            
-                                            // Fetch the index of specific message
-                                            if let index = messageArray.firstIndex(where: { objMessage in
-                                                objMessage.published == convertedMessage.published
-                                            }) {
-                                                // If index is found, replace it with the updated message
-                                                messageArray[index] = convertedMessage
-                                            }
-                                            // Leave the dispatch group as message processing is complete
-                                            dispatchGroup.leave()
-                                        case .failure(_):
-                                            // Leave the dispatch group as message processing is complete
-                                            dispatchGroup.leave()
-                                        }
-                                    }
-                                }
 
                                 self.usersProvider.fetchUserMetaData(uuid: senderId) { result in
                                     switch result {
