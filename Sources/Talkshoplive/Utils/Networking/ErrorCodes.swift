@@ -18,6 +18,7 @@ public enum APIClientError: Error{
     case AUTHENTICATION_EXCEPTION
     case SHOW_NOT_FOUND
     case SHOW_UNKNOWN_EXCEPTION
+    case SHOW_NOT_LIVE
     case EVENT_NOT_FOUND
     case EVENT_UNKNOWN_EXCEPTION
     case INVALID_USER_TOKEN
@@ -26,8 +27,10 @@ public enum APIClientError: Error{
     case CHANNEL_SUBSCRIPTION_FAILED
     case MESSAGE_SENDING_FAILED
     case MESSAGE_LIST_FAILED
+    case CHAT_TIMEOUT
     case UNKNOWN_EXCEPTION
     case PERMISSION_DENIED
+    case CHAT_CONNECTION_ERROR
 }
 
 extension APIClientError: LocalizedError {
@@ -51,6 +54,8 @@ extension APIClientError: LocalizedError {
             return "Show not found"
         case .SHOW_UNKNOWN_EXCEPTION:
             return "Show unknown exception"
+        case .SHOW_NOT_LIVE:
+            return "Show not live"
         case .EVENT_NOT_FOUND:
             return "Event not found"
         case .EVENT_UNKNOWN_EXCEPTION:
@@ -67,11 +72,15 @@ extension APIClientError: LocalizedError {
             return "Message sending failed"
         case .MESSAGE_LIST_FAILED:
             return "Message list failed"
+        case .CHAT_TIMEOUT:
+            return "Chat timeout"
         case .UNKNOWN_EXCEPTION:
             return "Unknown exception"
         case .PERMISSION_DENIED:
             //If token is expired/revoked
             return "Permission Denied"
+        case .CHAT_CONNECTION_ERROR:
+            return "Chat connection error"
         }
     }
 }

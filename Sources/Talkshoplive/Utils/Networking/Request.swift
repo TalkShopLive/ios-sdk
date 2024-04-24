@@ -27,7 +27,7 @@ struct CollectorRequest: Codable {
     
     enum CollectorActionType: String, Codable {
         case sdkInitialized = "SDK_INITIALIZED"
-        case selectViewShowDetails = "SELECT_VIEW_SHOW_DETAILS"
+        case selectViewShowDetails = "SELECT_SHOW_METADATA"
         case selectViewChat = "SELECT_VIEW_CHAT"
         case updateUser = "UPDATE_USER"
         case incrementViewCount = "INCREMENT_VIEW_COUNT"
@@ -60,7 +60,7 @@ struct Meta: Codable {
         case streamingContentKey = "streaming_content_key"
         case storeId = "store_id"
         case videoStatus = "video_status"
-        case videoTime = "video_time"
+        case videoTime = "total_event_duration"
     }
 }
 

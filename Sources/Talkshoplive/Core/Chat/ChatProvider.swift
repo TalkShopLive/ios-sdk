@@ -14,7 +14,7 @@ import PubNub
 public protocol _ChatProviderDelegate: AnyObject {
     func onMessageReceived(_ message: MessageBase)
     func onMessageRemoved(_ message: MessageBase)
-    func onStatusChanged(error:APIClientError)
+    func onStatusChange(error:APIClientError)
     // Add more methods for other events if needed
 }
 
@@ -37,6 +37,7 @@ public class ChatProvider {
     private var eventInstance: EventData?
     var isUpdateUser: Bool = false
     private var usersProvider = UsersProvider.shared
+    private var triedToReconnectBefore = false
 
     // MARK: - Initializer
     
@@ -180,6 +181,8 @@ public class ChatProvider {
                     } else {
                         completion?(false,APIClientError.USER_TOKEN_EXCEPTION)
                     }
+                } else {
+                    completion?(false,APIClientError.SHOW_NOT_LIVE)
                 }
             case .failure(let error):
                 // Invoke the completion with failure if an error occurs.
@@ -215,7 +218,7 @@ public class ChatProvider {
                     // Check if the sender ID exists in the converted message payload.
                         if let senderId = convertedMessage.payload?.sender?.id {
                             // Fetch user metadata using the sender ID.
-                            Users().fetchUserMetaData(uuid: senderId) { result in
+                            self.usersProvider.fetchUserMetaData(uuid: senderId) { result in
                                 switch result {
                                 case .success(let senderData):
                                     // Update the sender information in the converted message payload.
@@ -267,8 +270,22 @@ public class ChatProvider {
                 Config.shared.isDebugMode() ? print("The signal is \(signal.payload) and was sent by \(signal.publisher ?? "")") : ()
                 
             // Handle other events
-            case .connectionStatusChanged(_):
+            case .connectionStatusChanged(let connection):
                 Config.shared.isDebugMode() ? print("The connectionStatusChanged") : ()
+                if connection == .connected {
+                    self.triedToReconnectBefore = false
+                } else if connection == .disconnected {
+                    if self.triedToReconnectBefore {
+                        self.delegate?.onStatusChange(error: APIClientError.CHAT_CONNECTION_ERROR)
+                    } else {
+                        self.triedToReconnectBefore = true
+                        self.pubnub?.reconnect()
+                    }
+                } else {
+                    if self.triedToReconnectBefore {
+                        self.delegate?.onStatusChange(error: APIClientError.CHAT_CONNECTION_ERROR)
+                    }
+                }
                 
             case .subscriptionChanged(_):
                 Config.shared.isDebugMode() ? print("The subscriptionChanged") : ()
@@ -305,8 +322,14 @@ public class ChatProvider {
                 
             case .subscribeError(let error):
                 Config.shared.isDebugMode() ? print("The subscribeError", error.localizedDescription , "Code", error.reason.rawValue) :()
-                if error.reason.rawValue == 403 {
-                    self.delegate?.onStatusChanged(error: APIClientError.PERMISSION_DENIED)
+                if error.reason == .timedOut {
+                    self.delegate?.onStatusChange(error: APIClientError.CHAT_TIMEOUT)
+                } else if error.reason.rawValue == 403 {
+                    self.delegate?.onStatusChange(error: APIClientError.PERMISSION_DENIED)
+                }  else {
+                    if self.triedToReconnectBefore {
+                        self.delegate?.onStatusChange(error: APIClientError.CHAT_CONNECTION_ERROR)
+                    }
                 }
             }
         }
@@ -363,7 +386,11 @@ public class ChatProvider {
                         }
                     }
                 }
+            } else {
+                completion(false,APIClientError.SHOW_NOT_LIVE)
             }
+        } else {
+            completion(false,APIClientError.USER_TOKEN_EXCEPTION)
         }
     }
     
@@ -387,10 +414,10 @@ public class ChatProvider {
                         Config.shared.isDebugMode() ? print("History : Next page used for pagination: \(nextPage)") : ()
                     }
                     
+                    var messageArray: [MessageBase] = []
+
                     // Check if the messages for the specified channel exist in the response
                     if let myChannelMessages = response.messagesByChannel[self.publishChannel!] {
-                        // Convert the dictionary into an array of MessageBase
-                        var messageArray: [MessageBase] = []
                         
                         // Dispatch group to handle asynchronous tasks completion
                         let dispatchGroup = DispatchGroup()
@@ -448,6 +475,9 @@ public class ChatProvider {
                             // Invoke the completion closure with success and the obtained messages and page
                             completion(.success((messageArray, page)))
                         }
+                    } else {
+                        // Invoke the completion closure with success and the obtained messages and page
+                        completion(.success((messageArray,  response.next != nil ? MessagePage(page: response.next as! PubNubBoundedPageBase) : nil)))
                     }
                     
                 case let .failure(error):
@@ -512,7 +542,7 @@ public class ChatProvider {
           } else {
               // Handle the case when no channel is provided
               Config.shared.isDebugMode() ? print("Message Count Failed2: \(APIClientError.UNKNOWN_EXCEPTION)") : ()
-              completion(0,APIClientError.UNKNOWN_EXCEPTION)
+              completion(0,APIClientError.SHOW_NOT_LIVE)
           }
           
       }
@@ -538,7 +568,8 @@ public class ChatProvider {
                     completion(.failure(error))
                 }
             }
+        } else {
+            completion(.failure(APIClientError.SHOW_NOT_LIVE))
         }
-        
     }
 }
