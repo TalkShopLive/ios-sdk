@@ -37,6 +37,7 @@ public class ChatProvider {
     private var eventInstance: EventData?
     var isUpdateUser: Bool = false
     private var usersProvider = UsersProvider.shared
+    private var triedToReconnectBefore = false
 
     // MARK: - Initializer
     
@@ -292,8 +293,22 @@ public class ChatProvider {
                 Config.shared.isDebugMode() ? print("The signal is \(signal.payload) and was sent by \(signal.publisher ?? "")") : ()
                 
             // Handle other events
-            case .connectionStatusChanged(_):
+            case .connectionStatusChanged(let connection):
                 Config.shared.isDebugMode() ? print("The connectionStatusChanged") : ()
+                if connection == .connected {
+                    self.triedToReconnectBefore = false
+                } else if connection == .disconnected {
+                    if self.triedToReconnectBefore {
+                        self.delegate?.onStatusChange(error: APIClientError.CHAT_CONNECTION_ERROR)
+                    } else {
+                        self.triedToReconnectBefore = true
+                        self.pubnub?.reconnect()
+                    }
+                } else {
+                    if self.triedToReconnectBefore {
+                        self.delegate?.onStatusChange(error: APIClientError.CHAT_CONNECTION_ERROR)
+                    }
+                }
                 
             case .subscriptionChanged(_):
                 Config.shared.isDebugMode() ? print("The subscriptionChanged") : ()
@@ -334,6 +349,10 @@ public class ChatProvider {
                     self.delegate?.onStatusChange(error: APIClientError.CHAT_TIMEOUT)
                 } else if error.reason.rawValue == 403 {
                     self.delegate?.onStatusChange(error: APIClientError.PERMISSION_DENIED)
+                }  else {
+                    if self.triedToReconnectBefore {
+                        self.delegate?.onStatusChange(error: APIClientError.CHAT_CONNECTION_ERROR)
+                    }
                 }
             }
         }
