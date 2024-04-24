@@ -30,6 +30,7 @@ public enum APIClientError: Error{
     case CHAT_TIMEOUT
     case UNKNOWN_EXCEPTION
     case PERMISSION_DENIED
+    case CHAT_CONNECTION_ERROR
 }
 
 extension APIClientError: LocalizedError {
@@ -78,6 +79,8 @@ extension APIClientError: LocalizedError {
         case .PERMISSION_DENIED:
             //If token is expired/revoked
             return "Permission Denied"
+        case .CHAT_CONNECTION_ERROR:
+            return "Chat connection error"
         }
     }
 }
