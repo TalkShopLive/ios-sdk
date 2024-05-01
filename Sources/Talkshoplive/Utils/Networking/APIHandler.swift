@@ -7,12 +7,15 @@
 
 import Foundation
 
+// MARK: - APIConfig Structure
 public struct APIConfig: Codable {
     public let BASE_URL: String
     public let ASSETS_URL: String
     public let COLLECTOR_BASE_URL: String
     public let EVENTS_BASE_URL: String
 }
+
+// MARK: - HTTP methods
 public enum HTTPMethod: String {
     case get = "GET"
     case post = "POST"
@@ -20,13 +23,33 @@ public enum HTTPMethod: String {
     // Add other HTTP methods as needed
 }
 
+// MARK: - APIHandler Class 
+
+// APIHandler class responsible for handling API requests.
 public class APIHandler {
+    
+    // MARK: - Initializer
     public init() {
         
     }
-    
-    public func request<T: Decodable>(endpoint: APIEndpoint, method: HTTPMethod, body: Encodable?, responseType: T.Type, completion: @escaping (Result<T, APIClientError>) -> Void) {
-        
+
+    // MARK: - API Requests Methods
+
+    /// Performs an API request.
+    ///
+    /// - Parameters:
+    ///   - endpoint: The endpoint to which the request will be made.
+    ///   - method: The HTTP method for the request.
+    ///   - body: The body of the request, if any.
+    ///   - responseType: The type of the expected response.
+    ///   - completion: The completion handler to call when the request finishes.
+    public func request<T: Decodable>(
+        endpoint: APIEndpoint,
+        method: HTTPMethod,
+        body: Encodable?,
+        responseType: T.Type,
+        completion: @escaping (Result<T, APIClientError>) -> Void)
+    {
         // Check if the SDK is initialized or not
         guard Config.shared.isInitialized() else {
             print("SDK is not initialized")
@@ -100,8 +123,15 @@ public class APIHandler {
         task.resume()
     }
     
-    public func requestToRegister<T: Decodable>(clientKey: String, endpoint: APIEndpoint, method: HTTPMethod, body: Encodable?, responseType: T.Type, completion: @escaping (Result<T, APIClientError>) -> Void) {
-        
+    /// Performs an API request with additional client key.
+    public func requestToRegister<T: Decodable>(
+        clientKey: String,
+        endpoint: APIEndpoint,
+        method: HTTPMethod,
+        body: Encodable?,
+        responseType: T.Type,
+        completion: @escaping (Result<T, APIClientError>) -> Void)
+    {
         let fullURL = endpoint.baseURL + endpoint.path
         
         guard let url = URL(string: fullURL) else {
@@ -125,7 +155,6 @@ public class APIHandler {
                 return
             }
         }
-        
         
         let task = URLSession.shared.dataTask(with: request) { (data, response, error) in
             if let error = error {
@@ -166,8 +195,15 @@ public class APIHandler {
         task.resume()
     }
     
-    public func requestToken<T: Decodable>(jwtToken: String, endpoint: APIEndpoint, method: HTTPMethod, body: Encodable?, responseType: T.Type, completion: @escaping (Result<T, APIClientError>) -> Void) {
-        
+    /// Performs an API request with a JWT token.
+    public func requestToken<T: Decodable>(
+        jwtToken: String,
+        endpoint: APIEndpoint,
+        method: HTTPMethod,
+        body: Encodable?,
+        responseType: T.Type,
+        completion: @escaping (Result<T, APIClientError>) -> Void)
+    {
         // Check if the SDK is initialized or not
         guard Config.shared.isInitialized() else {
             print("SDK is not initialized")
@@ -244,8 +280,14 @@ public class APIHandler {
         task.resume()
     }
     
-    public func requestDelete(jwtToken: String? = nil, endpoint: APIEndpoint, method: HTTPMethod, body: Encodable?, completion: @escaping (Result<Bool, APIClientError>) -> Void) {
-        
+    /// Performs an API request for deletion.
+    public func requestDelete(
+        jwtToken: String? = nil,
+        endpoint: APIEndpoint,
+        method: HTTPMethod,
+        body: Encodable?,
+        completion: @escaping (Result<Bool, APIClientError>) -> Void)
+    {
         // Check if the SDK is initialized or not
         guard Config.shared.isInitialized() else {
             print("SDK is not initialized")

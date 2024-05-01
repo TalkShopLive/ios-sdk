@@ -1,29 +1,37 @@
 //
-//  File.swift
-//  
+//  Show.swift
+//
 //
 //  Created by TalkShopLive on 2024-01-24.
 //
 
 import Foundation
 
+// MARK: - Show Class
+
+// Show class responsible for managing show-related functionality through ShowProvider
 public class Show {
     
-    public static let shared = Show()
-
+    // MARK: - Properties
+    public static let shared = Show()// Singleton instance for Show class
     private var showInstance = ShowData()
     private var incrementedView = [String: Bool]()
    
+    // MARK: - Initializer
     public init() {
         
     }
     // MARK: - Public Methods
     /// Get the details of the show.
-    public func getDetails(showKey: String, completion: @escaping (Result<ShowData, APIClientError>) -> Void) {
-        
+    public func getDetails(
+        showKey: String,
+        completion: @escaping (Result<ShowData, APIClientError>) -> Void) 
+    {
+        // Fetch show details using the provider
         ShowProvider().fetchShow(showKey: showKey) { result in
             switch result {
             case .success(let showData):
+                // Update the show instance with fetched data
                 self.showInstance = showData
                 // Set the details and invoke the completion with success.
                 completion(.success(showData))
@@ -43,7 +51,12 @@ public class Show {
         }
     }
     
-    public func getStatus(showKey: String, completion: @escaping (Result<EventData, APIClientError>) -> Void) {
+    /// Get the status of the show.
+    public func getStatus(
+        showKey: String,
+        completion: @escaping (Result<EventData, APIClientError>) -> Void)
+    {
+        // Fetch current event status using the provider
         ShowProvider().fetchCurrentEvent(showKey: showKey) { result in
             switch result {
             case .success(let eventInstance):

@@ -1,5 +1,5 @@
 //
-//  File.swift
+//  EventData.swift
 //
 //
 //  Created by TalkShoLive on 2024-01-30.
@@ -7,28 +7,27 @@
 
 import Foundation
 
-// MARK: - EventData
+// MARK: - EventData 
 
 /// Represents the data structure for an event.
 
 public struct EventData: Codable {
-    var id: Int?
     public var storeId: Int?
-    var productId: Int?
-    var filename: String?
     public var name: String?
     public var status: String?
-    var streamKey: String?
     public var duration: Int?
     public var hlsPlaybackUrl: String?
     public var hlsUrl: String?
-    var isTest: Bool?
     public var endedAt: String?
     public var streamInCloud: Bool?
     public var totalViews: Int?
+    var id: Int?
+    var productId: Int?
+    var filename: String?
+    var streamKey: String?
+    var isTest: Bool?
 
     // MARK: Coding Keys
-
     enum CodingKeys: String, CodingKey {
         case id
         case storeId = "store_id"

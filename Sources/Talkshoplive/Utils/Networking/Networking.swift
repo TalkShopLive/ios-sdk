@@ -7,10 +7,20 @@
 
 import Foundation
 
+// MARK: - Networking Class 
+
+//Networking Class responsible for handling network requests and interactions.
 class Networking {
     
     //MARK: Initialize SDK
-    static func register(clientKey: String, completion: @escaping (Result<Void, APIClientError>) -> Void) {
+    /// Registers the SDK with the provided client key.
+    /// - Parameters:
+    ///   - clientKey: The client key used for SDK registration.
+    ///   - completion: A closure to be called upon completion of the registration process.
+    static func register(
+        clientKey: String,
+        completion: @escaping (Result<Void, APIClientError>) -> Void)
+    {
         // Making a request to register the SDK with the provided client key
         APIHandler().requestToRegister(clientKey: clientKey, endpoint: APIEndpoint.register, method: .get, body: nil, responseType: RegisteredClientData.self) { result in
             switch result {
@@ -35,10 +45,16 @@ class Networking {
     }
 
     
-    //MARK: Shows
+    // MARK: - Shows
 
-    // Retrieve shows associated with a given show key
-    static func getShows(showKey: String, completion: @escaping (Result<ShowData, APIClientError>) -> Void) {
+    /// Retrieves shows associated with a given show key.
+    /// - Parameters:
+    ///   - showKey: The key associated with the show.
+    ///   - completion: A closure to be called upon completion, containing a result with either the show data or an error.
+    static func getShows(
+        showKey: String,
+        completion: @escaping (Result<ShowData, APIClientError>) -> Void)
+    {
         APIHandler().request(endpoint: APIEndpoint.getShows(showKey: showKey), method: .get, body: nil, responseType: GetShowsResponse.self) { result in
             switch result {
             case .success(let apiResponse):
@@ -51,8 +67,14 @@ class Networking {
         }
     }
 
-    // Retrieve details of the current event for a given show key
-    static func getCurrentEvent(showKey: String, completion: @escaping (Result<EventData, APIClientError>) -> Void) {
+    /// Retrieves details of the current event for a given show key.
+    /// - Parameters:
+    ///   - showKey: The key associated with the show.
+    ///   - completion: A closure to be called upon completion, containing a result with either the event data or an error.
+    static func getCurrentEvent(
+        showKey: String,
+        completion: @escaping (Result<EventData, APIClientError>) -> Void)
+    {
         APIHandler().request(endpoint: APIEndpoint.getCurrentEvent(showKey: showKey), method: .get, body: nil, responseType: EventData.self) { result in
             switch result {
             case .success(let apiResponse):
@@ -64,12 +86,41 @@ class Networking {
             }
         }
     }
+    
+    // Increment the view count for the specified event.
+    /// - Parameters:
+    ///   - eventId: The ID of the event for which the view count should be incremented.
+    ///   - completion: A closure to be called upon completion, containing a boolean indicating whether the view count was incremented successfully and an error if applicable.
+    static func getIncrementView(
+        eventId: Int,
+        _ completion: ((Bool, APIClientError?) -> Void)? = nil)
+    {
+        // Make a request to increment the view count
+        APIHandler().request(endpoint: APIEndpoint.getIncrementViewCount(eventId: eventId), method: .post, body: nil, responseType: IncrementViewResponse.self) { result in
+            switch result {
+            case .success(_):
+                // View count incremented successfully
+                completion?(true, nil)
+            case .failure(let error):
+                // Failed to increment view count
+                completion?(false, error)
+            }
+        }
+    }
 
     
-    //MARK: Chat
+    // MARK: - Chat
 
-    // Create a messaging token based on the provided JWT token and user type (guest or federated)
-    static func createMessagingToken(jwtToken: String, isGuest: Bool, completion: @escaping (Result<MessagingTokenResponse, APIClientError>) -> Void) {
+    /// Creates a messaging token based on the provided JWT token and user type (guest or federated).
+    /// - Parameters:
+    ///   - jwtToken: The JWT token used for authentication.
+    ///   - isGuest: A boolean indicating whether the user is a guest or federated user.
+    ///   - completion: A closure to be called upon completion, containing a result with either the messaging token response or an error.
+    static func createMessagingToken(
+        jwtToken: String,
+        isGuest: Bool,
+        completion: @escaping (Result<MessagingTokenResponse, APIClientError>) -> Void)
+    {
         // Determine the endpoint based on whether the user is a guest or federated
         let endpoint = isGuest ? APIEndpoint.getGuestUserToken : APIEndpoint.getFederatedUserToken
         // Make a request to retrieve the messaging token
@@ -85,7 +136,12 @@ class Networking {
         }
     }
 
-    // Delete a message with the provided JWT token, event ID, and time token
+    /// Deletes a message with the provided JWT token, event ID, and time token.
+    /// - Parameters:
+    ///   - jwtToken: The JWT token used for authentication.
+    ///   - eventId: The ID of the event associated with the message.
+    ///   - timeToken: The time token associated with the message.
+    ///   - completion: A closure to be called upon completion, containing a result indicating whether the message was successfully deleted or an error.
     static func deleteMessage(jwtToken: String, eventId: String, timeToken: String, completion: @escaping (Result<Bool, APIClientError>) -> Void) {
         // Make a request to delete the message
         APIHandler().requestDelete(jwtToken: jwtToken, endpoint: APIEndpoint.deleteMessage(eventId: eventId, timetoken: timeToken), method: .delete, body: nil) { result in
@@ -101,9 +157,21 @@ class Networking {
     }
 
     
-    //MARK: Collector
+    // MARK: - Collector
 
-    // Collect analytics data with the specified parameters
+    /// Collects analytics data with the specified parameters.
+    /// - Parameters:
+    ///   - userId: The ID of the user associated with the action (optional).
+    ///   - category: The category of the action (optional).
+    ///   - version: The version of the application (optional).
+    ///   - action: The type of action being performed (optional).
+    ///   - eventId: The ID of the event associated with the action (optional).
+    ///   - showKey: The key of the streaming content (optional).
+    ///   - storeId: The ID of the store associated with the action (optional).
+    ///   - videoStatus: The status of the video being watched (optional).
+    ///   - videoTime: The time of the video being watched (optional).
+    ///   - screenResolution: The resolution of the screen (optional).
+    ///   - completion: A closure to be called upon completion, containing a boolean indicating whether the analytics data was sent successfully and an error if applicable.
     static func collect(userId: String? = nil,
                         category: CollectorRequest.CollectorCategory? = nil,
                         version: String? = nil,
@@ -149,28 +217,19 @@ class Networking {
             }
         }
     }
-
-    // Increment the view count for the specified event
-    static func getIncrementView(eventId: Int, _ completion: ((Bool, APIClientError?) -> Void)? = nil) {
-        // Make a request to increment the view count
-        APIHandler().request(endpoint: APIEndpoint.getIncrementViewCount(eventId: eventId), method: .post, body: nil, responseType: IncrementViewResponse.self) { result in
-            switch result {
-            case .success(_):
-                // View count incremented successfully
-                completion?(true, nil)
-            case .failure(let error):
-                // Failed to increment view count
-                completion?(false, error)
-            }
-        }
-    }
     
-    //MARK: Users
+    // MARK: - Users
     
     // Fetches user metadata from the server using the provided UUID.
-    static func getUserMetadata(uuid: String, _ completion: @escaping (Result<Sender, APIClientError>) -> Void) {
+    /// - Parameters:
+    ///   - uuid: The UUID of the user whose metadata is to be fetched.
+    ///   - completion: A closure to be called upon completion, containing a result indicating either the fetched user metadata or an error.
+    static func getUserMetadata(
+        uuid: String,
+        _ completion: @escaping (Result<Sender, APIClientError>) -> Void)
+    {
         // Make a request to the APIHandler to fetch user metadata.
-        APIHandler().request(endpoint: APIEndpoint.getUserMetadata(uuid: uuid), method: .get, body: nil, responseType: UserMeataResponse.self) { result in
+        APIHandler().request(endpoint: APIEndpoint.getUserMetadata(uuid: uuid), method: .get, body: nil, responseType: UserMetaResponse.self) { result in
             switch result {
             case .success(let apiResponse):
                 // User's metadata fetched successfully
