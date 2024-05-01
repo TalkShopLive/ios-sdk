@@ -1,5 +1,5 @@
 //
-//  MessageDataModel.swift
+//  MessageData.swift
 //
 //
 //  Created by TalkShopLive on 2024-01-30.
@@ -62,7 +62,9 @@ public struct MessageBase: JSONCodable {
     }
     
     /// Custom initializer to create a MessageBase object from a PubNubMessage.
-    public init(pubNubMessage: PubNubMessage) {
+    public init(
+        pubNubMessage: PubNubMessage)
+    {
         if let payloadString = pubNubMessage.payload.jsonStringify {
             if let payload = convertToModel(from: payloadString, responseType: MessageData.self) {
                 self.payload = payload
@@ -77,7 +79,9 @@ public struct MessageBase: JSONCodable {
         self.actions = self.toMessageActions(actions: pubNubMessage.actions)
     }
     
-    public func toMessageActions(actions: [PubNubMessageAction]) -> [MessageAction]{
+    public func toMessageActions(
+        actions: [PubNubMessageAction]) -> [MessageAction]
+    {
         var actionsArray = [MessageAction]()
         for i in actions {
             let actionObject = MessageAction(action: i)
@@ -145,7 +149,12 @@ public struct Sender : JSONCodable{
     }
     
     /// Custom initializer with parameters for all properties.
-    public init(id: String? = nil, name: String? = nil, profileUrl:String? = nil,externalId:String? = nil) {
+    public init(
+        id: String? = nil,
+        name: String? = nil,
+        profileUrl:String? = nil,
+        externalId:String? = nil)
+    {
         self.id = id
         self.name = name
         self.profileUrl = profileUrl
@@ -226,7 +235,16 @@ public struct OriginalMessageData: Codable {
     }
     
     /// Custom initializer with parameters for all properties.
-    public init(id: Int? = nil, createdAt: String? = nil, sender: Sender? = nil, text: String? = nil, type: MessageType? = nil, platform: String? = nil,key: MessagePayloadKey? = nil, payload: String? = nil) {
+    public init(
+        id: Int? = nil,
+        createdAt: String? = nil,
+        sender: Sender? = nil,
+        text: String? = nil,
+        type: MessageType? = nil,
+        platform: String? = nil,
+        key: MessagePayloadKey? = nil,
+        payload: String? = nil)
+    {
         self.id = id
         self.createdAt = createdAt
         self.sender = sender
@@ -293,7 +311,9 @@ public struct OriginalMessageBase: Codable {
         self.message = nil
     }
     
-    public init(message: OriginalMessageData? = nil) {
+    public init(
+        message: OriginalMessageData? = nil)
+    {
         self.message = message
     }
     
@@ -361,7 +381,17 @@ public struct MessageData: JSONCodable {
     }
     
     /// Custom initializer with parameters for all properties.
-    public init(id: Int? = nil, createdAt: String? = nil, sender: Sender? = nil, text: String? = nil, type: MessageType? = nil, platform: String? = nil,key: MessagePayloadKey? = nil, payload: String? = nil, original: OriginalMessageBase? = nil) {
+    public init(
+        id: Int? = nil,
+        createdAt: String? = nil,
+        sender: Sender? = nil,
+        text: String? = nil,
+        type: MessageType? = nil,
+        platform: String? = nil,
+        key: MessagePayloadKey? = nil,
+        payload: String? = nil,
+        original: OriginalMessageBase? = nil)
+    {
         self.id = id
         self.createdAt = createdAt
         self.sender = sender
@@ -590,7 +620,7 @@ public enum MessageType: String, Codable {
     case giphy
     
     public init(from decoder: Decoder) throws {
-            let stringValue = try decoder.singleValueContainer().decode(String.self)
-            self = MessageType(rawValue: stringValue.lowercased()) ?? .comment
+        let stringValue = try decoder.singleValueContainer().decode(String.self)
+        self = MessageType(rawValue: stringValue.lowercased()) ?? .comment
     }
 }

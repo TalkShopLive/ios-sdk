@@ -7,12 +7,12 @@
 
 import Foundation
 
-
+// MARK: - Error codes for the API client.
 public enum APIClientError: Error{
     case INVALID_URL
     case REQUEST_FAILED(Error)
     case NO_DATA
-    case USER_ALREADY_AUTHENTICATED // User_already_authenticated
+    case USER_ALREADY_AUTHENTICATED
     case HTTP_ERROR(Int)
     case AUTHENTICATION_FAILED
     case AUTHENTICATION_EXCEPTION
@@ -33,7 +33,10 @@ public enum APIClientError: Error{
     case CHAT_CONNECTION_ERROR
 }
 
+// MARK: - APIClientError extension
+
 extension APIClientError: LocalizedError {
+    /// Localized description for each error case.
     public var localizedDescription: String {
         switch self {
         case .INVALID_URL:

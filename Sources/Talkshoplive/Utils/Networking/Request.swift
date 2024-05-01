@@ -1,5 +1,5 @@
 //
-//  File.swift
+//  Request.swift
 //  
 //
 //  Created by TalkShopLive on 2024-01-23.
@@ -9,6 +9,7 @@ import Foundation
 
 //MARK: - Collector Request
 
+/// A structure representing a collector request containing analytics data.
 struct CollectorRequest: Codable {
     let timestampUtc: Int?
     let userId: String? // Assuming userId is of type String
@@ -20,11 +21,15 @@ struct CollectorRequest: Codable {
     let utm: UTM?
     let aspect: Aspect?
     
+    // MARK: CollectorCategory
+    /// An enumeration representing the category of the collector request.
     enum CollectorCategory: String, Codable {
         case interaction = "INTERACTION"
         case process = "PROCESS"
     }
     
+    // MARK: CollectorActionType
+    /// An enumeration representing the action type of the collector request.
     enum CollectorActionType: String, Codable {
         case sdkInitialized = "SDK_INITIALIZED"
         case selectViewShowDetails = "SELECT_SHOW_METADATA"
@@ -33,6 +38,7 @@ struct CollectorRequest: Codable {
         case incrementViewCount = "INCREMENT_VIEW_COUNT"
     }
 
+    // MARK: Coding Keys
     enum CodingKeys: String, CodingKey {
         case timestampUtc = "timestamp_utc"
         case userId = "user_id"
@@ -46,6 +52,9 @@ struct CollectorRequest: Codable {
     }
 }
 
+//MARK: - Meta Object
+
+/// A structure representing additional metadata associated with a collector request.
 struct Meta: Codable {
     let external: Bool?
     let eventId: Int?
@@ -54,6 +63,7 @@ struct Meta: Codable {
     let videoStatus: String?
     let videoTime: Int?
 
+    // MARK: Coding Keys
     enum CodingKeys: String, CodingKey {
         case external
         case eventId = "event_id"
@@ -64,6 +74,9 @@ struct Meta: Codable {
     }
 }
 
+//MARK: - UTM Object
+
+/// A structure representing UTM parameters associated with a collector request.
 struct UTM: Codable {
     let source: String?
     let campaign: String?
@@ -71,6 +84,7 @@ struct UTM: Codable {
     let term: String?
     let content: String?
 
+    // MARK: Coding Keys
     enum CodingKeys: String, CodingKey {
         case source
         case campaign
@@ -80,9 +94,13 @@ struct UTM: Codable {
     }
 }
 
+//MARK: - Aspect Object
+
+/// A structure representing aspect parameters associated with a collector request.
 struct Aspect: Codable {
     let screenResolution: String?
 
+    // MARK: Coding Keys
     enum CodingKeys: String, CodingKey {
         case screenResolution = "screen_resolution"
     }

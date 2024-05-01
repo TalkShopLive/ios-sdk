@@ -1,5 +1,5 @@
 //
-// APIEndpoint.swift
+// Urls.swift
 //
 //
 //  Created by TalkShopLive on 2024-01-23.
@@ -7,6 +7,9 @@
 
 import Foundation
 
+//MARK: - APIEndpoint
+
+/// Enum defining various API endpoints used in the application.
 public enum APIEndpoint {
     case messagingToken
     case getShows(showKey: String)
@@ -21,6 +24,7 @@ public enum APIEndpoint {
     case getIncrementViewCount(eventId: Int)
     case getUserMetadata(uuid: String)
     
+    /// Base URL for the API endpoint.
     var baseURL: String {
         do {
             switch self {
@@ -38,6 +42,7 @@ public enum APIEndpoint {
         }
     }
     
+    /// Path for the API endpoint.
     var path: String {
         switch self {
         case .messagingToken:
