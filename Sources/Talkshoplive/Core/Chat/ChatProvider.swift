@@ -324,8 +324,12 @@ public class ChatProvider {
                 Config.shared.isDebugMode() ? print("The subscribeError", error.localizedDescription , "Code", error.reason.rawValue) :()
                 if error.reason == .timedOut {
                     self.delegate?.onStatusChange(error: APIClientError.CHAT_TIMEOUT)
-                } else if error.reason.rawValue == 403 {
-                    self.delegate?.onStatusChange(error: APIClientError.PERMISSION_DENIED)
+                } else  if error.reason.rawValue == 403 {
+                    if error.localizedDescription.contains("expired") {
+                        self.delegate?.onStatusChange(error: APIClientError.CHAT_TOKEN_EXPIRED)
+                    } else {
+                        self.delegate?.onStatusChange(error: APIClientError.PERMISSION_DENIED)
+                    }
                 }  else {
                     if self.triedToReconnectBefore {
                         self.delegate?.onStatusChange(error: APIClientError.CHAT_CONNECTION_ERROR)
@@ -380,7 +384,11 @@ public class ChatProvider {
                         // Print an error message in case of a failure during publishing
                         Config.shared.isDebugMode() ? print("Message Sending Failed: \(error.localizedDescription)") : ()
                         if (error as? PubNubError)?.reason.rawValue == 403 {
-                            completion(false, APIClientError.PERMISSION_DENIED)
+                            if error.localizedDescription.contains("expired") {
+                                self.delegate?.onStatusChange(error: APIClientError.CHAT_TOKEN_EXPIRED)
+                            } else {
+                                self.delegate?.onStatusChange(error: APIClientError.PERMISSION_DENIED)
+                            }
                         } else {
                             completion(false, APIClientError.MESSAGE_SENDING_FAILED) // Indicate failure with status false and pass the error
                         }
@@ -484,7 +492,11 @@ public class ChatProvider {
                     // Print an error message in case of a failure and invoke the completion closure with the error
                     Config.shared.isDebugMode() ? print("History : Fetch History Failed: \(error.localizedDescription)") : ()
                     if (error as? PubNubError)?.reason.rawValue == 403 {
-                        completion(.failure(APIClientError.PERMISSION_DENIED))
+                        if error.localizedDescription.contains("expired") {
+                            self.delegate?.onStatusChange(error: APIClientError.CHAT_TOKEN_EXPIRED)
+                        } else {
+                            self.delegate?.onStatusChange(error: APIClientError.PERMISSION_DENIED)
+                        }
                     } else {
                         completion(.failure(APIClientError.MESSAGE_LIST_FAILED))
                     }
@@ -533,7 +545,11 @@ public class ChatProvider {
                       // Handle the failure case when retrieving message counts
                       Config.shared.isDebugMode() ? print("Message Count Failed1: \(error.localizedDescription)") : ()
                       if (error as? PubNubError)?.reason.rawValue == 403 {
-                          completion(0,APIClientError.PERMISSION_DENIED)
+                          if error.localizedDescription.contains("expired") {
+                              self.delegate?.onStatusChange(error: APIClientError.CHAT_TOKEN_EXPIRED)
+                          } else {
+                              self.delegate?.onStatusChange(error: APIClientError.PERMISSION_DENIED)
+                          }
                       } else {
                           completion(0,APIClientError.UNKNOWN_EXCEPTION)
                       }
