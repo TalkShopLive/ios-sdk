@@ -10,7 +10,7 @@ import Foundation
 public class Collector {
     
     // MARK: - Singleton
-    private let sdkVerion = "1.0.1-beta"
+    private let sdkVerion = "1.0.5"
     
     public static let shared = Collector()
     
