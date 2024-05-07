@@ -18,7 +18,6 @@ struct CollectorRequest: Codable {
     let application: String?
     let meta: Meta?
     let utm: UTM?
-    let aspect: Aspect?
     
     enum CollectorCategory: String, Codable {
         case interaction = "INTERACTION"
@@ -42,7 +41,6 @@ struct CollectorRequest: Codable {
         case application
         case meta
         case utm
-        case aspect
     }
 }
 
@@ -80,10 +78,3 @@ struct UTM: Codable {
     }
 }
 
-struct Aspect: Codable {
-    let screenResolution: String?
-
-    enum CodingKeys: String, CodingKey {
-        case screenResolution = "screen_resolution"
-    }
-}
