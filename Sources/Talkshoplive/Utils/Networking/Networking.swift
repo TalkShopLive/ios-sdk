@@ -23,12 +23,12 @@ class Networking {
                     completion(.success(()))
                 } else {
                     // If the client key is invalid, SDK initialization failed due to authentication error
-                    print("SDK Initialization Failed: \(APIClientError.AUTHENTICATION_EXCEPTION.localizedDescription)")
+                    print("SDK Initialization Failed: TSL.\(APIClientError.AUTHENTICATION_EXCEPTION.localizedDescription)")
                     completion(.failure(APIClientError.AUTHENTICATION_FAILED))
                 }
             case .failure(_):
                 // SDK initialization failed due to request failure or invalid response
-                print("SDK Initialization Failed: \(APIClientError.AUTHENTICATION_EXCEPTION.localizedDescription)")
+                print("SDK Initialization Failed: TSL.\(APIClientError.AUTHENTICATION_EXCEPTION.localizedDescription)")
                 completion(.failure(APIClientError.AUTHENTICATION_EXCEPTION))
             }
         }
@@ -132,8 +132,7 @@ class Networking {
                                                 campaign: "NOT_SET",
                                                 medium: "NOT_SET",
                                                 term: "NOT_SET",
-                                                content: "NOT_SET"),
-                                       aspect: Aspect(screenResolution: screenResolution ?? "NOT_SET"))
+                                                content: "NOT_SET"))
         // Make a request to send analytics data to the server
         APIHandler().request(endpoint: APIEndpoint.getCollector, method: .post, body: payload, responseType: NoResponse.self) { result in
             let actionType = payload.action!.rawValue
