@@ -60,4 +60,20 @@ public class ShowProvider {
             completion?(status,error)
         }
     }
+    
+    /// Fetch products for the given product IDs.
+    /// - Parameters:
+    ///   - productIds: The IDs of the products to fetch.
+    ///   - completion: A closure to be executed once the products are fetched.
+    internal func fetchProducts(
+        productIds: [Int],
+        completion: @escaping (Result<[ProductData], APIClientError>) -> Void)
+    {
+        // Call the network function to fetch products using the provided product IDs
+        Networking.getProducts(productIds: productIds) { result in
+            // Invoke the completion handler with the result obtained from the network call
+            completion(result)
+        }
+    }
+
 }

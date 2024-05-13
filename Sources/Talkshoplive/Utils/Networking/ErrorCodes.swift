@@ -21,6 +21,7 @@ public enum APIClientError: Error{
     case SHOW_NOT_LIVE
     case EVENT_NOT_FOUND
     case EVENT_UNKNOWN_EXCEPTION
+    case PRODUCT_NOT_FOUND
     case INVALID_USER_TOKEN
     case USER_TOKEN_EXPIRED
     case USER_TOKEN_EXCEPTION
@@ -63,6 +64,8 @@ extension APIClientError: LocalizedError {
             return "Event not found"
         case .EVENT_UNKNOWN_EXCEPTION:
             return "Event unknown exception"
+        case .PRODUCT_NOT_FOUND:
+            return "Product not found"
         case .INVALID_USER_TOKEN:
             return "Invalid user token"
         case .USER_TOKEN_EXPIRED:
