@@ -74,6 +74,8 @@ public struct VariantsData: Codable {
     public let exchangeName: String?
     public let buyerPrice: String?
     public let isDefault: Bool?
+    public var sku: String?
+
     
     // MARK: Coding Keys
     enum CodingKeys: String, CodingKey {
@@ -83,6 +85,7 @@ public struct VariantsData: Codable {
         case exchangeName
         case buyerPrice
         case isDefault
+        case sku
     }
     
     // MARK: Initializers
@@ -93,6 +96,7 @@ public struct VariantsData: Codable {
         exchangeName = nil
         buyerPrice = nil
         isDefault = nil
+        sku = nil
     }
     
     // Custom initializer to handle decoding from JSON
@@ -106,6 +110,7 @@ public struct VariantsData: Codable {
         exchangeName = try? container.decodeIfPresent(String.self, forKey: .exchangeName)
         buyerPrice = try? container.decodeIfPresent(String.self, forKey: .buyerPrice)
         isDefault = try? container.decodeIfPresent(Bool.self, forKey: .isDefault)
+        sku = try? container.decodeIfPresent(String.self, forKey: .sku)
     }
 
 }
