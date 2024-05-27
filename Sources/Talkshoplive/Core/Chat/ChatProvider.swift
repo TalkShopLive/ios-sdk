@@ -15,6 +15,8 @@ public protocol _ChatProviderDelegate: AnyObject {
     func onMessageReceived(_ message: MessageBase)
     func onMessageRemoved(_ message: MessageBase)
     func onStatusChange(error:APIClientError)
+    func onLikeComment(_ messageAction: MessageAction)
+    func onUnlikeComment(_ messageAction: MessageAction)
     // Add more methods for other events if needed
 }
 
@@ -30,6 +32,7 @@ public class ChatProvider {
     private var isGuest: Bool
     private var showKey: String
     private var channels: [String] = []
+    private var eventId: Int?
     private var publishChannel: String?
     private var eventsChannel: String?
     public var delegate: _ChatProviderDelegate?
@@ -144,6 +147,7 @@ public class ChatProvider {
                 self.setCurrentEvent(eventData)
                 // Set the details and invoke the completion with success.
                 if let event = self.eventInstance, let eventId = event.id {
+                    self.eventId = eventId
                     self.publishChannel = "chat.\(eventId)"
                     self.eventsChannel = "events.\(eventId)"
                     self.channels = [self.publishChannel!, self.eventsChannel!]
@@ -311,11 +315,23 @@ public class ChatProvider {
             case .membershipMetadataRemoved(_):
                 Config.shared.isDebugMode() ? print("The membershipMetadataRemoved") : ()
                 
-            case .messageActionAdded(_):
+            case .messageActionAdded(let messageAction):
                 Config.shared.isDebugMode() ? print("The messageActionAdded") : ()
+                // Convert the received messageAction into a MessageAction object
+                var convertedMessageAction = MessageAction(action: messageAction)
+                DispatchQueue.main.async {
+                    // Notify the delegate about the new like/comment action
+                    self.delegate?.onLikeComment(convertedMessageAction)
+                }
                 
-            case .messageActionRemoved(_):
-                Config.shared.isDebugMode() ? print("The messageActionRemoved") : ()
+            case .messageActionRemoved(let messageAction):
+                Config.shared.isDebugMode() ? print("The messageActionRemoved", messageAction) : ()
+                // Convert the received messageAction into a MessageAction object
+                let convertedMessageAction = MessageAction(action: messageAction)
+                DispatchQueue.main.async {
+                    // Notify the delegate about the unlike/comment removal action
+                    self.delegate?.onUnlikeComment(convertedMessageAction)
+                }
                 
             case .fileUploaded(_):
                 Config.shared.isDebugMode() ? print("The fileUploaded") : ()
@@ -531,7 +547,7 @@ public class ChatProvider {
                       }
                   case let .failure(error):
                       // Handle the failure case when retrieving message counts
-                      Config.shared.isDebugMode() ? print("Message Count Failed1: \(error.localizedDescription)") : ()
+                      Config.shared.isDebugMode() ? print("Message Count Failed: \(error.localizedDescription)") : ()
                       if (error as? PubNubError)?.reason.rawValue == 403 {
                           completion(0,APIClientError.PERMISSION_DENIED)
                       } else {
@@ -541,7 +557,7 @@ public class ChatProvider {
               })
           } else {
               // Handle the case when no channel is provided
-              Config.shared.isDebugMode() ? print("Message Count Failed2: \(APIClientError.UNKNOWN_EXCEPTION)") : ()
+              Config.shared.isDebugMode() ? print("Message Count Failed: \(APIClientError.UNKNOWN_EXCEPTION)") : ()
               completion(0,APIClientError.SHOW_NOT_LIVE)
           }
           
@@ -569,6 +585,53 @@ public class ChatProvider {
                 }
             }
         } else {
+            completion(.failure(APIClientError.SHOW_NOT_LIVE))
+        }
+    }
+    
+    // Method to like a comment using the chat provider.
+    internal func likeComment(timeToken: String,_ completion: @escaping (Bool, APIClientError?) -> Void?) {
+        // Check if a channel is provided for like comment
+        if let channel = self.publishChannel {
+            self.pubnub?.addMessageAction(channel: channel, type: "reaction", value: "like", messageTimetoken:  UInt64(timeToken)!, completion: { result in
+                switch result {
+                case let .success(response):
+                    Config.shared.isDebugMode() ? print("Liked comment!") : ()
+                    // Call the completion handler with success
+                    completion(true, nil)
+                case let .failure(error):
+                    // If there's an error, indicate failure with the appropriate error
+                    completion(false,APIClientError.LIKE_COMMENT_FAILED)
+                }
+            })
+        } else {
+            // Handle the case when no channel is provided
+            Config.shared.isDebugMode() ? print("Liked comment Failed: \(APIClientError.SHOW_NOT_LIVE)") : ()
+            // Call the completion handler with failure and the appropriate error
+            completion(false,APIClientError.SHOW_NOT_LIVE)
+        }
+    }
+    
+    // Method to unlike a comment using the chat provider.
+    internal func unlikeComment(timeToken: String,actionTimeToken: Int, _ completion: @escaping (Result<Bool, APIClientError>) -> Void?) {
+        // Check if the publish channel and JWT token are available
+        if let channel = publishChannel, let jwtToken = self.getJwtToken(), let eventId = self.eventId {
+            // Call the Networking's unlikeComment method to unlike a comment
+            Networking.unlikeComment(jwtToken: jwtToken, eventId: "\(eventId)", messageTimetoken: timeToken, actionTimeToken: "\(actionTimeToken)") { result in
+                // Invoke the completion handler with the result of the unlike comment operation
+                switch result {
+                case .success(let status):
+                    Config.shared.isDebugMode() ? print("Comment unliked!") : ()
+                    // Call the completion handler with success status
+                    completion(.success(status))
+                case .failure(let error):
+                    Config.shared.isDebugMode() ? print("Comment Unliked Failed: \(error.localizedDescription)") : ()
+                    // Call the completion handler with the failure status and error
+                    completion(.failure(error))
+                }
+            }
+        } else {
+            // If required parameters are not available, call the completion handler with a failure status
             completion(.failure(APIClientError.SHOW_NOT_LIVE))
         }
     }

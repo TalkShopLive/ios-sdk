@@ -99,6 +99,21 @@ class Networking {
             }
         }
     }
+    
+    // Unlike a comment with the provided JWT token, event ID, messageTimetoken and actionTimeToken
+    static func unlikeComment(jwtToken:String, eventId: String, messageTimetoken: String, actionTimeToken: String,_ completion: @escaping (Result<Bool, APIClientError>) -> Void?) {
+        // Make a request to unlike the comment
+        APIHandler().requestDelete(jwtToken: jwtToken, endpoint: APIEndpoint.unlikeComment(eventId: eventId, messageTimeToken: messageTimetoken, actionTimeToken: actionTimeToken), method: .delete, body: nil) { result in
+            switch result {
+            case .success(_):
+                // Successfully unliked a comment
+                completion(.success(true))
+            case .failure(_):
+                // Failed to unlike a comment
+                completion(.failure(APIClientError.UNKNOWN_EXCEPTION))
+            }
+        }
+    }
 
     
     //MARK: Collector

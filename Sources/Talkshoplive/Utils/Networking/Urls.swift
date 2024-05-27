@@ -20,11 +20,12 @@ public enum APIEndpoint {
     case getCollector
     case getIncrementViewCount(eventId: Int)
     case getUserMetadata(uuid: String)
+    case unlikeComment(eventId:String,messageTimeToken:String, actionTimeToken:String)
     
     var baseURL: String {
         do {
             switch self {
-            case .messagingToken, .getShows, .getCurrentEvent,.register,.getGuestUserToken,.getFederatedUserToken,.deleteMessage,.getUserMetadata:
+            case .messagingToken, .getShows, .getCurrentEvent,.register,.getGuestUserToken,.getFederatedUserToken,.deleteMessage,.getUserMetadata, .unlikeComment:
                 return try Config.loadAPIConfig().BASE_URL
             case .getClosedCaptions,.getHlsUrl:
                 return try Config.loadAPIConfig().ASSETS_URL
@@ -64,6 +65,8 @@ public enum APIEndpoint {
             return "/event/\(eventId)/increment"
         case .getUserMetadata(uuid: let uuid):
             return "/api/messaging/senders/\(uuid)"
+        case .unlikeComment(eventId: let eventId, messageTimeToken: let messageTimeToken, actionTimeToken: let actionTimeToken):
+            return "/api2/v1/sdk/chat/messages/\(eventId)/\(messageTimeToken)/\(actionTimeToken)"
         }
     }
 }
