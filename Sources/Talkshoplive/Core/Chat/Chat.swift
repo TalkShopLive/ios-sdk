@@ -15,6 +15,8 @@ public protocol ChatDelegate: AnyObject {
     func onNewMessage(_ message: MessageBase)
     func onDeleteMessage(_ message: MessageBase)
     func onStatusChange(error:APIClientError)
+    func onLikeComment(_ messageAction: MessageAction)
+    func onUnlikeComment(_ messageAction: MessageAction)
     // Add more methods for other events if needed
 }
 
@@ -189,6 +191,27 @@ public class Chat {
         // Call the count method of the chat provider, passing the completion closure
         self.chatProvider?.count(completion: completion)
     }
+    
+    // Method to like a comment using the chat provider.
+    public func likeComment(timeToken: String, completion: @escaping (Bool, APIClientError?) -> Void?) {
+        // Call the onLikeComment method of the chat provider, passing the completion closure
+        self.chatProvider?.likeComment(timeToken: timeToken, completion)
+    }
+    
+    // Method to unlike a comment using the chat provider.
+    public func UnlikeComment(timeToken: String, actionTimeToken: Int, completion: @escaping (Bool, APIClientError?) -> Void) {
+        // Call the OnUnlikeComment method of the chat provider, passing the completion closure
+        self.chatProvider?.unlikeComment(timeToken: timeToken, actionTimeToken: actionTimeToken, { result in
+            switch result {
+            case .success(let status):
+                // Set the status and invoke the completion handler with success.
+                completion(status, nil)
+            case .failure(let error):
+                // Invoke the completion handler with failure if an error occurs.
+                completion(false, error)
+            }
+        })
+    }
 }
 
 // MARK: - Chat Listeners
@@ -212,5 +235,17 @@ extension Chat: _ChatProviderDelegate {
     public func onStatusChange(error: APIClientError) {
         // Forward the permission denied to the ChatDelegate
         self.delegate?.onStatusChange(error: error)
+    }
+    
+    // Delegate method called when a comment is liked
+    public func onLikeComment(_ messageAction: MessageAction) {
+        // Forward the liked comment action to the ChatDelegate
+        self.delegate?.onLikeComment(messageAction)
+    }
+    
+    // Delegate method called when a comment is unliked
+    public func onUnlikeComment(_ messageAction: MessageAction) {
+        // Forward the unliked comment action to the ChatDelegate
+        self.delegate?.onUnlikeComment(messageAction)
     }
 }

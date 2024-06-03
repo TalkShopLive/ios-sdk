@@ -281,7 +281,7 @@ Use to retrieve the count of messages using a chat instance.
   - `error`: An optional error that occurred during the counting process, if any.
 
 ```
-self.chat?.countMessages({ count, error in
+self.chatInstance.countMessages({ count, error in
     if let error = error {
         //If Token is revoked, it will return "PERMISSION_DENIED"
         print(error.localizedDescription)
@@ -290,6 +290,70 @@ self.chat?.countMessages({ count, error in
         print("Message Count : \(count)")
     }
 })
+```
+
+#### `likeComment(timeToken:completion:)`
+
+Use to like a message using a chat instance.
+
+- Parameters:
+  - `timeToken `: The time token when message was published.
+  
+- Completion:
+  - `status`: A boolean value indicating whether the message was liked successfully or not.
+  - `error`: An optional error that occurred during the like comment process, if any.
+
+```
+self.chatInstance.likeComment(timeToken: "timetoken", completion: { status, error in
+    if status {
+        print("Liked comment Successfully", status)
+    } else {
+        print("Liked comment Error", error?.localizedDescription ?? "")
+    }
+})
+```
+
+- Recieve Like comment event listener
+```
+class ContentViewModel: ObservableObject, ChatDelegate {
+    func onLikeComment(_ messageAction: Talkshoplive.MessageAction) {
+        // Handle the liked message action.
+    }
+}
+
+```
+
+
+#### ` UnlikeComment(timeToken:actionTimeToken:completion:)`
+
+Use to Unlike a message using a chat instance.
+
+- Parameters:
+  - `timeToken `: The time token when message was published.
+  - `actionTimeToken `: The time token when message was liked.
+  
+- Completion:
+  - `status`: A boolean value indicating whether the message was unliked successfully or not.
+  - `error`: An optional error that occurred during the unlike comment process, if any.
+
+```
+self.chatInstance.UnlikeComment(timeToken: "timetoken", actionTimeToken: "actionTimetoken", completion: { status, error in
+    if status {
+        print("Unliked comment Successfully", status)
+    } else {
+        print("Unliked comment Error", error?.localizedDescription ?? "")
+    }
+})
+```
+
+- Recieve Unlike comment event listener
+```
+class ContentViewModel: ObservableObject, ChatDelegate {
+    func onUnlikeComment(_ messageAction: MessageAction) {
+        // Handle the Unliked message action.
+    }
+}
+
 ```
 
 #### `onStatusChange(error:)`
