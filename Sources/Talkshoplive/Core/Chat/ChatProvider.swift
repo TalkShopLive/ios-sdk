@@ -374,11 +374,15 @@ public class ChatProvider {
     /// Publishes a message to the configured channel.
     /// - Parameters:
     ///   - message: The message to be published.
+    ///   - type: Default will be "comment", Other types are giphy and question.
+    ///   - aspectRatio: when type is "giphy", aspectRatio param should pass.
     ///   - completion: A closure to be called after the publishing operation completes. It receives two parameters:
     ///                 - success: A boolean value indicating whether the publishing operation was successful.
     ///                 - error: An optional Error object indicating any error that occurred during the publishing operation.
     internal func publish(
         message: String,
+        type: MessageType? = .comment,
+        aspectRatio: Double? = nil,
         completion: @escaping (Bool, APIClientError?) -> Void)
     {
         // Check if the message length is within the specified limit
@@ -390,13 +394,27 @@ public class ChatProvider {
         
         if let messageToken = messageToken {
             // Create a MessageData object with relevant information
-            let messageObject = MessageData(
+            var messageObject = MessageData(
                 id: Int(Date().milliseconds), //in milliseconds
                 createdAt: Date().toString(), //Current Date Object
-                sender: Sender(id: messageToken.userId, name: messageToken.userId), // User id obtained from the backend after creating a messaging token
-                text: message,
-                type: (message.contains("?") ? .question : .comment),
-                platform: "mobile")
+                sender: Sender(id: messageToken.userId, name: messageToken.userId), // User id obtained from the backend after creating a messaging token)
+                platform: "mobile"
+                )
+            //Check for If MessageType is giphy
+            if type == .giphy {
+                //If it's giphy, aspectRatio will be setup for publish message.
+                if let aspectRatio = aspectRatio {
+                    //Setup necessary details to publish giphy
+                    messageObject.type = .giphy
+                    messageObject.text = message
+                    messageObject.aspectRatio = aspectRatio
+                } else {
+                    completion(false, APIClientError.MESSAGE_SENDING_GIPHY_DATA_NOT_FOUND) // Indicate failure with status false and pass the error
+                }
+            } else {
+                messageObject.type = (message.contains("?") ? .question : .comment)
+                messageObject.text = message
+            }
             
             // Check if the publish channel is configured
             if let channel = self.publishChannel {

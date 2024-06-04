@@ -345,6 +345,7 @@ public struct MessageData: JSONCodable {
     public var sender: Sender? //
     public var text: String? //The message to be sent.
     public var type: MessageType? // Enum representing the MessageType. Use .question if the text contains "?".
+    public var aspectRatio: Double? //The message to be sent.
     public var platform: String? // Platform identifier, e.g., "sdk".
     public var key: MessagePayloadKey? // Platform identifier, e.g., "sdk".
     public var timeToken: String?
@@ -363,6 +364,7 @@ public struct MessageData: JSONCodable {
         case key
         case timeToken = "payload"
         case original
+        case aspectRatio
     }
     
     // MARK: - Initializers
@@ -378,6 +380,7 @@ public struct MessageData: JSONCodable {
         self.key = nil
         self.timeToken = nil
         self.original = nil
+        self.aspectRatio = nil
     }
     
     /// Custom initializer with parameters for all properties.
@@ -387,6 +390,7 @@ public struct MessageData: JSONCodable {
         sender: Sender? = nil,
         text: String? = nil,
         type: MessageType? = nil,
+        aspectRatio: Double? = nil,
         platform: String? = nil,
         key: MessagePayloadKey? = nil,
         payload: String? = nil,
@@ -397,6 +401,7 @@ public struct MessageData: JSONCodable {
         self.sender = sender
         self.text = text
         self.type = type ?? .comment // Default value, adjust as needed
+        self.aspectRatio = aspectRatio
         self.platform = platform
         self.key = key
         self.timeToken = payload
@@ -412,6 +417,7 @@ public struct MessageData: JSONCodable {
         id = try? container.decodeIfPresent(Int.self, forKey: .id)
         createdAt = try container.decodeIfPresent(String.self, forKey: .createdAt)
         text = try container.decodeIfPresent(String.self, forKey: .text)
+        aspectRatio = try container.decodeIfPresent(Double.self, forKey: .aspectRatio)
         type = try container.decodeIfPresent(MessageType.self, forKey: .type)
         platform = try container.decodeIfPresent(String.self, forKey: .platform)
         key = try container.decodeIfPresent(MessagePayloadKey.self, forKey: .key)
@@ -438,6 +444,7 @@ public struct MessageData: JSONCodable {
         try container.encode(createdAt, forKey: .createdAt)
         try container.encode(sender, forKey: .sender)
         try container.encode(text, forKey: .text)
+        try container.encode(aspectRatio, forKey: .aspectRatio)
         try container.encode(type, forKey: .type)
         try container.encode(platform, forKey: .platform)
         try container.encode(key, forKey: .key)
