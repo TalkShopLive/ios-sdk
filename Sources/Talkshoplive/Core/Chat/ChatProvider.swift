@@ -178,7 +178,7 @@ public class ChatProvider {
                             completion?(true,nil)
                             //Analytics
                             Collector.shared.collect(userId: self.messageToken?.userId,
-                                                     category: .interaction,
+                                                     category: self.isUpdateUser ? .process : .interaction,
                                                      action: self.isUpdateUser ? .updateUser : .selectViewChat,
                                                      eventId: eventId,
                                                      showKey: self.showKey,

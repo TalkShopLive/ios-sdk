@@ -36,6 +36,7 @@ struct CollectorRequest: Codable {
         case selectViewChat = "SELECT_VIEW_CHAT"
         case updateUser = "UPDATE_USER"
         case incrementViewCount = "INCREMENT_VIEW_COUNT"
+        case selectShowProducts = "SELECT_SHOW_PRODUCTS"
     }
 
     // MARK: Coding Keys

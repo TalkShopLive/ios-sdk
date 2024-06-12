@@ -85,6 +85,36 @@ showInstance.getDetails(showKey: "yourShowKey") { result in
 }
 ```
 
+#### `getProducts(showKey:completion:)`
+
+Get Products list from specific show's details.
+
+- Parameters:
+    - `showKey`: The unique identifier of the show.
+    - `completion`: A closure that will be called once the products are fetched. It takes a `Result` enum containing either the `[ProductData]` on success or an `Error` on failure.
+
+```
+showInstance.getProducts(showKey: "yourShowKey") { result in
+    switch result {
+    case .success(let products):
+        print("Products: \(products)")
+        
+        //Please use following to find product's variants information
+        for i in products {
+            print("Product Details", i)
+            if let variants = i.variants, variants.count > 0 {
+                for j in variants {
+                    print("SKU", (i.sku ?? ""))
+                }
+            }
+        }
+    case .failure(let error):
+        // Handle error case
+        print("Error fetching products list: \(error)")
+    }
+}
+```
+
 #### `getStatus(showKey:completion:)`
 
 Get the current event of a show.

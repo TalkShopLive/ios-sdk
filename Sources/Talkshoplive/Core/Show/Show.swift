@@ -37,7 +37,7 @@ public class Show {
                 completion(.success(showData))
                 
                 //Analytics
-                Collector.shared.collect(category: .interaction,
+                Collector.shared.collect(category: .process,
                                          action: .selectViewShowDetails,
                                          eventId: self.showInstance.eventId ?? nil,
                                          showKey: self.showInstance.showKey ?? nil,
@@ -72,7 +72,7 @@ public class Show {
                             self.incrementedView[showKey] = true
                             Config.shared.isDebugMode() ? print("Incremented View!") : ()
                             //Analytics
-                            Collector.shared.collect(category: .interaction,
+                            Collector.shared.collect(category: .process,
                                                      action: .incrementViewCount,
                                                      eventId: eventInstance.id ?? nil,
                                                      showKey: showKey ,
@@ -90,4 +90,43 @@ public class Show {
             }
         }
     }
+    
+    /// Get the products list from show details
+    public func getProducts(
+        showKey: String,
+        completion: @escaping (Result<[ProductData], APIClientError>) -> Void)
+    {
+        // Fetch show details using the provider
+        if let productIds = self.showInstance.productsIds {
+            // Fetch products using the ShowProvider
+            ShowProvider().fetchProducts(productIds: productIds) { result in
+                // Handle the result of fetching products
+                switch result {
+                case .success(let productData):
+                    // If products are fetched successfully, update the show instance with fetched data
+                    // Set the details and invoke the completion with success.
+                    completion(.success(productData))
+                    
+                    //Analytics
+                    Collector.shared.collect(category: .process,
+                                             action: .selectShowProducts,
+                                             eventId: self.showInstance.eventId ?? nil,
+                                             showKey: self.showInstance.showKey ?? nil,
+                                             storeId: self.showInstance.currentEvent?.storeId ?? nil,
+                                             videoStatus: self.showInstance.status,
+                                             videoTime: self.showInstance.duration ?? nil)
+
+                                   
+                case .failure(let error):
+                    // If there is a failure in fetching products, invoke the completion with failure
+                    completion(.failure(error))
+                }
+            }
+        } else {
+            // If product IDs are not available, invoke the completion with failure indicating product not found
+            completion(.failure(APIClientError.PRODUCT_NOT_FOUND))
+        }
+        
+    }
+
 }
