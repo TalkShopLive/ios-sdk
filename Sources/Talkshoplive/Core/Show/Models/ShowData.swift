@@ -33,6 +33,7 @@ public struct ShowData: Codable {
     private let streamingContent: StreamingContent?
     private let owningStore: OwningStore?
     private let master: Master?
+    public let productsIds: [Int]?
 
     
     // MARK: Coding Keys
@@ -59,6 +60,7 @@ public struct ShowData: Codable {
         case channelLogo
         case channelName = "brand_name"
         case trailerDuration
+        case productsIds
     }
     
     // MARK: Initializers
@@ -85,6 +87,7 @@ public struct ShowData: Codable {
         channelLogo = nil
         channelName = nil
         trailerDuration = nil
+        productsIds = []
     }
     
     // Custom initializer to handle decoding from JSON
@@ -143,7 +146,8 @@ public struct ShowData: Codable {
             // If stream key is not available or it's a test event, set closed captions URL to nil.
             cc = nil
         }
-        
+
+        productsIds = streamingContent?.inShowProductIds
     }
 }
 
@@ -153,12 +157,14 @@ struct StreamingContent: Codable {
     let id: Int?
     let trailers: [Trailer]?
     let airDates: [AirDate]?
+    let inShowProductIds: [Int]?
     
     // MARK: Coding Keys
     private enum CodingKeys: String, CodingKey {
         case id
         case trailers
         case airDates = "air_dates"
+        case inShowProductIds = "in_show_product_ids"
     }
     
     // Custom initializer to handle decoding from JSON
@@ -169,6 +175,7 @@ struct StreamingContent: Codable {
         id = try? container.decodeIfPresent(Int.self, forKey: .id)
         trailers = try? container.decodeIfPresent([Trailer].self, forKey: .trailers)
         airDates = try? container.decodeIfPresent([AirDate].self, forKey: .airDates)
+        inShowProductIds = try? container.decodeIfPresent([Int].self, forKey: .inShowProductIds)
     }
 }
 
@@ -284,11 +291,13 @@ struct ImageAttachment : Codable {
 struct AttachmentDetails : Codable {
     let product: String?
     let large: String?
+    let original: String?
     
     // MARK: Coding Keys
     private enum CodingKeys: String, CodingKey {
         case product
         case large
+        case original
     }
     
     // Custom initializer to handle decoding from JSON
@@ -298,6 +307,7 @@ struct AttachmentDetails : Codable {
         // Decode each property and use nil coalescing to handle optional values
         product = try? container.decodeIfPresent(String.self, forKey: .product)
         large = try? container.decodeIfPresent(String.self, forKey: .large)
+        original = try? container.decodeIfPresent(String.self, forKey: .original)
     }
 }
 
@@ -305,12 +315,14 @@ struct AttachmentDetails : Codable {
 
 struct Master : Codable {
     let id: Int?
+    let sku: String?
     let images: [ImageAttachment]?
     
     // MARK: Coding Keys
     private enum CodingKeys: String, CodingKey {
         case id
         case images
+        case sku
     }
     
     // Custom initializer to handle decoding from JSON
@@ -320,6 +332,7 @@ struct Master : Codable {
         // Decode each property and use nil coalescing to handle optional values
         id = try? container.decodeIfPresent(Int.self, forKey: .id)
         images = try? container.decodeIfPresent([ImageAttachment].self, forKey: .images)
+        sku = try? container.decodeIfPresent(String.self, forKey: .sku)
     }
 }
 

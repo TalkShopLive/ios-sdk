@@ -90,4 +90,33 @@ public class Show {
             }
         }
     }
+    
+    /// Get the products list from show details
+    public func getProducts(
+        showKey: String,
+        completion: @escaping (Result<[ProductData], APIClientError>) -> Void)
+    {
+        // Fetch show details using the provider
+        if let productIds = self.showInstance.productsIds {
+            // Fetch products using the ShowProvider
+            ShowProvider().fetchProducts(productIds: productIds) { result in
+                // Handle the result of fetching products
+                switch result {
+                case .success(let productData):
+                    // If products are fetched successfully, update the show instance with fetched data
+                    // Set the details and invoke the completion with success.
+                    completion(.success(productData))
+                                   
+                case .failure(let error):
+                    // If there is a failure in fetching products, invoke the completion with failure
+                    completion(.failure(error))
+                }
+            }
+        } else {
+            // If product IDs are not available, invoke the completion with failure indicating product not found
+            completion(.failure(APIClientError.PRODUCT_NOT_FOUND))
+        }
+        
+    }
+
 }
