@@ -15,6 +15,7 @@ public enum APIEndpoint {
     case getShows(showKey: String)
     case getCurrentEvent(showKey: String)
     case getClosedCaptions(fileName: String)
+    case getProducts(productIds: [Int])
     case register
     case getGuestUserToken
     case getFederatedUserToken
@@ -29,7 +30,7 @@ public enum APIEndpoint {
     var baseURL: String {
         do {
             switch self {
-            case .messagingToken, .getShows, .getCurrentEvent,.register,.getGuestUserToken,.getFederatedUserToken,.deleteMessage,.getUserMetadata, .unlikeComment:
+            case .messagingToken, .getShows, .getCurrentEvent,.register,.getGuestUserToken,.getFederatedUserToken,.deleteMessage,.getUserMetadata,.getProducts,.unlikeComment:
                 return try Config.loadAPIConfig().BASE_URL
             case .getClosedCaptions,.getHlsUrl:
                 return try Config.loadAPIConfig().ASSETS_URL
@@ -52,6 +53,11 @@ public enum APIEndpoint {
             return "/api/products/digital/streaming_content/\(showKey)"
         case .getCurrentEvent(showKey: let showKey):
             return "/api/shows/\(showKey)/streams/current"
+        case .getProducts(productIds: let productIds):
+            let perPage = 50
+            let order = "array_order"
+            let idsQuery = productIds.map { "ids[]=\($0)" }.joined(separator: "&")
+            return "/api/fetch_multiple_products?\(idsQuery)&per_page=\(perPage)&order_by=\(order)"
         case .getClosedCaptions(fileName: let fileName):
             return "/events/\(fileName)_transcoded.transcript.vtt"
         case .register:

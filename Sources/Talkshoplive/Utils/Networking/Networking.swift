@@ -87,6 +87,28 @@ class Networking {
         }
     }
     
+    /// Retrieves details of products for the given product IDs.
+    /// - Parameters:
+    ///   - productIds: The IDs of the products to retrieve details for.
+    ///   - completion: A closure to be called upon completion, containing a result with either the product data or an error.
+    static func getProducts(
+        productIds: [Int],
+        completion: @escaping (Result<[ProductData], APIClientError>) -> Void)
+    {
+        // Make a request to the APIHandler to fetch product details using the provided product IDs
+        APIHandler().request(endpoint: APIEndpoint.getProducts(productIds: productIds), method: .get, body: nil, responseType: GetProductsResponse.self) { result in
+            // Handle the result of the API request
+            switch result {
+            case .success(let apiResponse):
+                // If products are successfully retrieved, invoke the completion with the product data
+                completion(.success(apiResponse.products))
+            case .failure(_):
+                // If an error occurs, invoke the completion with failure indicating products not found
+                completion(.failure(APIClientError.EVENT_NOT_FOUND))
+            }
+        }
+    }
+    
     // Increment the view count for the specified event.
     /// - Parameters:
     ///   - eventId: The ID of the event for which the view count should be incremented.

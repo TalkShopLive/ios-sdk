@@ -182,7 +182,7 @@ public class ChatProvider {
                             completion?(true,nil)
                             //Analytics
                             Collector.shared.collect(userId: self.messageToken?.userId,
-                                                     category: .interaction,
+                                                     category: self.isUpdateUser ? .process : .interaction,
                                                      action: self.isUpdateUser ? .updateUser : .selectViewChat,
                                                      eventId: eventId,
                                                      showKey: self.showKey,
@@ -329,7 +329,7 @@ public class ChatProvider {
             case .messageActionAdded(let messageAction):
                 Config.shared.isDebugMode() ? print("The messageActionAdded") : ()
                 // Convert the received messageAction into a MessageAction object
-                var convertedMessageAction = MessageAction(action: messageAction)
+                let convertedMessageAction = MessageAction(action: messageAction)
                 DispatchQueue.main.async {
                     // Notify the delegate about the new like/comment action
                     self.delegate?.onLikeComment(convertedMessageAction)
@@ -639,11 +639,11 @@ public class ChatProvider {
         if let channel = self.publishChannel {
             self.pubnub?.addMessageAction(channel: channel, type: "reaction", value: "like", messageTimetoken:  UInt64(timeToken)!, completion: { result in
                 switch result {
-                case let .success(response):
+                case .success(_):
                     Config.shared.isDebugMode() ? print("Liked comment!") : ()
                     // Call the completion handler with success
                     completion(true, nil)
-                case let .failure(error):
+                case .failure(_):
                     // If there's an error, indicate failure with the appropriate error
                     completion(false,APIClientError.LIKE_COMMENT_FAILED)
                 }
@@ -659,7 +659,7 @@ public class ChatProvider {
     // Method to unlike a comment using the chat provider.
     internal func unlikeComment(timeToken: String,actionTimeToken: Int, _ completion: @escaping (Result<Bool, APIClientError>) -> Void?) {
         // Check if the publish channel and JWT token are available
-        if let channel = publishChannel, let jwtToken = self.getJwtToken(), let eventId = self.eventId {
+        if let _ = publishChannel, let jwtToken = self.getJwtToken(), let eventId = self.eventId {
             // Call the Networking's unlikeComment method to unlike a comment
             Networking.unlikeComment(jwtToken: jwtToken, eventId: "\(eventId)", messageTimetoken: timeToken, actionTimeToken: "\(actionTimeToken)") { result in
                 // Invoke the completion handler with the result of the unlike comment operation
