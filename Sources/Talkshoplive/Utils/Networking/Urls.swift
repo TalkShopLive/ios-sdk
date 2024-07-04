@@ -30,7 +30,7 @@ public enum APIEndpoint {
     var baseURL: String {
         do {
             switch self {
-            case .messagingToken, .getShows, .getCurrentEvent,.register,.getGuestUserToken,.getFederatedUserToken,.deleteMessage,.getUserMetadata, .unlikeComment:
+            case .messagingToken, .getShows, .getCurrentEvent,.register,.getGuestUserToken,.getFederatedUserToken,.deleteMessage,.getUserMetadata,.getProducts,.unlikeComment:
                 return try Config.loadAPIConfig().BASE_URL
             case .getClosedCaptions,.getHlsUrl:
                 return try Config.loadAPIConfig().ASSETS_URL
@@ -54,7 +54,6 @@ public enum APIEndpoint {
         case .getCurrentEvent(showKey: let showKey):
             return "/api/shows/\(showKey)/streams/current"
         case .getProducts(productIds: let productIds):
-            let baseURL = "https://staging.cms.talkshop.live"
             let perPage = 50
             let order = "array_order"
             let idsQuery = productIds.map { "ids[]=\($0)" }.joined(separator: "&")
