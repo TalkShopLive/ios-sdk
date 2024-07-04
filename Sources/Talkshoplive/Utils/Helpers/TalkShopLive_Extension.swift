@@ -24,11 +24,11 @@ func convertToModel<T: Decodable>(
             let messageData = try JSONDecoder().decode(responseType, from: jsonData)
             return messageData
         } catch {
-            Config.shared.isDebugMode() ? print("Error decoding JSON: \(error)") : ()
+//            Config.shared.isDebugMode() ? print("Error decoding JSON: \(error)") : ()
             return nil
         }
     } else {
-        Config.shared.isDebugMode() ? print("Error converting payload to Data.") : ()
+//        Config.shared.isDebugMode() ? print("Error converting payload to Data.") : ()
         return nil
     }
 }
