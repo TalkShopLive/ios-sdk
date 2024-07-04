@@ -28,6 +28,8 @@ public enum APIClientError: Error{
     case CHANNEL_SUBSCRIPTION_FAILED
     case MESSAGE_SENDING_FAILED
     case MESSAGE_LIST_FAILED
+    case LIKE_COMMENT_FAILED
+    case UNLIKE_COMMENT_FAILED
     case CHAT_TIMEOUT
     case UNKNOWN_EXCEPTION
     case PERMISSION_DENIED
@@ -78,12 +80,16 @@ extension APIClientError: LocalizedError {
             return "Message sending failed"
         case .MESSAGE_LIST_FAILED:
             return "Message list failed"
+        case .LIKE_COMMENT_FAILED:
+            return "Like comment failed"
+        case .UNLIKE_COMMENT_FAILED:
+            return "Unlike comment failed"
         case .CHAT_TIMEOUT:
             return "Chat timeout"
         case .UNKNOWN_EXCEPTION:
             return "Unknown exception"
         case .PERMISSION_DENIED:
-            //If token is expired/revoked
+            //If token is revoked
             return "Permission Denied"
         case .CHAT_CONNECTION_ERROR:
             return "Chat connection error"

@@ -517,6 +517,7 @@ public struct MessageAction : JSONCodable{
     public var actionValue: String?
     public var actionTimetoken: Int?
     public var publisher: String?
+    public var messageTimetoken: String?
     
     // MARK: - Coding Keys
     
@@ -526,6 +527,7 @@ public struct MessageAction : JSONCodable{
         case actionValue
         case actionTimetoken
         case publisher
+        case messageTimetoken
     }
     
     // MARK: - Initializers
@@ -536,6 +538,7 @@ public struct MessageAction : JSONCodable{
         actionValue = nil
         actionTimetoken = nil
         publisher = nil
+        messageTimetoken = nil
     }
     
     /// Custom initializer to create a MessagePage object from a PubNubBoundedPageBase.
@@ -544,6 +547,7 @@ public struct MessageAction : JSONCodable{
         actionValue = action.actionValue
         actionTimetoken = Int(action.actionTimetoken)
         publisher = action.publisher
+        messageTimetoken = String(action.messageTimetoken)
     }
     
     // MARK: - Codable Protocol
@@ -556,6 +560,7 @@ public struct MessageAction : JSONCodable{
         actionValue = try container.decodeIfPresent(String.self, forKey: .actionValue)
         actionTimetoken = try container.decodeIfPresent(Int.self, forKey: .actionTimetoken)
         publisher = try container.decodeIfPresent(String.self, forKey: .publisher)
+        messageTimetoken = try container.decodeIfPresent(String.self, forKey: .messageTimetoken)
     }
     
     /// Encoder method to convert the struct to an encoded format.
@@ -565,6 +570,7 @@ public struct MessageAction : JSONCodable{
         try container.encode(actionType, forKey: .actionType)
         try container.encode(actionValue, forKey: .actionValue)
         try container.encode(publisher, forKey: .publisher)
+        try container.encode(messageTimetoken, forKey: .messageTimetoken)
     }
     
 }
