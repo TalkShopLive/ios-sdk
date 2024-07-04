@@ -169,6 +169,8 @@ Use initialized instance of the Chat class and sends a message using that instan
 
 - Parameters:
   - `message`: The text message to be sent.
+  - `type`: Default will be "comment", Other types are `giphy` and `question`.
+  - `aspectRatio`: When type is "giphy", aspectRatio is mandatory.
   
 - Completion:
   - `status`: A boolean value indicating whether the message was sent successfully or not.
@@ -186,15 +188,36 @@ self.chatInstance.sendMessage(message: newMessage, completion: {status, error in
 }
 ```
 
+- Send Giphy
+```
+self.chatInstance.sendMessage(message: "GiphyId", type: .giphy, aspectRatio: "GiphyWidth/GiphyHeight",completion: {status, error in
+    if status {
+        print("Giphy Sent!", status)
+    } else {
+        //If aspectRatio will be missing, it will return "MESSAGE_SENDING_GIPHY_DATA_NOT_FOUND"
+        //If Token is revoked, it will return "PERMISSION_DENIED"
+        print("Giphy Sending Failed: \(error.localizedDescription)")
+    }
+}
+```
+
 - Recieve New message event listener
 ```
 class ContentViewModel: ObservableObject, ChatDelegate {
     func onNewMessage(_ message: MessageData) {
         // Handle the received message
+        print("Recieved New Message", message)
+        
         //If it's threaded message, it will have original message details
         if let originalMessage = message.payload?.original?.message {
             print("Original message's sender details", originalMessage.sender)
             print("Original message details", originalMessage.text)
+        }
+        
+        //When MessageType is "giphy"
+        if message.payload?.type == .giphy {
+            print("Giphy ID", message.payload?.text)
+            //Use giphyId with respective giphy URL to load the gif.
         }
     }
 }

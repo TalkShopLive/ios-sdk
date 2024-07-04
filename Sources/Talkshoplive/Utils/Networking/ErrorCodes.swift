@@ -27,6 +27,7 @@ public enum APIClientError: Error{
     case USER_TOKEN_EXCEPTION
     case CHANNEL_SUBSCRIPTION_FAILED
     case MESSAGE_SENDING_FAILED
+    case MESSAGE_SENDING_GIPHY_DATA_NOT_FOUND
     case MESSAGE_LIST_FAILED
     case LIKE_COMMENT_FAILED
     case UNLIKE_COMMENT_FAILED
@@ -78,6 +79,8 @@ extension APIClientError: LocalizedError {
             return "Channel subscription failed"
         case .MESSAGE_SENDING_FAILED:
             return "Message sending failed"
+        case . MESSAGE_SENDING_GIPHY_DATA_NOT_FOUND:
+            return "Giphy data not found"
         case .MESSAGE_LIST_FAILED:
             return "Message list failed"
         case .LIKE_COMMENT_FAILED:

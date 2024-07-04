@@ -83,10 +83,12 @@ public class Chat {
     ///                 - error: An optional Error object indicating any error that occurred during the message sending operation.
     public func sendMessage(
         message: String,
+        type: MessageType? = .comment,
+        aspectRatio: Double? = nil,
         completion: @escaping (Bool, APIClientError?) -> Void)
     {
         // Call the publish method in ChatProvider to send the message
-        self.chatProvider?.publish(message: message, completion: completion)
+        self.chatProvider?.publish(message: message, type: type, aspectRatio: aspectRatio, completion: completion)
     }
     
     // Method to retrieve chat messages, optionally specifying a page for pagination.

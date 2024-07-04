@@ -108,7 +108,6 @@ class Networking {
             }
         }
     }
-
     
     // Increment the view count for the specified event.
     /// - Parameters:

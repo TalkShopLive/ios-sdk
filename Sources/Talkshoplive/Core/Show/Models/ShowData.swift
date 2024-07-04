@@ -34,7 +34,6 @@ public struct ShowData: Codable {
     private let owningStore: OwningStore?
     private let master: Master?
     public let productsIds: [Int]?
-
     
     // MARK: Coding Keys
     enum CodingKeys: String, CodingKey {
