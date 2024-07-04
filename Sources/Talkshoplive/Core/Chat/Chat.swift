@@ -22,6 +22,7 @@ public protocol ChatDelegate: AnyObject {
 
 // MARK: - Chat Class
 
+// Chat class responsible for managing chat-related functionality using ChatProvider
 public class Chat {
     
     // MARK: - Properties
@@ -38,7 +39,12 @@ public class Chat {
     ///   - jwtToken: The JWT token for authentication.
     ///   - isGuest: A flag indicating whether the user is a guest or fedarated user.
     ///   - showKey: The unique key associated with the show using that to subscribe channel for specific event.
-    public init(jwtToken: String, isGuest: Bool, showKey: String,_ completion: ((Bool, APIClientError?) -> Void)? = nil) {
+    public init(
+        jwtToken: String,
+        isGuest: Bool,
+        showKey: String,
+        _ completion: ((Bool, APIClientError?) -> Void)? = nil) 
+    {
 
         // Set the showKey property
         self.showKey = showKey
@@ -75,7 +81,10 @@ public class Chat {
     ///   - completion: A closure to be called after the message sending operation completes. It receives two parameters:
     ///                 - success: A boolean value indicating whether the message sending operation was successful.
     ///                 - error: An optional Error object indicating any error that occurred during the message sending operation.
-    public func sendMessage(message: String, completion: @escaping (Bool, APIClientError?) -> Void) {
+    public func sendMessage(
+        message: String,
+        completion: @escaping (Bool, APIClientError?) -> Void)
+    {
         // Call the publish method in ChatProvider to send the message
         self.chatProvider?.publish(message: message, completion: completion)
     }
@@ -88,7 +97,14 @@ public class Chat {
     ///   - includeMeta: A boolean indicating whether to include message metadata. Default is true.
     ///   - includeUUID: A boolean indicating whether to include UUID in the message. Default is true.
     ///   - completion: A closure to be called after the message retrieval operation completes. It receives a `Result` enum with an array of `MessageBase` objects and an optional `MessagePage` for pagination.
-    public func getChatMessages(limit: Int? = 25, start: Int? = nil, includeActions: Bool = true, includeMeta: Bool = true, includeUUID: Bool = true, completion: @escaping (Result<([MessageBase], MessagePage?), APIClientError>) -> Void) {
+    public func getChatMessages(
+        limit: Int? = 25,
+        start: Int? = nil,
+        includeActions: Bool = true,
+        includeMeta: Bool = true,
+        includeUUID: Bool = true,
+        completion: @escaping (Result<([MessageBase], MessagePage?), APIClientError>) -> Void)
+    {
         // Call the fetchPastMessages method in ChatProvider to retrieve past messages
         self.chatProvider?.fetchPastMessages(limit: limit ?? 25, start: start, includeActions: includeActions, includeMeta: includeMeta, includeUUID: includeUUID, completion: { result in
             completion(result)
@@ -114,7 +130,11 @@ public class Chat {
     ///   - completion: A closure to be called after the user update operation completes. It receives two parameters:
     ///                 - success: A boolean value indicating whether the user update operation was successful.
     ///                 - error: An optional Error object indicating any error that occurred during the user update operation.
-    public func updateUser(jwtToken: String, isGuest: Bool, completion: @escaping (Bool, APIClientError?) -> Void) {
+    public func updateUser(
+        jwtToken: String,
+        isGuest: Bool,
+        completion: @escaping (Bool, APIClientError?) -> Void)
+    {
         // Check if there's an existing JWT token
         if let existingToken = self.chatProvider?.getJwtToken() {
             // Compare existing token with the new token
@@ -147,7 +167,10 @@ public class Chat {
     ///   - completion: A closure to be called after the message deletion operation completes. It receives two parameters:
     ///                 - success: A boolean value indicating whether the message deletion operation was successful.
     ///                 - error: An optional Error object indicating any error that occurred during the message deletion operation.
-    public func deleteMessage(timeToken: String, completion: @escaping (Bool, APIClientError?) -> Void) {
+    public func deleteMessage(
+        timeToken: String,
+        completion: @escaping (Bool, APIClientError?) -> Void)
+    {
         // Call the ChatProvider's unPublishMessage method to delete the message
         self.chatProvider?.unPublishMessage(timetoken: timeToken) { result in
             switch result {
@@ -161,8 +184,10 @@ public class Chat {
         }
     }
 
-    //Methos to count the total number of messages using the chat provider.
-    public func countMessages(_ completion: @escaping (Int, APIClientError?) -> Void?) {
+    //Method to count the total number of messages using the chat provider.
+    public func countMessages(
+        _ completion: @escaping (Int, APIClientError?) -> Void?)
+    {
         // Call the count method of the chat provider, passing the completion closure
         self.chatProvider?.count(completion: completion)
     }

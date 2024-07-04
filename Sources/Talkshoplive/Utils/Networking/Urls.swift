@@ -1,5 +1,5 @@
 //
-// APIEndpoint.swift
+// Urls.swift
 //
 //
 //  Created by TalkShopLive on 2024-01-23.
@@ -7,11 +7,15 @@
 
 import Foundation
 
+//MARK: - APIEndpoint
+
+/// Enum defining various API endpoints used in the application.
 public enum APIEndpoint {
     case messagingToken
     case getShows(showKey: String)
     case getCurrentEvent(showKey: String)
     case getClosedCaptions(fileName: String)
+    case getProducts(productIds: [Int])
     case register
     case getGuestUserToken
     case getFederatedUserToken
@@ -22,6 +26,7 @@ public enum APIEndpoint {
     case getUserMetadata(uuid: String)
     case unlikeComment(eventId:String,messageTimeToken:String, actionTimeToken:String)
     
+    /// Base URL for the API endpoint.
     var baseURL: String {
         do {
             switch self {
@@ -39,6 +44,7 @@ public enum APIEndpoint {
         }
     }
     
+    /// Path for the API endpoint.
     var path: String {
         switch self {
         case .messagingToken:
@@ -47,6 +53,12 @@ public enum APIEndpoint {
             return "/api/products/digital/streaming_content/\(showKey)"
         case .getCurrentEvent(showKey: let showKey):
             return "/api/shows/\(showKey)/streams/current"
+        case .getProducts(productIds: let productIds):
+            let baseURL = "https://staging.cms.talkshop.live"
+            let perPage = 50
+            let order = "array_order"
+            let idsQuery = productIds.map { "ids[]=\($0)" }.joined(separator: "&")
+            return "/api/fetch_multiple_products?\(idsQuery)&per_page=\(perPage)&order_by=\(order)"
         case .getClosedCaptions(fileName: let fileName):
             return "/events/\(fileName)_transcoded.transcript.vtt"
         case .register:

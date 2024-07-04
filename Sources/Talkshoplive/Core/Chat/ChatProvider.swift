@@ -26,7 +26,8 @@ public protocol _ChatProviderDelegate: AnyObject {
 public class ChatProvider {
     
     // MARK: - Properties
-    
+    public var delegate: _ChatProviderDelegate?
+    public var isUpdateUser: Bool = false
     private var pubnub: PubNub?
     private var messageToken: MessagingTokenResponse?
     private var isGuest: Bool
@@ -35,21 +36,24 @@ public class ChatProvider {
     private var eventId: Int?
     private var publishChannel: String?
     private var eventsChannel: String?
-    public var delegate: _ChatProviderDelegate?
     private var jwtToken: String?
     private var eventInstance: EventData?
-    var isUpdateUser: Bool = false
     private var usersProvider = UsersProvider.shared
     private var triedToReconnectBefore = false
 
     // MARK: - Initializer
     
-    // Initialize ChatProvider with a JWT token and show key
+    /// Initialize ChatProvider with a JWT token and show key
     /// - Parameters:
     ///   - jwtToken: The JWT token used for authentication.
     ///   - isGuest: A boolean indicating whether the user is a guest.
     ///   - showKey: The show key used to configure the chat provider.
-    public init(jwtToken: String, isGuest: Bool, showKey: String,_ completion: ((Bool, APIClientError?) -> Void)? = nil) {
+    public init(
+        jwtToken: String,
+        isGuest: Bool,
+        showKey: String,
+        _ completion: ((Bool, APIClientError?) -> Void)? = nil)
+    {
         // Load configuration from ConfigLoader
         self.isGuest = isGuest
         self.showKey = showKey
@@ -69,7 +73,7 @@ public class ChatProvider {
 
     // MARK: - JWT Token
     
-    // Save the JWT token.
+    /// Method to save the JWT token.
     /// - Parameter token: The JWT token to be saved.
     func setJwtToken(_ token: String) {
         self.jwtToken = token
@@ -83,13 +87,13 @@ public class ChatProvider {
     
     // MARK: - Messaging Token
     
-    // Save the messaging token
+    ///Save the messaging token
     /// - Parameter token: The messaging token to be saved.
     func setMessagingToken(_ token: MessagingTokenResponse) {
         self.messageToken = token
     }
     
-    // Get the saved messaging token
+    /// Get the saved messaging token
     /// - Returns: The saved messaging token, if available.
     public func getMessagingToken() -> MessagingTokenResponse? {
         return self.messageToken
@@ -97,21 +101,26 @@ public class ChatProvider {
     
     // MARK: - Current Event
     
-    // Save the messaging token
-    /// - Parameter token: The messaging token to be saved.
+    /// Save the current event
+    /// - Parameter token: The current event  to be saved.
     func setCurrentEvent(_ event: EventData) {
         self.eventInstance = event
     }
     
-    // Get the saved messaging token
+    /// Get the saved messaging token
     /// - Returns: The saved messaging token, if available.
     public func getCurrentEvent() -> EventData? {
         return self.eventInstance
     }
 
-    // Create a messaging token asynchronously
+    // MARK: - Create Messaging Token
+    
+    /// Create a messaging token asynchronously
     /// - Parameter jwtToken: The JWT token used for authentication.
-    private func createMessagingToken(jwtToken: String,_ completion: ((Bool, APIClientError?) -> Void)? = nil) {
+    private func createMessagingToken(
+        jwtToken: String,
+        _ completion: ((Bool, APIClientError?) -> Void)? = nil)
+    {
         // Call Networking to fetch the messaging token
         Networking.createMessagingToken(jwtToken: jwtToken, isGuest: self.isGuest) { result in
             switch result {
@@ -140,7 +149,9 @@ public class ChatProvider {
 
     /// Subscribe to channels based on the showKey.
     /// - Parameter showKey: The show key used to determine which channels to subscribe to.
-    private func initializePubNub(_ completion: ((Bool, APIClientError?) -> Void)? = nil) {
+    private func initializePubNub(
+        _ completion: ((Bool, APIClientError?) -> Void)? = nil)
+    {
         Networking.getCurrentEvent(showKey: self.showKey, completion: { result in
             switch result {
             case .success(let eventData):
@@ -171,7 +182,7 @@ public class ChatProvider {
                             completion?(true,nil)
                             //Analytics
                             Collector.shared.collect(userId: self.messageToken?.userId,
-                                                     category: .interaction,
+                                                     category: self.isUpdateUser ? .process : .interaction,
                                                      action: self.isUpdateUser ? .updateUser : .selectViewChat,
                                                      eventId: eventId,
                                                      showKey: self.showKey,
@@ -366,7 +377,10 @@ public class ChatProvider {
     ///   - completion: A closure to be called after the publishing operation completes. It receives two parameters:
     ///                 - success: A boolean value indicating whether the publishing operation was successful.
     ///                 - error: An optional Error object indicating any error that occurred during the publishing operation.
-    internal func publish(message: String, completion: @escaping (Bool, APIClientError?) -> Void)  {
+    internal func publish(
+        message: String,
+        completion: @escaping (Bool, APIClientError?) -> Void)
+    {
         // Check if the message length is within the specified limit
         guard message.count <= 200 else {
             // Handle the case where the message exceeds the maximum length
@@ -418,7 +432,14 @@ public class ChatProvider {
     ///   - start: timestamp of last fetched message or now
     ///   - completion: A closure to be called upon completion, providing a Result with an array of MessageBase objects,
     ///                 an optional MessagePage for pagination, or an error if the operation fails.
-    internal func fetchPastMessages(limit: Int = 25, start: Int? = nil, includeActions: Bool = true, includeMeta: Bool = true, includeUUID: Bool = true, completion: @escaping (Result<([MessageBase], MessagePage?), APIClientError>) -> Void) {
+    internal func fetchPastMessages(
+        limit: Int = 25,
+        start: Int? = nil,
+        includeActions: Bool = true,
+        includeMeta: Bool = true,
+        includeUUID: Bool = true,
+        completion: @escaping (Result<([MessageBase], MessagePage?), APIClientError>) -> Void)
+    {
         // Use PubNub's fetchMessageHistory method to retrieve message history for specified channels
         let startTimeToken = start != nil ? UInt64(start!) : UInt64(Date().nanoseconds)
         pubnub?.fetchMessageHistory(for: self.channels, includeActions: includeActions, includeMeta: includeMeta, includeUUID: includeUUID, page: PubNubBoundedPageBase(start: startTimeToken, limit: limit), completion: { result in
@@ -530,7 +551,9 @@ public class ChatProvider {
     }
     
     // MARK: - Messages count for specific channel
-    internal func count(completion: @escaping (Int, APIClientError?) -> Void?) {
+    internal func count(
+        completion: @escaping (Int, APIClientError?) -> Void?)
+    {
           // Check if a channel is provided for counting messages
           if let channel = self.publishChannel {
               // Use PubNub to retrieve message counts for the specified channel
@@ -569,7 +592,10 @@ public class ChatProvider {
     /// - Parameters:
     ///   - timetoken: The timetoken of the message when it's published.
     ///   - completion: A closure that receives the result of the deletion operation as a `Result` enum with a `Bool` indicating success or failure and an `Error` in case of failure.
-    internal func unPublishMessage(timetoken: String, completion: @escaping (Result<Bool, APIClientError>) -> Void) {
+    internal func unPublishMessage(
+        timetoken: String,
+        completion: @escaping (Result<Bool, APIClientError>) -> Void)
+    {
         // Check if the publish channel and JWT token are available
         if let channel = publishChannel, let jwtToken = self.getJwtToken() {
             // Call the Networking's deletMessage method to delete the message

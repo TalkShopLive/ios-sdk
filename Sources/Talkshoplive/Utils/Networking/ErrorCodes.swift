@@ -7,12 +7,12 @@
 
 import Foundation
 
-
+// MARK: - Error codes for the API client.
 public enum APIClientError: Error{
     case INVALID_URL
     case REQUEST_FAILED(Error)
     case NO_DATA
-    case USER_ALREADY_AUTHENTICATED // User_already_authenticated
+    case USER_ALREADY_AUTHENTICATED
     case HTTP_ERROR(Int)
     case AUTHENTICATION_FAILED
     case AUTHENTICATION_EXCEPTION
@@ -21,6 +21,7 @@ public enum APIClientError: Error{
     case SHOW_NOT_LIVE
     case EVENT_NOT_FOUND
     case EVENT_UNKNOWN_EXCEPTION
+    case PRODUCT_NOT_FOUND
     case INVALID_USER_TOKEN
     case USER_TOKEN_EXPIRED
     case USER_TOKEN_EXCEPTION
@@ -35,7 +36,10 @@ public enum APIClientError: Error{
     case CHAT_CONNECTION_ERROR
 }
 
+// MARK: - APIClientError extension
+
 extension APIClientError: LocalizedError {
+    /// Localized description for each error case.
     public var localizedDescription: String {
         switch self {
         case .INVALID_URL:
@@ -62,6 +66,8 @@ extension APIClientError: LocalizedError {
             return "Event not found"
         case .EVENT_UNKNOWN_EXCEPTION:
             return "Event unknown exception"
+        case .PRODUCT_NOT_FOUND:
+            return "Product not found"
         case .INVALID_USER_TOKEN:
             return "Invalid user token"
         case .USER_TOKEN_EXPIRED:
