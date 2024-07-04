@@ -46,7 +46,7 @@ public class TalkShopLive {
             //Analytics
             switch result {
             case .success():
-                Collector.shared.collect(category: .interaction,action: .sdkInitialized)
+                Collector.shared.collect(category: .process,action: .sdkInitialized)
             case .failure(_):
                 break
             }
