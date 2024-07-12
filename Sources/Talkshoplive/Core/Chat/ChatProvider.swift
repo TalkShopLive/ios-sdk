@@ -137,7 +137,7 @@ public class ChatProvider {
                 }
             case .failure(let error):
                 // Handle token retrieval failure
-                Config.shared.isDebugMode() ? print("Token retrieval Failed: \(error.localizedDescription)") : ()
+                Config.shared.isDebugMode() ? print(String(describing: self),"::","Token retrieval Failed: \(error.localizedDescription)") : ()
                 // You might want to handle the error appropriately, e.g., show an alert to the user or log it.
                 completion?(false,error)
                 break
@@ -194,14 +194,16 @@ public class ChatProvider {
                             }
                         })
                     } else {
+                        Config.shared.isDebugMode() ? print(String(describing: self),"::",APIClientError.USER_TOKEN_EXCEPTION) : ()
                         completion?(false,APIClientError.USER_TOKEN_EXCEPTION)
                     }
                 } else {
+                    Config.shared.isDebugMode() ? print(String(describing: self),"::",APIClientError.SHOW_NOT_LIVE) : ()
                     completion?(false,APIClientError.SHOW_NOT_LIVE)
                 }
             case .failure(let error):
                 // Invoke the completion with failure if an error occurs.
-                Config.shared.isDebugMode() ? print("\(error.localizedDescription)") : ()
+                Config.shared.isDebugMode() ? print(String(describing: self),"::",APIClientError.SHOW_NOT_FOUND) : ()
                 completion?(false,APIClientError.SHOW_NOT_FOUND)
             }
         })
@@ -246,7 +248,7 @@ public class ChatProvider {
                                     
                                 case .failure(let error):
                                     // Print the error if debug mode is enabled.
-                                    Config.shared.isDebugMode() ? print("Error fetching user metadata: \(error.localizedDescription)") : ()
+                                    Config.shared.isDebugMode() ? print(String(describing: self),"::","Error fetching user metadata: \(error.localizedDescription)") : ()
                                     
                                     // Notify the delegate on the main thread about the received message even if there's an error.
                                     DispatchQueue.main.async {
@@ -291,6 +293,7 @@ public class ChatProvider {
                     self.triedToReconnectBefore = false
                 } else if connection == .disconnected {
                     if self.triedToReconnectBefore {
+                        Config.shared.isDebugMode() ? print(String(describing: self),"::",APIClientError.CHAT_CONNECTION_ERROR) : ()
                         self.delegate?.onStatusChange(error: APIClientError.CHAT_CONNECTION_ERROR)
                     } else {
                         self.triedToReconnectBefore = true
@@ -298,6 +301,7 @@ public class ChatProvider {
                     }
                 } else {
                     if self.triedToReconnectBefore {
+                        Config.shared.isDebugMode() ? print(String(describing: self),"::",APIClientError.CHAT_CONNECTION_ERROR) : ()
                         self.delegate?.onStatusChange(error: APIClientError.CHAT_CONNECTION_ERROR)
                     }
                 }
@@ -351,10 +355,17 @@ public class ChatProvider {
                 Config.shared.isDebugMode() ? print("The subscribeError", error.localizedDescription , "Code", error.reason.rawValue) :()
                 if error.reason == .timedOut {
                     self.delegate?.onStatusChange(error: APIClientError.CHAT_TIMEOUT)
-                } else if error.reason.rawValue == 403 {
-                    self.delegate?.onStatusChange(error: APIClientError.PERMISSION_DENIED)
+                } else  if error.reason.rawValue == 403 {
+                    if error.localizedDescription.contains("expired") {
+                        Config.shared.isDebugMode() ? print(String(describing: self),"::",APIClientError.CHAT_TOKEN_EXPIRED) : ()
+                        self.delegate?.onStatusChange(error: APIClientError.CHAT_TOKEN_EXPIRED)
+                    } else {
+                        Config.shared.isDebugMode() ? print(String(describing: self),"::",APIClientError.PERMISSION_DENIED) : ()
+                        self.delegate?.onStatusChange(error: APIClientError.PERMISSION_DENIED)
+                    }
                 }  else {
                     if self.triedToReconnectBefore {
+                        Config.shared.isDebugMode() ? print(String(describing: self),"::",APIClientError.CHAT_CONNECTION_ERROR) : ()
                         self.delegate?.onStatusChange(error: APIClientError.CHAT_CONNECTION_ERROR)
                     }
                 }
@@ -426,18 +437,27 @@ public class ChatProvider {
                         completion(true, nil) // Indicate success with status true and no error
                     case let .failure(error):
                         // Print an error message in case of a failure during publishing
-                        Config.shared.isDebugMode() ? print("Message Sending Failed: \(error.localizedDescription)") : ()
+                        Config.shared.isDebugMode() ? print("Message Sending Failed: \(String(describing: self)) \(error.localizedDescription)") : ()
                         if (error as? PubNubError)?.reason.rawValue == 403 {
-                            completion(false, APIClientError.PERMISSION_DENIED)
+                            if error.localizedDescription.contains("expired") {
+                                Config.shared.isDebugMode() ? print(String(describing: self),"::",APIClientError.CHAT_TOKEN_EXPIRED) : ()
+                                self.delegate?.onStatusChange(error: APIClientError.CHAT_TOKEN_EXPIRED)
+                            } else {
+                                Config.shared.isDebugMode() ? print(String(describing: self),"::",APIClientError.PERMISSION_DENIED) : ()
+                                self.delegate?.onStatusChange(error: APIClientError.PERMISSION_DENIED)
+                            }
                         } else {
+                            Config.shared.isDebugMode() ? print(String(describing: self),"::",APIClientError.MESSAGE_SENDING_FAILED) : ()
                             completion(false, APIClientError.MESSAGE_SENDING_FAILED) // Indicate failure with status false and pass the error
                         }
                     }
                 }
             } else {
+                Config.shared.isDebugMode() ? print(String(describing: self),"::",APIClientError.SHOW_NOT_LIVE) : ()
                 completion(false,APIClientError.SHOW_NOT_LIVE)
             }
         } else {
+            Config.shared.isDebugMode() ? print(String(describing: self),"::",APIClientError.USER_TOKEN_EXCEPTION) : ()
             completion(false,APIClientError.USER_TOKEN_EXCEPTION)
         }
     }
@@ -539,8 +559,15 @@ public class ChatProvider {
                     // Print an error message in case of a failure and invoke the completion closure with the error
                     Config.shared.isDebugMode() ? print("History : Fetch History Failed: \(error.localizedDescription)") : ()
                     if (error as? PubNubError)?.reason.rawValue == 403 {
-                        completion(.failure(APIClientError.PERMISSION_DENIED))
+                        if error.localizedDescription.contains("expired") {
+                            Config.shared.isDebugMode() ? print(String(describing: self),"::",APIClientError.CHAT_TOKEN_EXPIRED) : ()
+                            self.delegate?.onStatusChange(error: APIClientError.CHAT_TOKEN_EXPIRED)
+                        } else {
+                            Config.shared.isDebugMode() ? print(String(describing: self),"::",APIClientError.PERMISSION_DENIED) : ()
+                            self.delegate?.onStatusChange(error: APIClientError.PERMISSION_DENIED)
+                        }
                     } else {
+                        Config.shared.isDebugMode() ? print(String(describing: self),"::",APIClientError.MESSAGE_LIST_FAILED) : ()
                         completion(.failure(APIClientError.MESSAGE_LIST_FAILED))
                     }
                 }
@@ -590,8 +617,15 @@ public class ChatProvider {
                       // Handle the failure case when retrieving message counts
                       Config.shared.isDebugMode() ? print("Message Count Failed: \(error.localizedDescription)") : ()
                       if (error as? PubNubError)?.reason.rawValue == 403 {
-                          completion(0,APIClientError.PERMISSION_DENIED)
+                          if error.localizedDescription.contains("expired") {
+                              Config.shared.isDebugMode() ? print(String(describing: self),"::",APIClientError.CHAT_TOKEN_EXPIRED) : ()
+                              self.delegate?.onStatusChange(error: APIClientError.CHAT_TOKEN_EXPIRED)
+                          } else {
+                              Config.shared.isDebugMode() ? print(String(describing: self),"::",APIClientError.PERMISSION_DENIED) : ()
+                              self.delegate?.onStatusChange(error: APIClientError.PERMISSION_DENIED)
+                          }
                       } else {
+                          Config.shared.isDebugMode() ? print(String(describing: self),"::",APIClientError.UNKNOWN_EXCEPTION) : ()
                           completion(0,APIClientError.UNKNOWN_EXCEPTION)
                       }
                   }
@@ -621,14 +655,15 @@ public class ChatProvider {
                 // Invoke the completion handler with the result of the deletion operation
                 switch result {
                 case .success(let status):
-                    Config.shared.isDebugMode() ? print("Message Deleted!") : ()
+                    Config.shared.isDebugMode() ? print(String(describing: self),"::","Message Deleted!") : ()
                     completion(.success(status))
                 case .failure(let error):
-                    Config.shared.isDebugMode() ? print("Message Deletion Failed: \(error.localizedDescription)") : ()
+                    Config.shared.isDebugMode() ? print(String(describing: self),"::","Message Deletion Failed: \(error.localizedDescription)") : ()
                     completion(.failure(error))
                 }
             }
         } else {
+            Config.shared.isDebugMode() ? print(String(describing: self),"::",APIClientError.SHOW_NOT_LIVE) : ()
             completion(.failure(APIClientError.SHOW_NOT_LIVE))
         }
     }

@@ -53,7 +53,7 @@ public class Chat {
         self.chatProvider = ChatProvider(jwtToken: jwtToken, isGuest: isGuest, showKey: showKey) {result,error in
             if  Config.shared.isDebugMode() {
                 if let error = error {
-                    print(error.localizedDescription)
+                    Config.shared.isDebugMode() ? print(String(describing: self),"::",error) : ()
                 } else {
                     print("Token Created!")
                 }
@@ -155,6 +155,7 @@ public class Chat {
                 
             } else {
                 // If the new token is the same as the existing one, indicate failure with sameToken error
+                Config.shared.isDebugMode() ? print(String(describing: self),"::",APIClientError.USER_ALREADY_AUTHENTICATED) : ()
                 completion(false,APIClientError.USER_ALREADY_AUTHENTICATED)
             }
         } else {

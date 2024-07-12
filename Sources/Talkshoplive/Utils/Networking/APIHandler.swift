@@ -60,6 +60,7 @@ public class APIHandler {
         let fullURL = endpoint.baseURL + endpoint.path
         
         guard let url = URL(string: fullURL) else {
+            Config.shared.isDebugMode() ? print("TSL.",APIClientError.INVALID_URL) : ()
             completion(.failure(APIClientError.INVALID_URL))
             return
         }
@@ -73,6 +74,7 @@ public class APIHandler {
                 let requestBody = try JSONEncoder().encode(param)
                 request.httpBody = requestBody
             } catch {
+                Config.shared.isDebugMode() ? print("TSL.",APIClientError.REQUEST_FAILED(error)) : ()
                 completion(.failure(APIClientError.REQUEST_FAILED(error)))
                 return
             }
@@ -80,6 +82,7 @@ public class APIHandler {
         
         let task = URLSession.shared.dataTask(with: request) { (data, response, error) in
             if let error = error {
+                Config.shared.isDebugMode() ? print("TSL.",APIClientError.REQUEST_FAILED(error)) : ()
                 completion(.failure(APIClientError.REQUEST_FAILED(error)))
                 return
             }
@@ -135,6 +138,7 @@ public class APIHandler {
         let fullURL = endpoint.baseURL + endpoint.path
         
         guard let url = URL(string: fullURL) else {
+            Config.shared.isDebugMode() ? print("TSL.",APIClientError.INVALID_URL) : ()
             completion(.failure(APIClientError.INVALID_URL))
             return
         }
@@ -151,6 +155,7 @@ public class APIHandler {
                 let requestBody = try JSONEncoder().encode(param)
                 request.httpBody = requestBody
             } catch {
+                Config.shared.isDebugMode() ? print("TSL.",APIClientError.REQUEST_FAILED(error)) : ()
                 completion(.failure(APIClientError.REQUEST_FAILED(error)))
                 return
             }
@@ -158,6 +163,7 @@ public class APIHandler {
         
         let task = URLSession.shared.dataTask(with: request) { (data, response, error) in
             if let error = error {
+                Config.shared.isDebugMode() ? print("TSL.",APIClientError.REQUEST_FAILED(error)) : ()
                 completion(.failure(APIClientError.REQUEST_FAILED(error)))
                 return
             }
@@ -214,6 +220,7 @@ public class APIHandler {
         let fullURL = endpoint.baseURL + endpoint.path
         
         guard let url = URL(string: fullURL) else {
+            Config.shared.isDebugMode() ? print("TSL.",APIClientError.INVALID_URL) : ()
             completion(.failure(APIClientError.INVALID_URL))
             return
         }
@@ -235,6 +242,7 @@ public class APIHandler {
                 let requestBody = try JSONEncoder().encode(param)
                 request.httpBody = requestBody
             } catch {
+                Config.shared.isDebugMode() ? print("TSL.",APIClientError.REQUEST_FAILED(error)) : ()
                 completion(.failure(APIClientError.REQUEST_FAILED(error)))
                 return
             }
@@ -243,6 +251,7 @@ public class APIHandler {
         
         let task = URLSession.shared.dataTask(with: request) { (data, response, error) in
             if let error = error {
+                Config.shared.isDebugMode() ? print("TSL.",APIClientError.REQUEST_FAILED(error)) : ()
                 completion(.failure(APIClientError.REQUEST_FAILED(error)))
                 return
             }
@@ -298,6 +307,7 @@ public class APIHandler {
         let fullURL = endpoint.baseURL + endpoint.path
         
         guard let url = URL(string: fullURL) else {
+            Config.shared.isDebugMode() ? print("TSL.",APIClientError.INVALID_URL) : ()
             completion(.failure(APIClientError.INVALID_URL))
             return
         }
@@ -323,6 +333,7 @@ public class APIHandler {
                 let requestBody = try JSONEncoder().encode(param)
                 request.httpBody = requestBody
             } catch {
+                Config.shared.isDebugMode() ? print("TSL.",APIClientError.REQUEST_FAILED(error)) : ()
                 completion(.failure(APIClientError.REQUEST_FAILED(error)))
                 return
             }
@@ -331,6 +342,7 @@ public class APIHandler {
         
         let task = URLSession.shared.dataTask(with: request) { (data, response, error) in
             if let error = error {
+                Config.shared.isDebugMode() ? print("TSL.",APIClientError.REQUEST_FAILED(error)) : ()
                 completion(.failure(APIClientError.REQUEST_FAILED(error)))
                 return
             }

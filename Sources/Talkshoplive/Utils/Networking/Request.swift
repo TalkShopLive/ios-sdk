@@ -19,7 +19,6 @@ struct CollectorRequest: Codable {
     let application: String?
     let meta: Meta?
     let utm: UTM?
-    let aspect: Aspect?
     
     // MARK: CollectorCategory
     /// An enumeration representing the category of the collector request.
@@ -49,7 +48,6 @@ struct CollectorRequest: Codable {
         case application
         case meta
         case utm
-        case aspect
     }
 }
 

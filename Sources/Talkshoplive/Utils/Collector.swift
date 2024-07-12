@@ -12,10 +12,10 @@ import Foundation
 // Collector class responsible for managing analytics
 public class Collector {
     
-    // MARK: Properties
-    private let sdkVerion = "1.0.4"  // SDK version used by the collector.
+    // MARK: - Properties
+    private let sdkVerion = "1.0.5" // SDK version used by the collector.
     public static let shared = Collector() // Singleton instance of the Collector.
-    
+ 
     // MARK: Initializers
     init() {
         

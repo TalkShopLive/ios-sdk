@@ -46,6 +46,7 @@ public class Show {
                                          videoTime: self.showInstance.duration ?? nil)
             case .failure(let error):
                 // Invoke the completion with failure if an error occurs.
+                Config.shared.isDebugMode() ? print(String(describing: self),"::",error.localizedDescription) : ()
                 completion(.failure(error))
             }
         }
@@ -80,12 +81,13 @@ public class Show {
                                                      videoStatus: eventInstance.status,
                                                      videoTime: eventInstance.duration ?? nil)
                         } else {
-                            Config.shared.isDebugMode() ? print("Increment View Failed: \(error?.localizedDescription ?? "")") : ()
+                            Config.shared.isDebugMode() ? print(String(describing: self),"::","Increment View Failed: \(error?.localizedDescription ?? "")") : ()
                         }
                     }
                 }
             case .failure(let error):
                 // Invoke the completion with failure if an error occurs.
+                Config.shared.isDebugMode() ? print(String(describing: self),"::",error.localizedDescription) : ()
                 completion(.failure(error))
             }
         }
