@@ -4,19 +4,23 @@
 import Foundation
 import PubNub
 
+// MARK: - TalkShopLive Class
+
+// TalkShopLive class responsible for initialize the sdk
 public class TalkShopLive {
     
+    // MARK: - Properties
     private let clientKey: String // TSL authentication key
     public let debugMode: Bool
     public let testMode: Bool
-    public let dnt: Bool // Do not track - needed for Abbey/Collector
-    private var hasInitialized: Bool = false //SDK initialized or not
+    public let dnt: Bool
     
+    // MARK: - Initializer
     public init(
         clientKey: String, // Provide a default value or replace with an appropriate default
-        debugMode: Bool = false, //Print console logs if true
+        debugMode: Bool = false, //Print console logs if true if true
         testMode: Bool = false, //Switch to staging if true
-        dnt: Bool = false,
+        dnt: Bool = false, // Do not track - needed for Abbey/Collector
         completion: ((Result<Void, APIClientError>) -> Void)? = nil)
     {
         self.clientKey = clientKey
@@ -42,7 +46,7 @@ public class TalkShopLive {
             //Analytics
             switch result {
             case .success():
-                Collector.shared.collect(category: .interaction,action: .sdkInitialized)
+                Collector.shared.collect(category: .process,action: .sdkInitialized)
             case .failure(_):
                 break
             }

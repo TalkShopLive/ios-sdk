@@ -1,5 +1,5 @@
 //
-//  File.swift
+//  ShowData.swift
 //
 //
 //  Created by TalkShopLive on 2024-01-30.
@@ -7,7 +7,7 @@
 
 import Foundation
 
-//MARK: - StreamingContent Object
+//MARK: - ShowData 
 
 // Define the main struct representing the top-level data
 public struct ShowData: Codable {
@@ -25,16 +25,17 @@ public struct ShowData: Codable {
     public let endedAt: String?
     public let duration: Int?
     public let currentEvent: EventData?
-    private let events: [EventData]?
-    private let streamingContent: StreamingContent?
-    private let owningStore: OwningStore?
-    private let master: Master?
     public let videoThumbnailUrl: String?
     public let channelLogo: String?
     public let channelName: String?
     public let trailerDuration: Int?
+    private let events: [EventData]?
+    private let streamingContent: StreamingContent?
+    private let owningStore: OwningStore?
+    private let master: Master?
+    public let productsIds: [Int]?
     
-    // CodingKeys enum to map the JSON keys to Swift property names
+    // MARK: Coding Keys
     enum CodingKeys: String, CodingKey {
         case id
         case showKey = "product_key"
@@ -58,8 +59,10 @@ public struct ShowData: Codable {
         case channelLogo
         case channelName = "brand_name"
         case trailerDuration
+        case productsIds
     }
     
+    // MARK: Initializers
     public init() {
         id = nil
         showKey = nil
@@ -83,6 +86,7 @@ public struct ShowData: Codable {
         channelLogo = nil
         channelName = nil
         trailerDuration = nil
+        productsIds = []
     }
     
     // Custom initializer to handle decoding from JSON
@@ -102,20 +106,25 @@ public struct ShowData: Codable {
         endedAt = currentEvent?.endedAt
         channelName = try? container.decodeIfPresent(String.self, forKey: .channelName)
 
+        // If there is no current event, set playback URL, status, and duration to nil.
         if currentEvent == nil {
             hlsPlaybackUrl = nil
             status = "created"
             duration = nil
         } else {
+            // If there is a current event, assign its playback URL, status, and duration.
             hlsPlaybackUrl = currentEvent?.hlsPlaybackUrl
             status = currentEvent?.status
             duration = currentEvent?.duration
         }
         
+        // Check if the current event's filename is available.
         if let fileName = currentEvent?.filename {
+            // If filename exists, construct the HLS URL using the filename.
             let url = APIEndpoint.getHlsUrl(fileName: fileName)
             hlsUrl = url.baseURL + url.path
         } else {
+            // If filename is not available, set the HLS URL to nil.
             hlsUrl = nil
         }
         
@@ -126,14 +135,18 @@ public struct ShowData: Codable {
         videoThumbnailUrl = master?.images?.first?.attachment?.large
         trailerDuration = streamingContent?.trailers?.first?.duration
         
+        // Check if the current event's stream key is available and if it's not a test event.
         if let fileName = currentEvent?.streamKey, currentEvent?.isTest == false {
+            // If stream key exists and it's not a test event, retrieve closed captions URL.
             let captionUrl = APIEndpoint.getClosedCaptions(fileName: fileName)
             let fileNameURL = captionUrl.baseURL + captionUrl.path
             cc = fileNameURL
         } else {
+            // If stream key is not available or it's a test event, set closed captions URL to nil.
             cc = nil
         }
-        
+
+        productsIds = streamingContent?.inShowProductIds
     }
 }
 
@@ -143,11 +156,14 @@ struct StreamingContent: Codable {
     let id: Int?
     let trailers: [Trailer]?
     let airDates: [AirDate]?
+    let inShowProductIds: [Int]?
     
+    // MARK: Coding Keys
     private enum CodingKeys: String, CodingKey {
         case id
         case trailers
         case airDates = "air_dates"
+        case inShowProductIds = "in_show_product_ids"
     }
     
     // Custom initializer to handle decoding from JSON
@@ -158,6 +174,7 @@ struct StreamingContent: Codable {
         id = try? container.decodeIfPresent(Int.self, forKey: .id)
         trailers = try? container.decodeIfPresent([Trailer].self, forKey: .trailers)
         airDates = try? container.decodeIfPresent([AirDate].self, forKey: .airDates)
+        inShowProductIds = try? container.decodeIfPresent([Int].self, forKey: .inShowProductIds)
     }
 }
 
@@ -168,6 +185,7 @@ struct Trailer: Codable {
     let video: String?
     let duration : Int?
     
+    // MARK: Coding Keys
     private enum CodingKeys: String, CodingKey {
         case id
         case video
@@ -193,6 +211,7 @@ struct AirDate: Codable {
     let eventID: Int? // Renamed for camelCase convention
     let date: String?
     
+    // MARK: Coding Keys
     private enum CodingKeys: String, CodingKey {
         case id
         case name
@@ -220,6 +239,7 @@ struct OwningStore : Codable {
     let name: String?
     let image: ImageAttachment?
     
+    // MARK: Coding Keys
     private enum CodingKeys: String, CodingKey {
         case id
         case name
@@ -245,6 +265,7 @@ struct ImageAttachment : Codable {
     let attachmentFileName: String?
     let attachment: AttachmentDetails?
     
+    // MARK: Coding Keys
     private enum CodingKeys: String, CodingKey {
         case id
         case attachmentContentType = "attachment_content_type"
@@ -269,10 +290,13 @@ struct ImageAttachment : Codable {
 struct AttachmentDetails : Codable {
     let product: String?
     let large: String?
+    let original: String?
     
+    // MARK: Coding Keys
     private enum CodingKeys: String, CodingKey {
         case product
         case large
+        case original
     }
     
     // Custom initializer to handle decoding from JSON
@@ -282,6 +306,7 @@ struct AttachmentDetails : Codable {
         // Decode each property and use nil coalescing to handle optional values
         product = try? container.decodeIfPresent(String.self, forKey: .product)
         large = try? container.decodeIfPresent(String.self, forKey: .large)
+        original = try? container.decodeIfPresent(String.self, forKey: .original)
     }
 }
 
@@ -289,11 +314,14 @@ struct AttachmentDetails : Codable {
 
 struct Master : Codable {
     let id: Int?
+    let sku: String?
     let images: [ImageAttachment]?
     
+    // MARK: Coding Keys
     private enum CodingKeys: String, CodingKey {
         case id
         case images
+        case sku
     }
     
     // Custom initializer to handle decoding from JSON
@@ -303,6 +331,7 @@ struct Master : Codable {
         // Decode each property and use nil coalescing to handle optional values
         id = try? container.decodeIfPresent(Int.self, forKey: .id)
         images = try? container.decodeIfPresent([ImageAttachment].self, forKey: .images)
+        sku = try? container.decodeIfPresent(String.self, forKey: .sku)
     }
 }
 

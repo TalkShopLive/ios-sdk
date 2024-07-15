@@ -7,7 +7,7 @@
 
 import Foundation
 
-
+// MARK: - Error codes for the API client.
 public enum APIClientError: Error{
     case INVALID_URL
     case REQUEST_FAILED(Error)
@@ -19,11 +19,16 @@ public enum APIClientError: Error{
     case SHOW_NOT_FOUND
     case SHOW_NOT_LIVE
     case EVENT_NOT_FOUND
+    case EVENT_UNKNOWN_EXCEPTION
+    case PRODUCT_NOT_FOUND
     case INVALID_USER_TOKEN
     case USER_TOKEN_EXPIRED
     case USER_TOKEN_EXCEPTION
     case MESSAGE_SENDING_FAILED
+    case MESSAGE_SENDING_GIPHY_DATA_NOT_FOUND
     case MESSAGE_LIST_FAILED
+    case LIKE_COMMENT_FAILED
+    case UNLIKE_COMMENT_FAILED
     case CHAT_TIMEOUT
     case UNKNOWN_EXCEPTION
     case PERMISSION_DENIED
@@ -31,7 +36,10 @@ public enum APIClientError: Error{
     case CHAT_TOKEN_EXPIRED
 }
 
+// MARK: - APIClientError extension
+
 extension APIClientError: LocalizedError {
+    /// Localized description for each error case.
     public var localizedDescription: String {
         switch self {
         case .INVALID_URL:
@@ -54,6 +62,10 @@ extension APIClientError: LocalizedError {
             return "Show not live"
         case .EVENT_NOT_FOUND:
             return "Event not found"
+        case .EVENT_UNKNOWN_EXCEPTION:
+            return "Event unknown exception"
+        case .PRODUCT_NOT_FOUND:
+            return "Product not found"
         case .INVALID_USER_TOKEN:
             return "Invalid user token"
         case .USER_TOKEN_EXPIRED:
@@ -62,14 +74,20 @@ extension APIClientError: LocalizedError {
             return "User token exception"
         case .MESSAGE_SENDING_FAILED:
             return "Message sending failed"
+        case . MESSAGE_SENDING_GIPHY_DATA_NOT_FOUND:
+            return "Giphy data not found"
         case .MESSAGE_LIST_FAILED:
             return "Message list failed"
+        case .LIKE_COMMENT_FAILED:
+            return "Like comment failed"
+        case .UNLIKE_COMMENT_FAILED:
+            return "Unlike comment failed"
         case .CHAT_TIMEOUT:
             return "Chat timeout"
         case .UNKNOWN_EXCEPTION:
             return "Unknown exception"
         case .PERMISSION_DENIED:
-            //If token is expired/revoked
+            //If token is revoked
             return "Permission Denied"
         case .CHAT_CONNECTION_ERROR:
             return "Chat connection error"
