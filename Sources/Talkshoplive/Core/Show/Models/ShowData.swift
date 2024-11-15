@@ -34,7 +34,10 @@ public struct ShowData: Codable {
     private let owningStore: OwningStore?
     private let master: Master?
     public let productsIds: [Int]?
-    
+    public let entranceProductsIds: [Int]?
+    public let entranceProductsRequired: Bool?
+
+
     // MARK: Coding Keys
     enum CodingKeys: String, CodingKey {
         case id
@@ -60,6 +63,7 @@ public struct ShowData: Codable {
         case channelName = "brand_name"
         case trailerDuration
         case productsIds
+        case entranceProductsIds
     }
     
     // MARK: Initializers
@@ -87,6 +91,8 @@ public struct ShowData: Codable {
         channelName = nil
         trailerDuration = nil
         productsIds = []
+        entranceProductsIds = []
+        entranceProductsRequired = false
     }
     
     // Custom initializer to handle decoding from JSON
@@ -147,6 +153,8 @@ public struct ShowData: Codable {
         }
 
         productsIds = streamingContent?.inShowProductIds
+        entranceProductsIds = streamingContent?.entranceProductIds
+        entranceProductsRequired = streamingContent?.entranceProductsRequired
     }
 }
 
@@ -157,6 +165,8 @@ struct StreamingContent: Codable {
     let trailers: [Trailer]?
     let airDates: [AirDate]?
     let inShowProductIds: [Int]?
+    let entranceProductIds: [Int]?
+    let entranceProductsRequired: Bool?
     
     // MARK: Coding Keys
     private enum CodingKeys: String, CodingKey {
@@ -164,6 +174,8 @@ struct StreamingContent: Codable {
         case trailers
         case airDates = "air_dates"
         case inShowProductIds = "in_show_product_ids"
+        case entranceProductIds = "entrance_product_ids"
+        case entranceProductsRequired = "entrance_products_required"
     }
     
     // Custom initializer to handle decoding from JSON
@@ -175,6 +187,8 @@ struct StreamingContent: Codable {
         trailers = try? container.decodeIfPresent([Trailer].self, forKey: .trailers)
         airDates = try? container.decodeIfPresent([AirDate].self, forKey: .airDates)
         inShowProductIds = try? container.decodeIfPresent([Int].self, forKey: .inShowProductIds)
+        entranceProductIds = try? container.decodeIfPresent([Int].self, forKey: .entranceProductIds)
+        entranceProductsRequired = try? container.decodeIfPresent(Bool.self, forKey: .entranceProductsRequired)
     }
 }
 

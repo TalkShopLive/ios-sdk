@@ -85,16 +85,17 @@ showInstance.getDetails(showKey: "yourShowKey") { result in
 }
 ```
 
-#### `getProducts(showKey:completion:)`
+#### `getProducts(showKey:isEntrance:completion:)`
 
 Get Products list from specific show's details.
 
 - Parameters:
     - `showKey`: The unique identifier of the show.
+    - `isEntrance`(optional): A flag indicating whether the request is related to pre products. Default is `false`.
     - `completion`: A closure that will be called once the products are fetched. It takes a `Result` enum containing either the `[ProductData]` on success or an `Error` on failure.
 
 ```
-showInstance.getProducts(showKey: "yourShowKey") { result in
+showInstance.getProducts(showKey: "yourShowKey", isEntrance: "true/false") { result in
     switch result {
     case .success(let products):
         print("Products: \(products)")
