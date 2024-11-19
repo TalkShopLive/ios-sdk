@@ -61,9 +61,8 @@ public class Show {
         ShowProvider().fetchCurrentEvent(showKey: showKey) { result in
             switch result {
             case .success(let eventInstance):
-                // Set the details and invoke the completion with success.
-                completion(.success(eventInstance))
-                if let incremented = self.incrementedView[showKey], !incremented,
+                let incremented = self.incrementedView[showKey]
+                if !(incremented ?? false),
                    let eventId = eventInstance.id,
                     eventInstance.streamInCloud == true,
                     eventInstance.status == "live"
@@ -85,6 +84,8 @@ public class Show {
                         }
                     }
                 }
+                // Set the details and invoke the completion with success.
+                completion(.success(eventInstance))
             case .failure(let error):
                 // Invoke the completion with failure if an error occurs.
                 Config.shared.isDebugMode() ? print(String(describing: self),"::",error.localizedDescription) : ()
