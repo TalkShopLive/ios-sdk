@@ -96,10 +96,10 @@ public class Show {
     /// Get the products list from show details
     public func getProducts(
         showKey: String,
-        isEntrance: Bool = false,
+        preLive: Bool = false,
         completion: @escaping (Result<[ProductData], APIClientError>) -> Void)
     {
-        var productIds = (isEntrance && (self.showInstance.entranceProductsRequired ?? false)) ? self.showInstance.entranceProductsIds : self.showInstance.productsIds
+        var productIds = (preLive && (self.showInstance.entranceProductsRequired ?? false)) ? self.showInstance.entranceProductsIds : self.showInstance.productsIds
         // Fetch show details using the provider
         if let productIds = productIds, productIds.count > 0 {
             // Fetch products using the ShowProvider
