@@ -2,7 +2,7 @@
 // https://docs.swift.org/swift-book
 
 import Foundation
-import PubNub
+import PubNubSDK
 
 // MARK: - TalkShopLive Class
 

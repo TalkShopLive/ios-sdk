@@ -6,7 +6,7 @@
 //
 
 import Foundation
-import PubNub
+import PubNubSDK
 
 // MARK: - ChatProviderDelegate
 
@@ -173,6 +173,9 @@ public class ChatProvider {
                         )
                         // Initialize PubNub instance
                         self.pubnub = PubNub(configuration: configuration)
+                        
+                        PubNub.log.levels = .all
+
                         // Log the initialization
                         Config.shared.isDebugMode() ? print("Initialized Pubnub", self.pubnub!) : ()
                         
@@ -201,7 +204,7 @@ public class ChatProvider {
                     Config.shared.isDebugMode() ? print(String(describing: self),"::",APIClientError.SHOW_NOT_LIVE) : ()
                     completion?(false,APIClientError.SHOW_NOT_LIVE)
                 }
-            case .failure(let error):
+            case .failure(_):
                 // Invoke the completion with failure if an error occurs.
                 Config.shared.isDebugMode() ? print(String(describing: self),"::",APIClientError.SHOW_NOT_FOUND) : ()
                 completion?(false,APIClientError.SHOW_NOT_FOUND)
