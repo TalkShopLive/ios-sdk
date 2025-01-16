@@ -6,7 +6,7 @@
 //
 
 import Foundation
-import PubNub
+import PubNubSDK
 
 // MARK: - ChatProviderDelegate
 
@@ -40,6 +40,7 @@ public class ChatProvider {
     private var eventInstance: EventData?
     private var usersProvider = UsersProvider.shared
     private var triedToReconnectBefore = false
+    private var listener: SubscriptionListener?
 
     // MARK: - Initializer
     
@@ -173,6 +174,9 @@ public class ChatProvider {
                         )
                         // Initialize PubNub instance
                         self.pubnub = PubNub(configuration: configuration)
+                        
+                        PubNub.log.levels = .all
+
                         // Log the initialization
                         Config.shared.isDebugMode() ? print("Initialized Pubnub", self.pubnub!) : ()
                         
@@ -201,7 +205,7 @@ public class ChatProvider {
                     Config.shared.isDebugMode() ? print(String(describing: self),"::",APIClientError.SHOW_NOT_LIVE) : ()
                     completion?(false,APIClientError.SHOW_NOT_LIVE)
                 }
-            case .failure(let error):
+            case .failure(_):
                 // Invoke the completion with failure if an error occurs.
                 Config.shared.isDebugMode() ? print(String(describing: self),"::",APIClientError.SHOW_NOT_FOUND) : ()
                 completion?(false,APIClientError.SHOW_NOT_FOUND)
@@ -217,9 +221,9 @@ public class ChatProvider {
     // Subscribe to configured channels and handle events
     private func subscribe() {
         // Create a listener for subscription events
-        let listener = SubscriptionListener(queue: .main)
+        listener = SubscriptionListener(queue: .main)
         
-        listener.didReceiveSubscription = { event in
+        listener?.didReceiveSubscription = { event in
             // Handle different subscription events
             switch event {
             case .messageReceived(let message):
@@ -373,7 +377,7 @@ public class ChatProvider {
         }
         
         // Add the listener to PubNub
-        pubnub?.add(listener)
+        pubnub?.add(listener!)
         
         // Subscribe to the configured channels
         pubnub?.subscribe(to: self.channels)

@@ -6,7 +6,7 @@
 //
 
 import Foundation
-import PubNub
+import PubNubSDK
 
 // MARK: Base Class
 

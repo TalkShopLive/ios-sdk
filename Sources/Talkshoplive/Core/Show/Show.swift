@@ -100,7 +100,7 @@ public class Show {
         preLive: Bool = false,
         completion: @escaping (Result<[ProductData], APIClientError>) -> Void)
     {
-        var productIds = (preLive && (self.showInstance.entranceProductsRequired ?? false)) ? self.showInstance.entranceProductsIds : self.showInstance.productsIds
+        let productIds = (preLive && (self.showInstance.entranceProductsRequired ?? false)) ? self.showInstance.entranceProductsIds : self.showInstance.productsIds
         // Fetch show details using the provider
         if let productIds = productIds, productIds.count > 0 {
             // Fetch products using the ShowProvider
