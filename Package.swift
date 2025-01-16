@@ -7,6 +7,7 @@ let package = Package(
     name: "Talkshoplive",
     platforms: [
             .iOS(.v14),
+            .macOS(.v10_15)
     ],
     products: [
         // Products define the executables and libraries a package produces, making them visible to other packages.
@@ -15,7 +16,7 @@ let package = Package(
             targets: ["Talkshoplive"]),
     ],
     dependencies: [
-            .package(url: "https://github.com/pubnub/swift.git", from: "8.2.2"),
+            .package(url: "https://github.com/pubnub/swift.git", from: "8.2.4"),
             // Add other dependencies if needed
     ],
     targets: [
