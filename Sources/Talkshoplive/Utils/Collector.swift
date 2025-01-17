@@ -13,7 +13,7 @@ import Foundation
 public class Collector {
     
     // MARK: - Properties
-    private let sdkVerion = "1.0.5" // SDK version used by the collector.
+    private let sdkVerion = "2.0.0" // SDK version used by the collector.
     public static let shared = Collector() // Singleton instance of the Collector.
  
     // MARK: Initializers
