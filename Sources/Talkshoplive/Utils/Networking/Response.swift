@@ -1,5 +1,5 @@
 //
-// APIResponseModel.swift
+// Response.swift
 //
 //
 //  Created by TalkShopLive on 2024-01-19.
@@ -7,15 +7,16 @@
 
 import Foundation
 
+//MARK: - MessagingToken Response
+
+/// A structure representing the response received when creating a messaging token.
 public struct MessagingTokenResponse: Codable {
     let publishKey: String
     let subscribeKey: String
     let userId: String
     let token: String
     
-    // MARK: - Coding Keys
-    
-    /// Coding keys for encoding and decoding.
+    // MARK: Coding Keys
     enum CodingKeys: String, CodingKey {
         case publishKey = "publish_key"
         case subscribeKey = "subscribe_key"
@@ -35,9 +36,13 @@ public struct MessagingTokenResponse: Codable {
     }
 }
 
+//MARK: - GetShows Response
+
 public struct GetShowsResponse: Codable {
     let product : ShowData
 }
+
+//MARK: - No Response
 
 public struct NoResponse: Codable {
     public init() {
@@ -45,14 +50,17 @@ public struct NoResponse: Codable {
     }
 }
 
+//MARK: - IncrementView Response
+
 public struct IncrementViewResponse: Codable {
     let status: String?
     
+    // MARK: Initializers
     public init() {
         status = nil
     }
     
-    // Define CodingKeys to map keys to properties
+    // MARK: Coding Keys
     enum CodingKeys: String, CodingKey {
         case status
     }
@@ -65,24 +73,28 @@ public struct IncrementViewResponse: Codable {
     
 }
 
-public struct UserMeataResponse: Codable {
+//MARK: - UserMeta Response
+
+public struct UserMetaResponse: Codable {
     let sender: Sender?
     
+    // MARK: Initializers
     public init() {
         sender = nil
     }
     
-    // Define CodingKeys to map keys to properties
+    // MARK: Coding Keys
     enum CodingKeys: String, CodingKey {
         case sender
     }
     
-    // Implement Decodable initializer
+    /// Implement Decodable initializer
     public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         sender = try container.decodeIfPresent(Sender.self, forKey: .sender)
     }
     
+    /// Encodes this instance into the given encoder.
     public func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encodeIfPresent(self.sender, forKey: .sender)

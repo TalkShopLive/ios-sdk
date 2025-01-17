@@ -6,7 +6,7 @@
 //
 
 import Foundation
-import PubNub
+import PubNubSDK
 
 // MARK: - ChatProviderDelegate
 
@@ -15,6 +15,8 @@ public protocol _ChatProviderDelegate: AnyObject {
     func onMessageReceived(_ message: MessageBase)
     func onMessageRemoved(_ message: MessageBase)
     func onStatusChange(error:APIClientError)
+    func onLikeComment(_ messageAction: MessageAction)
+    func onUnlikeComment(_ messageAction: MessageAction)
     // Add more methods for other events if needed
 }
 
@@ -24,29 +26,35 @@ public protocol _ChatProviderDelegate: AnyObject {
 public class ChatProvider {
     
     // MARK: - Properties
-    
+    public var delegate: _ChatProviderDelegate?
+    public var isUpdateUser: Bool = false
     private var pubnub: PubNub?
     private var messageToken: MessagingTokenResponse?
     private var isGuest: Bool
     private var showKey: String
     private var channels: [String] = []
+    private var eventId: Int?
     private var publishChannel: String?
     private var eventsChannel: String?
-    public var delegate: _ChatProviderDelegate?
     private var jwtToken: String?
     private var eventInstance: EventData?
-    var isUpdateUser: Bool = false
     private var usersProvider = UsersProvider.shared
     private var triedToReconnectBefore = false
+    private var listener: SubscriptionListener?
 
     // MARK: - Initializer
     
-    // Initialize ChatProvider with a JWT token and show key
+    /// Initialize ChatProvider with a JWT token and show key
     /// - Parameters:
     ///   - jwtToken: The JWT token used for authentication.
     ///   - isGuest: A boolean indicating whether the user is a guest.
     ///   - showKey: The show key used to configure the chat provider.
-    public init(jwtToken: String, isGuest: Bool, showKey: String,_ completion: ((Bool, APIClientError?) -> Void)? = nil) {
+    public init(
+        jwtToken: String,
+        isGuest: Bool,
+        showKey: String,
+        _ completion: ((Bool, APIClientError?) -> Void)? = nil)
+    {
         // Load configuration from ConfigLoader
         self.isGuest = isGuest
         self.showKey = showKey
@@ -66,7 +74,7 @@ public class ChatProvider {
 
     // MARK: - JWT Token
     
-    // Save the JWT token.
+    /// Method to save the JWT token.
     /// - Parameter token: The JWT token to be saved.
     func setJwtToken(_ token: String) {
         self.jwtToken = token
@@ -80,13 +88,13 @@ public class ChatProvider {
     
     // MARK: - Messaging Token
     
-    // Save the messaging token
+    ///Save the messaging token
     /// - Parameter token: The messaging token to be saved.
     func setMessagingToken(_ token: MessagingTokenResponse) {
         self.messageToken = token
     }
     
-    // Get the saved messaging token
+    /// Get the saved messaging token
     /// - Returns: The saved messaging token, if available.
     public func getMessagingToken() -> MessagingTokenResponse? {
         return self.messageToken
@@ -94,21 +102,26 @@ public class ChatProvider {
     
     // MARK: - Current Event
     
-    // Save the messaging token
-    /// - Parameter token: The messaging token to be saved.
+    /// Save the current event
+    /// - Parameter token: The current event  to be saved.
     func setCurrentEvent(_ event: EventData) {
         self.eventInstance = event
     }
     
-    // Get the saved messaging token
+    /// Get the saved messaging token
     /// - Returns: The saved messaging token, if available.
     public func getCurrentEvent() -> EventData? {
         return self.eventInstance
     }
 
-    // Create a messaging token asynchronously
+    // MARK: - Create Messaging Token
+    
+    /// Create a messaging token asynchronously
     /// - Parameter jwtToken: The JWT token used for authentication.
-    private func createMessagingToken(jwtToken: String,_ completion: ((Bool, APIClientError?) -> Void)? = nil) {
+    private func createMessagingToken(
+        jwtToken: String,
+        _ completion: ((Bool, APIClientError?) -> Void)? = nil)
+    {
         // Call Networking to fetch the messaging token
         Networking.createMessagingToken(jwtToken: jwtToken, isGuest: self.isGuest) { result in
             switch result {
@@ -137,13 +150,16 @@ public class ChatProvider {
 
     /// Subscribe to channels based on the showKey.
     /// - Parameter showKey: The show key used to determine which channels to subscribe to.
-    private func initializePubNub(_ completion: ((Bool, APIClientError?) -> Void)? = nil) {
+    private func initializePubNub(
+        _ completion: ((Bool, APIClientError?) -> Void)? = nil)
+    {
         Networking.getCurrentEvent(showKey: self.showKey, completion: { result in
             switch result {
             case .success(let eventData):
                 self.setCurrentEvent(eventData)
                 // Set the details and invoke the completion with success.
                 if let event = self.eventInstance, let eventId = event.id {
+                    self.eventId = eventId
                     self.publishChannel = "chat.\(eventId)"
                     self.eventsChannel = "events.\(eventId)"
                     self.channels = [self.publishChannel!, self.eventsChannel!]
@@ -158,6 +174,9 @@ public class ChatProvider {
                         )
                         // Initialize PubNub instance
                         self.pubnub = PubNub(configuration: configuration)
+                        
+                        PubNub.log.levels = .all
+
                         // Log the initialization
                         Config.shared.isDebugMode() ? print("Initialized Pubnub", self.pubnub!) : ()
                         
@@ -167,7 +186,7 @@ public class ChatProvider {
                             completion?(true,nil)
                             //Analytics
                             Collector.shared.collect(userId: self.messageToken?.userId,
-                                                     category: .interaction,
+                                                     category: self.isUpdateUser ? .process : .interaction,
                                                      action: self.isUpdateUser ? .updateUser : .selectViewChat,
                                                      eventId: eventId,
                                                      showKey: self.showKey,
@@ -186,7 +205,7 @@ public class ChatProvider {
                     Config.shared.isDebugMode() ? print(String(describing: self),"::",APIClientError.SHOW_NOT_LIVE) : ()
                     completion?(false,APIClientError.SHOW_NOT_LIVE)
                 }
-            case .failure(let error):
+            case .failure(_):
                 // Invoke the completion with failure if an error occurs.
                 Config.shared.isDebugMode() ? print(String(describing: self),"::",APIClientError.SHOW_NOT_FOUND) : ()
                 completion?(false,APIClientError.SHOW_NOT_FOUND)
@@ -202,9 +221,9 @@ public class ChatProvider {
     // Subscribe to configured channels and handle events
     private func subscribe() {
         // Create a listener for subscription events
-        let listener = SubscriptionListener(queue: .main)
+        listener = SubscriptionListener(queue: .main)
         
-        listener.didReceiveSubscription = { event in
+        listener?.didReceiveSubscription = { event in
             // Handle different subscription events
             switch event {
             case .messageReceived(let message):
@@ -315,11 +334,23 @@ public class ChatProvider {
             case .membershipMetadataRemoved(_):
                 Config.shared.isDebugMode() ? print("The membershipMetadataRemoved") : ()
                 
-            case .messageActionAdded(_):
+            case .messageActionAdded(let messageAction):
                 Config.shared.isDebugMode() ? print("The messageActionAdded") : ()
+                // Convert the received messageAction into a MessageAction object
+                let convertedMessageAction = MessageAction(action: messageAction)
+                DispatchQueue.main.async {
+                    // Notify the delegate about the new like/comment action
+                    self.delegate?.onLikeComment(convertedMessageAction)
+                }
                 
-            case .messageActionRemoved(_):
-                Config.shared.isDebugMode() ? print("The messageActionRemoved") : ()
+            case .messageActionRemoved(let messageAction):
+                Config.shared.isDebugMode() ? print("The messageActionRemoved", messageAction) : ()
+                // Convert the received messageAction into a MessageAction object
+                let convertedMessageAction = MessageAction(action: messageAction)
+                DispatchQueue.main.async {
+                    // Notify the delegate about the unlike/comment removal action
+                    self.delegate?.onUnlikeComment(convertedMessageAction)
+                }
                 
             case .fileUploaded(_):
                 Config.shared.isDebugMode() ? print("The fileUploaded") : ()
@@ -346,7 +377,7 @@ public class ChatProvider {
         }
         
         // Add the listener to PubNub
-        pubnub?.add(listener)
+        pubnub?.add(listener!)
         
         // Subscribe to the configured channels
         pubnub?.subscribe(to: self.channels)
@@ -358,10 +389,17 @@ public class ChatProvider {
     /// Publishes a message to the configured channel.
     /// - Parameters:
     ///   - message: The message to be published.
+    ///   - type: Default will be "comment", Other types are giphy and question.
+    ///   - aspectRatio: when type is "giphy", aspectRatio param should pass.
     ///   - completion: A closure to be called after the publishing operation completes. It receives two parameters:
     ///                 - success: A boolean value indicating whether the publishing operation was successful.
     ///                 - error: An optional Error object indicating any error that occurred during the publishing operation.
-    internal func publish(message: String, completion: @escaping (Bool, APIClientError?) -> Void)  {
+    internal func publish(
+        message: String,
+        type: MessageType? = .comment,
+        aspectRatio: Double? = nil,
+        completion: @escaping (Bool, APIClientError?) -> Void)
+    {
         // Check if the message length is within the specified limit
         guard message.count <= 200 else {
             // Handle the case where the message exceeds the maximum length
@@ -371,13 +409,27 @@ public class ChatProvider {
         
         if let messageToken = messageToken {
             // Create a MessageData object with relevant information
-            let messageObject = MessageData(
+            var messageObject = MessageData(
                 id: Int(Date().milliseconds), //in milliseconds
                 createdAt: Date().toString(), //Current Date Object
-                sender: Sender(id: messageToken.userId, name: messageToken.userId), // User id obtained from the backend after creating a messaging token
-                text: message,
-                type: (message.contains("?") ? .question : .comment),
-                platform: "mobile")
+                sender: Sender(id: messageToken.userId, name: messageToken.userId), // User id obtained from the backend after creating a messaging token)
+                platform: "mobile"
+                )
+            //Check for If MessageType is giphy
+            if type == .giphy {
+                //If it's giphy, aspectRatio will be setup for publish message.
+                if let aspectRatio = aspectRatio {
+                    //Setup necessary details to publish giphy
+                    messageObject.type = .giphy
+                    messageObject.text = message
+                    messageObject.aspectRatio = aspectRatio
+                } else {
+                    completion(false, APIClientError.MESSAGE_SENDING_GIPHY_DATA_NOT_FOUND) // Indicate failure with status false and pass the error
+                }
+            } else {
+                messageObject.type = (message.contains("?") ? .question : .comment)
+                messageObject.text = message
+            }
             
             // Check if the publish channel is configured
             if let channel = self.publishChannel {
@@ -422,7 +474,14 @@ public class ChatProvider {
     ///   - start: timestamp of last fetched message or now
     ///   - completion: A closure to be called upon completion, providing a Result with an array of MessageBase objects,
     ///                 an optional MessagePage for pagination, or an error if the operation fails.
-    internal func fetchPastMessages(limit: Int = 25, start: Int? = nil, includeActions: Bool = true, includeMeta: Bool = true, includeUUID: Bool = true, completion: @escaping (Result<([MessageBase], MessagePage?), APIClientError>) -> Void) {
+    internal func fetchPastMessages(
+        limit: Int = 25,
+        start: Int? = nil,
+        includeActions: Bool = true,
+        includeMeta: Bool = true,
+        includeUUID: Bool = true,
+        completion: @escaping (Result<([MessageBase], MessagePage?), APIClientError>) -> Void)
+    {
         // Use PubNub's fetchMessageHistory method to retrieve message history for specified channels
         let startTimeToken = start != nil ? UInt64(start!) : UInt64(Date().nanoseconds)
         pubnub?.fetchMessageHistory(for: self.channels, includeActions: includeActions, includeMeta: includeMeta, includeUUID: includeUUID, page: PubNubBoundedPageBase(start: startTimeToken, limit: limit), completion: { result in
@@ -541,7 +600,9 @@ public class ChatProvider {
     }
     
     // MARK: - Messages count for specific channel
-    internal func count(completion: @escaping (Int, APIClientError?) -> Void?) {
+    internal func count(
+        completion: @escaping (Int, APIClientError?) -> Void?)
+    {
           // Check if a channel is provided for counting messages
           if let channel = self.publishChannel {
               // Use PubNub to retrieve message counts for the specified channel
@@ -558,7 +619,7 @@ public class ChatProvider {
                       }
                   case let .failure(error):
                       // Handle the failure case when retrieving message counts
-                      Config.shared.isDebugMode() ? print("Message Count Failed1: \(error.localizedDescription)") : ()
+                      Config.shared.isDebugMode() ? print("Message Count Failed: \(error.localizedDescription)") : ()
                       if (error as? PubNubError)?.reason.rawValue == 403 {
                           if error.localizedDescription.contains("expired") {
                               Config.shared.isDebugMode() ? print(String(describing: self),"::",APIClientError.CHAT_TOKEN_EXPIRED) : ()
@@ -575,7 +636,7 @@ public class ChatProvider {
               })
           } else {
               // Handle the case when no channel is provided
-              Config.shared.isDebugMode() ? print(String(describing: self),"::","Message Count Failed: \(APIClientError.UNKNOWN_EXCEPTION)") : ()
+              Config.shared.isDebugMode() ? print("Message Count Failed: \(APIClientError.UNKNOWN_EXCEPTION)") : ()
               completion(0,APIClientError.SHOW_NOT_LIVE)
           }
           
@@ -587,7 +648,10 @@ public class ChatProvider {
     /// - Parameters:
     ///   - timetoken: The timetoken of the message when it's published.
     ///   - completion: A closure that receives the result of the deletion operation as a `Result` enum with a `Bool` indicating success or failure and an `Error` in case of failure.
-    internal func unPublishMessage(timetoken: String, completion: @escaping (Result<Bool, APIClientError>) -> Void) {
+    internal func unPublishMessage(
+        timetoken: String,
+        completion: @escaping (Result<Bool, APIClientError>) -> Void)
+    {
         // Check if the publish channel and JWT token are available
         if let channel = publishChannel, let jwtToken = self.getJwtToken() {
             // Call the Networking's deletMessage method to delete the message
@@ -604,6 +668,53 @@ public class ChatProvider {
             }
         } else {
             Config.shared.isDebugMode() ? print(String(describing: self),"::",APIClientError.SHOW_NOT_LIVE) : ()
+            completion(.failure(APIClientError.SHOW_NOT_LIVE))
+        }
+    }
+    
+    // Method to like a comment using the chat provider.
+    internal func likeComment(timeToken: String,_ completion: @escaping (Bool, APIClientError?) -> Void?) {
+        // Check if a channel is provided for like comment
+        if let channel = self.publishChannel {
+            self.pubnub?.addMessageAction(channel: channel, type: "reaction", value: "like", messageTimetoken:  UInt64(timeToken)!, completion: { result in
+                switch result {
+                case .success(_):
+                    Config.shared.isDebugMode() ? print("Liked comment!") : ()
+                    // Call the completion handler with success
+                    completion(true, nil)
+                case .failure(_):
+                    // If there's an error, indicate failure with the appropriate error
+                    completion(false,APIClientError.LIKE_COMMENT_FAILED)
+                }
+            })
+        } else {
+            // Handle the case when no channel is provided
+            Config.shared.isDebugMode() ? print("Liked comment Failed: \(APIClientError.SHOW_NOT_LIVE)") : ()
+            // Call the completion handler with failure and the appropriate error
+            completion(false,APIClientError.SHOW_NOT_LIVE)
+        }
+    }
+    
+    // Method to unlike a comment using the chat provider.
+    internal func unlikeComment(timeToken: String,actionTimeToken: Int, _ completion: @escaping (Result<Bool, APIClientError>) -> Void?) {
+        // Check if the publish channel and JWT token are available
+        if let _ = publishChannel, let jwtToken = self.getJwtToken(), let eventId = self.eventId {
+            // Call the Networking's unlikeComment method to unlike a comment
+            Networking.unlikeComment(jwtToken: jwtToken, eventId: "\(eventId)", messageTimetoken: timeToken, actionTimeToken: "\(actionTimeToken)") { result in
+                // Invoke the completion handler with the result of the unlike comment operation
+                switch result {
+                case .success(let status):
+                    Config.shared.isDebugMode() ? print("Comment unliked!") : ()
+                    // Call the completion handler with success status
+                    completion(.success(status))
+                case .failure(let error):
+                    Config.shared.isDebugMode() ? print("Comment Unliked Failed: \(error.localizedDescription)") : ()
+                    // Call the completion handler with the failure status and error
+                    completion(.failure(error))
+                }
+            }
+        } else {
+            // If required parameters are not available, call the completion handler with a failure status
             completion(.failure(APIClientError.SHOW_NOT_LIVE))
         }
     }

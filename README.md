@@ -85,6 +85,37 @@ showInstance.getDetails(showKey: "yourShowKey") { result in
 }
 ```
 
+#### `getProducts(showKey:preLive:completion:)`
+
+Get Products list from specific show's details.
+
+- Parameters:
+    - `showKey`: The unique identifier of the show.
+    - `preLive`(optional): A flag indicating whether the request is related to pre products. Default is `false`.
+    - `completion`: A closure that will be called once the products are fetched. It takes a `Result` enum containing either the `[ProductData]` on success or an `Error` on failure.
+
+```
+showInstance.getProducts(showKey: "yourShowKey", preLive: "true/false") { result in
+    switch result {
+    case .success(let products):
+        print("Products: \(products)")
+        
+        //Please use following to find product's variants information
+        for i in products {
+            print("Product Details", i)
+            if let variants = i.variants, variants.count > 0 {
+                for j in variants {
+                    print("SKU", (i.sku ?? ""))
+                }
+            }
+        }
+    case .failure(let error):
+        // Handle error case
+        print("Error fetching products list: \(error)")
+    }
+}
+```
+
 #### `getStatus(showKey:completion:)`
 
 Get the current event of a show.
@@ -139,6 +170,8 @@ Use initialized instance of the Chat class and sends a message using that instan
 
 - Parameters:
   - `message`: The text message to be sent.
+  - `type`: Default will be "comment", Other types are `giphy` and `question`.
+  - `aspectRatio`: When type is "giphy", aspectRatio is mandatory.
   
 - Completion:
   - `status`: A boolean value indicating whether the message was sent successfully or not.
@@ -157,15 +190,36 @@ self.chatInstance.sendMessage(message: newMessage, completion: {status, error in
 }
 ```
 
+- Send Giphy
+```
+self.chatInstance.sendMessage(message: "GiphyId", type: .giphy, aspectRatio: "GiphyWidth/GiphyHeight",completion: {status, error in
+    if status {
+        print("Giphy Sent!", status)
+    } else {
+        //If aspectRatio will be missing, it will return "MESSAGE_SENDING_GIPHY_DATA_NOT_FOUND"
+        //If Token is revoked, it will return "PERMISSION_DENIED"
+        print("Giphy Sending Failed: \(error.localizedDescription)")
+    }
+}
+```
+
 - Recieve New message event listener
 ```
 class ContentViewModel: ObservableObject, ChatDelegate {
     func onNewMessage(_ message: MessageData) {
         // Handle the received message
+        print("Recieved New Message", message)
+        
         //If it's threaded message, it will have original message details
         if let originalMessage = message.payload?.original?.message {
             print("Original message's sender details", originalMessage.sender)
             print("Original message details", originalMessage.text)
+        }
+        
+        //When MessageType is "giphy"
+        if message.payload?.type == .giphy {
+            print("Giphy ID", message.payload?.text)
+            //Use giphyId with respective giphy URL to load the gif.
         }
     }
 }
@@ -284,7 +338,7 @@ Use to retrieve the count of messages using a chat instance.
   - `error`: An optional error that occurred during the counting process, if any.
 
 ```
-self.chat?.countMessages({ count, error in
+self.chatInstance.countMessages({ count, error in
     if let error = error {
         //If Token is revoked, it will return "PERMISSION_DENIED"
         //If Token is expired, it will return "CHAT_TOKEN_EXPIRED"
@@ -294,6 +348,70 @@ self.chat?.countMessages({ count, error in
         print("Message Count : \(count)")
     }
 })
+```
+
+#### `likeComment(timeToken:completion:)`
+
+Use to like a message using a chat instance.
+
+- Parameters:
+  - `timeToken `: The time token when message was published.
+  
+- Completion:
+  - `status`: A boolean value indicating whether the message was liked successfully or not.
+  - `error`: An optional error that occurred during the like comment process, if any.
+
+```
+self.chatInstance.likeComment(timeToken: "timetoken", completion: { status, error in
+    if status {
+        print("Liked comment Successfully", status)
+    } else {
+        print("Liked comment Error", error?.localizedDescription ?? "")
+    }
+})
+```
+
+- Recieve Like comment event listener
+```
+class ContentViewModel: ObservableObject, ChatDelegate {
+    func onLikeComment(_ messageAction: Talkshoplive.MessageAction) {
+        // Handle the liked message action.
+    }
+}
+
+```
+
+
+#### ` UnlikeComment(timeToken:actionTimeToken:completion:)`
+
+Use to Unlike a message using a chat instance.
+
+- Parameters:
+  - `timeToken `: The time token when message was published.
+  - `actionTimeToken `: The time token when message was liked.
+  
+- Completion:
+  - `status`: A boolean value indicating whether the message was unliked successfully or not.
+  - `error`: An optional error that occurred during the unlike comment process, if any.
+
+```
+self.chatInstance.UnlikeComment(timeToken: "timetoken", actionTimeToken: "actionTimetoken", completion: { status, error in
+    if status {
+        print("Unliked comment Successfully", status)
+    } else {
+        print("Unliked comment Error", error?.localizedDescription ?? "")
+    }
+})
+```
+
+- Recieve Unlike comment event listener
+```
+class ContentViewModel: ObservableObject, ChatDelegate {
+    func onUnlikeComment(_ messageAction: MessageAction) {
+        // Handle the Unliked message action.
+    }
+}
+
 ```
 
 #### `onStatusChange(error:)`
