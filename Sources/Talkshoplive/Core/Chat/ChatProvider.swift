@@ -175,8 +175,6 @@ public class ChatProvider {
                         // Initialize PubNub instance
                         self.pubnub = PubNub(configuration: configuration)
                         
-                        PubNub.log.levels = .all
-
                         // Log the initialization
                         Config.shared.isDebugMode() ? print("Initialized Pubnub", self.pubnub!) : ()
                         
