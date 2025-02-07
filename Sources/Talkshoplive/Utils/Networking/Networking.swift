@@ -233,11 +233,9 @@ class Networking {
                                                   storeId: storeId,
                                                   videoStatus: videoStatus ?? "NOT_SET",
                                                   videoTime: videoTime),
-                                       utm: UTM(source: "NOT_SET",
-                                                campaign: "NOT_SET",
-                                                medium: "NOT_SET",
-                                                term: "NOT_SET",
-                                                content: "NOT_SET"))
+                                       aspect: Aspect(
+                                        screenResolution: screenResolution ?? "NOT_SET"
+                                           ))
         // Make a request to send analytics data to the server
         APIHandler().request(endpoint: APIEndpoint.getCollector, method: .post, body: payload, responseType: NoResponse.self) { result in
             let actionType = payload.action!.rawValue
