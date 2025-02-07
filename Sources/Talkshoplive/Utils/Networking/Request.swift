@@ -1,6 +1,6 @@
 //
 //  Request.swift
-//  
+//
 //
 //  Created by TalkShopLive on 2024-01-23.
 //
@@ -10,7 +10,7 @@ import Foundation
 //MARK: - Collector Request
 
 /// A structure representing a collector request containing analytics data.
-struct CollectorRequest: Codable {
+public struct CollectorRequest: Codable {
     let timestampUtc: Int?
     let userId: String? // Assuming userId is of type String
     let category: CollectorCategory?
@@ -18,7 +18,7 @@ struct CollectorRequest: Codable {
     let action: CollectorActionType?
     let application: String?
     let meta: Meta?
-    let utm: UTM?
+    let aspect: Aspect?
     
     // MARK: CollectorCategory
     /// An enumeration representing the category of the collector request.
@@ -29,13 +29,23 @@ struct CollectorRequest: Codable {
     
     // MARK: CollectorActionType
     /// An enumeration representing the action type of the collector request.
-    enum CollectorActionType: String, Codable {
+    public enum CollectorActionType: String, Codable {
         case sdkInitialized = "SDK_INITIALIZED"
         case selectViewShowDetails = "SELECT_SHOW_METADATA"
         case selectViewChat = "SELECT_VIEW_CHAT"
         case updateUser = "UPDATE_USER"
         case incrementViewCount = "INCREMENT_VIEW_COUNT"
         case selectShowProducts = "SELECT_SHOW_PRODUCTS"
+        
+        /// Returns the associated category for each action.
+        var associatedCategory: CollectorCategory {
+            switch self {
+            case .sdkInitialized, .updateUser:
+                return .process
+            case .selectViewShowDetails, .selectViewChat, .incrementViewCount, .selectShowProducts:
+                return .interaction
+            }
+        }
     }
 
     // MARK: Coding Keys
@@ -47,7 +57,7 @@ struct CollectorRequest: Codable {
         case action
         case application
         case meta
-        case utm
+        case aspect
     }
 }
 
@@ -72,27 +82,6 @@ struct Meta: Codable {
         case videoTime = "total_event_duration"
     }
 }
-
-//MARK: - UTM Object
-
-/// A structure representing UTM parameters associated with a collector request.
-struct UTM: Codable {
-    let source: String?
-    let campaign: String?
-    let medium: String?
-    let term: String?
-    let content: String?
-
-    // MARK: Coding Keys
-    enum CodingKeys: String, CodingKey {
-        case source
-        case campaign
-        case medium
-        case term
-        case content
-    }
-}
-
 //MARK: - Aspect Object
 
 /// A structure representing aspect parameters associated with a collector request.
