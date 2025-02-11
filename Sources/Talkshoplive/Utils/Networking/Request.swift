@@ -25,24 +25,41 @@ public struct CollectorRequest: Codable {
     enum CollectorCategory: String, Codable {
         case interaction = "INTERACTION"
         case process = "PROCESS"
+        case pageView = "PAGE_VIEW"
     }
     
     // MARK: CollectorActionType
     /// An enumeration representing the action type of the collector request.
     public enum CollectorActionType: String, Codable {
-        case sdkInitialized = "SDK_INITIALIZED"
-        case selectViewShowDetails = "SELECT_SHOW_METADATA"
-        case selectViewChat = "SELECT_VIEW_CHAT"
-        case updateUser = "UPDATE_USER"
-        case incrementViewCount = "INCREMENT_VIEW_COUNT"
-        case selectShowProducts = "SELECT_SHOW_PRODUCTS"
+        case videoComplete = "VIDEO_COMPLETE"
+        case videoTime = "VIDEO_TIME"
+        case videoPause = "VIDEO_PAUSE"
+        case videoPlay = "VIDEO_PLAY"
+        case viewContent = "VIEW_CONTENT"
+        case addToCart = "ADD_TO_CART"
+        case addToCartAffiliate = "ADD_TO_CART_AFFILIATE"
+        case selectProduct = "SELECT_PRODUCT"
+        case selectViewProductDetails = "SELECT_VIEW_PRODUCT_DETAILS"
+        case expandProductDetails = "EXPAND_PRODUCT_DETAILS"
+        case customizeProduct = "CUSTOMIZE_PRODUCT"
+        case customizeProductQuantityIncrease = "CUSTOMIZE_PRODUCT_QUANTITY_INCREASE"
+        case customizeProductQuantityDecrease = "CUSTOMIZE_PRODUCT_QUANTITY_DECREASE"
+        case selectAddToCartPDPDetails = "SELECT_ADD_TO_CART_PDP_DETAILS"
+        case selectAddToCartStreamView = "SELECT_ADD_TO_CART_STREAM_VIEW"
+        case selectProductCart = "SELECT_PRODUCT_CART"
+        
         
         /// Returns the associated category for each action.
         var associatedCategory: CollectorCategory {
             switch self {
-            case .sdkInitialized, .updateUser:
+            case .viewContent:
+                return .pageView
+            case .videoComplete, .videoTime:
                 return .process
-            case .selectViewShowDetails, .selectViewChat, .incrementViewCount, .selectShowProducts:
+            case .videoPause, .videoPlay, .addToCart, .addToCartAffiliate, .selectProduct, .selectViewProductDetails,
+                    .expandProductDetails, .customizeProduct, .customizeProductQuantityIncrease,
+                    .customizeProductQuantityDecrease, .selectAddToCartPDPDetails,
+                    .selectAddToCartStreamView, .selectProductCart:
                 return .interaction
             }
         }
