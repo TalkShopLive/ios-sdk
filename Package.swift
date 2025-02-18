@@ -6,8 +6,8 @@ import PackageDescription
 let package = Package(
     name: "Talkshoplive",
     platforms: [
-            .iOS(.v14),
-            .macOS(.v10_15)
+        .iOS(.v13),
+        .macOS(.v10_15)
     ],
     products: [
         // Products define the executables and libraries a package produces, making them visible to other packages.
@@ -30,7 +30,11 @@ let package = Package(
             path: "Sources/Talkshoplive",
             resources: [
                 // Add other resource files as needed
-            ]),
+            ],
+            swiftSettings: [
+                .define("PLATFORM_IOS")
+            ]
+        ),
         .testTarget(
             name: "TalkshopliveTests",
             dependencies: ["Talkshoplive"]),
