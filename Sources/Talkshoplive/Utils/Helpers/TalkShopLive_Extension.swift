@@ -7,6 +7,10 @@
 
 import Foundation
 
+#if canImport(UIKit)
+import UIKit
+#endif
+
 /// Function to convert a JSON string to a specified model object.
 ///
 /// - Parameters:
@@ -31,4 +35,18 @@ func convertToModel<T: Decodable>(
 //      Config.shared.isDebugMode() ? print("Error converting payload to Data.") : ()
         return nil
     }
+}
+
+func getScreenResolution() -> String {
+#if canImport(UIKit)
+    
+    let screenSize = UIScreen.main.bounds.size
+    let scale = UIScreen.main.scale
+    let screenWidth = Int(screenSize.width * scale)
+    let screenHeight = Int(screenSize.height * scale)
+    
+    return "\(screenWidth)x\(screenHeight)"
+#else
+    return "NOT SET"
+#endif
 }

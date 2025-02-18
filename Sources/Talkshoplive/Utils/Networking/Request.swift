@@ -1,6 +1,6 @@
 //
 //  Request.swift
-//  
+//
 //
 //  Created by TalkShopLive on 2024-01-23.
 //
@@ -10,7 +10,7 @@ import Foundation
 //MARK: - Collector Request
 
 /// A structure representing a collector request containing analytics data.
-struct CollectorRequest: Codable {
+public struct CollectorRequest: Codable {
     let timestampUtc: Int?
     let userId: String? // Assuming userId is of type String
     let category: CollectorCategory?
@@ -18,24 +18,51 @@ struct CollectorRequest: Codable {
     let action: CollectorActionType?
     let application: String?
     let meta: Meta?
-    let utm: UTM?
+    let aspect: Aspect?
     
     // MARK: CollectorCategory
     /// An enumeration representing the category of the collector request.
     enum CollectorCategory: String, Codable {
         case interaction = "INTERACTION"
         case process = "PROCESS"
+        case pageView = "PAGE_VIEW"
     }
     
     // MARK: CollectorActionType
     /// An enumeration representing the action type of the collector request.
-    enum CollectorActionType: String, Codable {
-        case sdkInitialized = "SDK_INITIALIZED"
-        case selectViewShowDetails = "SELECT_SHOW_METADATA"
-        case selectViewChat = "SELECT_VIEW_CHAT"
-        case updateUser = "UPDATE_USER"
-        case incrementViewCount = "INCREMENT_VIEW_COUNT"
-        case selectShowProducts = "SELECT_SHOW_PRODUCTS"
+    public enum CollectorActionType: String, Codable {
+        case videoComplete = "VIDEO_COMPLETE"
+        case videoTime = "VIDEO_TIME"
+        case videoPause = "VIDEO_PAUSE"
+        case videoPlay = "VIDEO_PLAY"
+        case viewContent = "VIEW_CONTENT"
+        case addToCart = "ADD_TO_CART"
+        case addToCartAffiliate = "ADD_TO_CART_AFFILIATE"
+        case selectProduct = "SELECT_PRODUCT"
+        case selectViewProductDetails = "SELECT_VIEW_PRODUCT_DETAILS"
+        case expandProductDetails = "EXPAND_PRODUCT_DETAILS"
+        case customizeProduct = "CUSTOMIZE_PRODUCT"
+        case customizeProductQuantityIncrease = "CUSTOMIZE_PRODUCT_QUANTITY_INCREASE"
+        case customizeProductQuantityDecrease = "CUSTOMIZE_PRODUCT_QUANTITY_DECREASE"
+        case selectAddToCartPDPDetails = "SELECT_ADD_TO_CART_PDP_DETAILS"
+        case selectAddToCartStreamView = "SELECT_ADD_TO_CART_STREAM_VIEW"
+        case selectProductCart = "SELECT_PRODUCT_CART"
+        
+        
+        /// Returns the associated category for each action.
+        var associatedCategory: CollectorCategory {
+            switch self {
+            case .viewContent:
+                return .pageView
+            case .videoComplete, .videoTime:
+                return .process
+            case .videoPause, .videoPlay, .addToCart, .addToCartAffiliate, .selectProduct, .selectViewProductDetails,
+                    .expandProductDetails, .customizeProduct, .customizeProductQuantityIncrease,
+                    .customizeProductQuantityDecrease, .selectAddToCartPDPDetails,
+                    .selectAddToCartStreamView, .selectProductCart:
+                return .interaction
+            }
+        }
     }
 
     // MARK: Coding Keys
@@ -47,7 +74,7 @@ struct CollectorRequest: Codable {
         case action
         case application
         case meta
-        case utm
+        case aspect
     }
 }
 
@@ -72,27 +99,6 @@ struct Meta: Codable {
         case videoTime = "total_event_duration"
     }
 }
-
-//MARK: - UTM Object
-
-/// A structure representing UTM parameters associated with a collector request.
-struct UTM: Codable {
-    let source: String?
-    let campaign: String?
-    let medium: String?
-    let term: String?
-    let content: String?
-
-    // MARK: Coding Keys
-    enum CodingKeys: String, CodingKey {
-        case source
-        case campaign
-        case medium
-        case term
-        case content
-    }
-}
-
 //MARK: - Aspect Object
 
 /// A structure representing aspect parameters associated with a collector request.

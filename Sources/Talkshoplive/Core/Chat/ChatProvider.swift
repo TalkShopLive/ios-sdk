@@ -175,27 +175,17 @@ public class ChatProvider {
                         // Initialize PubNub instance
                         self.pubnub = PubNub(configuration: configuration)
                         
-                        PubNub.log.levels = .all
-
                         // Log the initialization
                         Config.shared.isDebugMode() ? print("Initialized Pubnub", self.pubnub!) : ()
                         
                         // Initialize PubNub with the obtained token
                         DispatchQueue.main.asyncAfter(deadline: DispatchTime.now() + 1.0, execute: {
                             self.subscribe()
-                            completion?(true,nil)
-                            //Analytics
-                            Collector.shared.collect(userId: self.messageToken?.userId,
-                                                     category: self.isUpdateUser ? .process : .interaction,
-                                                     action: self.isUpdateUser ? .updateUser : .selectViewChat,
-                                                     eventId: eventId,
-                                                     showKey: self.showKey,
-                                                     storeId: event.storeId ?? nil,
-                                                     videoStatus: event.status ?? nil,
-                                                     videoTime: event.duration ?? nil)
                             if self.isUpdateUser {
                                 self.isUpdateUser = false
                             }
+                            completion?(true,nil)
+                           
                         })
                     } else {
                         Config.shared.isDebugMode() ? print(String(describing: self),"::",APIClientError.USER_TOKEN_EXCEPTION) : ()

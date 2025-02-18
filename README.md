@@ -10,6 +10,7 @@ TSL takes care of the infrastructure and APIs needed for live streaming of diffe
 * [Configure TSL-iOS-SDK](#configure-tsl-ios-sdk)
 * [Shows](#shows)
 * [Chats](#chats)
+* [Collect](#collect)
 
 ## Requirements
 
@@ -63,7 +64,7 @@ For more information, see Apple's guide on [Adding Package Dependencies to Your 
 The TSL iOS SDK provides methods for fetching details of a specific show and its current event, enabling you to get show and current event details in your app.
 
 ### Methods
-
+    
 #### `getDetails(showKey:completion:)`
 
 Get detailed information about a specific show.
@@ -438,6 +439,31 @@ func onStatusChange(error: Talkshoplive.APIClientError) {
         break
     }
 }
+```
+
+## Collect
+
+### Overview
+
+The Collect functionality logs user actions related to shows and product views. By capturing these events, the SDK tracks user engagement and interactions within the application, enabling you to analyze user behavior and improve the overall user experience.
+
+### Initialization
+    
+#### `Collect(show:userId:)`
+
+This initializer creates a Collect instance using a show details object and, optionally, a user identifier.
+
+- Parameters:
+    - `show`: An object containing the show details.
+    - `userId`((optional)): The identifier of the user associated with the action.
+
+```
+let showInstance = Talkshoplive.Show()
+// Create a Collect instance with the current show and a user identifier.
+let collectInstance = Collect(show: showInstance, userId: "UserId")
+
+// Track a specific user action by calling the collect method with an action name.
+collectInstance.collect(actionName: .actionName)
 ```
     
 ## Run the Tests: 

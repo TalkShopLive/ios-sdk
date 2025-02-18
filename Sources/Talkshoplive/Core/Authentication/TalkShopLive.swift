@@ -43,13 +43,6 @@ public class TalkShopLive {
         // Register the SDK using the provided client key
         Networking.register(clientKey: self.clientKey) { result in
             completion?(result)
-            //Analytics
-            switch result {
-            case .success():
-                Collector.shared.collect(category: .process,action: .sdkInitialized)
-            case .failure(_):
-                break
-            }
         }
     }
 }
