@@ -17,6 +17,7 @@ public struct GetProductsResponse: Codable {
 // Define the main struct representing the top-level data
 public struct ProductData: Codable {
     public var id: Int?
+    public var name: String?
     public var sku: String?
     public var description: String?
     public var image: String?
@@ -28,6 +29,7 @@ public struct ProductData: Codable {
     // MARK: Coding Keys
     enum CodingKeys: String, CodingKey {
         case id
+        case name
         case sku
         case description
         case image
@@ -40,6 +42,7 @@ public struct ProductData: Codable {
     // MARK: Initializers
     public init() {
         id = nil
+        name = nil
         sku = nil
         description = nil
         image = nil
@@ -55,6 +58,7 @@ public struct ProductData: Codable {
         
         // Decode each property and use nil coalescing to handle optional values
         id = try? container.decodeIfPresent(Int.self, forKey: .id)
+        name = try? container.decodeIfPresent(String.self, forKey: .name)
         description = try? container.decodeIfPresent(String.self, forKey: .description)
         productSource = try? container.decodeIfPresent(String.self, forKey: .productSource)
         affiliateLink = try? container.decodeIfPresent(String.self, forKey: .affiliateLink)
