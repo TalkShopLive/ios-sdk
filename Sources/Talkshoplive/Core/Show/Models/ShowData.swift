@@ -273,7 +273,7 @@ struct OwningStore : Codable {
 
 //MARK: - ImageAttachment Object
 
-struct ImageAttachment : Codable {
+public struct ImageAttachment : Codable {
     let id: Int?
     let attachmentContentType: String?
     let attachmentFileName: String?
