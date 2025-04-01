@@ -35,6 +35,7 @@ public struct CollectorRequest: Codable {
         case videoTime = "VIDEO_TIME"
         case videoPause = "VIDEO_PAUSE"
         case videoPlay = "VIDEO_PLAY"
+        case videoView = "VIDEO_VIEW"
         case viewContent = "VIEW_CONTENT"
         case addToCart = "ADD_TO_CART"
         case addToCartAffiliate = "ADD_TO_CART_AFFILIATE"
@@ -54,7 +55,7 @@ public struct CollectorRequest: Codable {
             switch self {
             case .viewContent:
                 return .pageView
-            case .videoComplete, .videoTime:
+            case .videoComplete, .videoTime, .videoView:
                 return .process
             case .videoPause, .videoPlay, .addToCart, .addToCartAffiliate, .selectProduct, .selectViewProductDetails,
                     .expandProductDetails, .customizeProduct, .customizeProductQuantityIncrease,
