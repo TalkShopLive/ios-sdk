@@ -103,7 +103,7 @@ public class Config {
             return APIConfig(
                 BASE_URL: "https://staging.cms.talkshop.live",
                 ASSETS_URL: "https://assets-dev.talkshop.live",
-                COLLECTOR_BASE_URL: "https://staging.collector.talkshop.live",
+                COLLECTOR_BASE_URL: "https://stg.collector.tslstg.com",
                 EVENTS_BASE_URL: "https://staging.events-api.talkshop.live"
             )
         case .production:
