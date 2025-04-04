@@ -37,16 +37,9 @@ public struct CollectorRequest: Codable {
         case videoPlay = "VIDEO_PLAY"
         case viewContent = "VIEW_CONTENT"
         case addToCart = "ADD_TO_CART"
-        case addToCartAffiliate = "ADD_TO_CART_AFFILIATE"
         case selectProduct = "SELECT_PRODUCT"
-        case selectViewProductDetails = "SELECT_VIEW_PRODUCT_DETAILS"
-        case expandProductDetails = "EXPAND_PRODUCT_DETAILS"
-        case customizeProduct = "CUSTOMIZE_PRODUCT"
         case customizeProductQuantityIncrease = "CUSTOMIZE_PRODUCT_QUANTITY_INCREASE"
         case customizeProductQuantityDecrease = "CUSTOMIZE_PRODUCT_QUANTITY_DECREASE"
-        case selectAddToCartPDPDetails = "SELECT_ADD_TO_CART_PDP_DETAILS"
-        case selectAddToCartStreamView = "SELECT_ADD_TO_CART_STREAM_VIEW"
-        case selectProductCart = "SELECT_PRODUCT_CART"
         
         
         /// Returns the associated category for each action.
@@ -56,10 +49,8 @@ public struct CollectorRequest: Codable {
                 return .pageView
             case .videoComplete, .videoTime:
                 return .process
-            case .videoPause, .videoPlay, .addToCart, .addToCartAffiliate, .selectProduct, .selectViewProductDetails,
-                    .expandProductDetails, .customizeProduct, .customizeProductQuantityIncrease,
-                    .customizeProductQuantityDecrease, .selectAddToCartPDPDetails,
-                    .selectAddToCartStreamView, .selectProductCart:
+            case .videoPause, .videoPlay, .addToCart,.selectProduct,
+                    .customizeProductQuantityIncrease,.customizeProductQuantityDecrease:
                 return .interaction
             }
         }
