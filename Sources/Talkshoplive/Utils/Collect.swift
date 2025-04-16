@@ -15,7 +15,7 @@ public class Collect {
     /// Initializes the `Collect` instance with a show and an optional user ID.
     /// - Parameters:
     ///   - show: The `ShowData` object representing the current event.
-    ///   - userId: An optional `String` representing the user ID.
+    ///   - userId: A `String` representing the unique user identifier associated with the action.
     public init(show: ShowData, userId: String) {
         self.show = show
         self.userId = userId
