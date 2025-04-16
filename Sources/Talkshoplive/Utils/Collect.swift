@@ -10,13 +10,13 @@ import Foundation
 /// `Collect` is responsible for sending analytics events related to user interactions and system processes.
 public class Collect {
     private let show: ShowData?  // Holds data related to the current show/event.
-    private let userId: String?  // The ID of the user performing the action.
+    private let userId: String  // The ID of the user performing the action.
 
     /// Initializes the `Collect` instance with a show and an optional user ID.
     /// - Parameters:
     ///   - show: The `ShowData` object representing the current event.
-    ///   - userId: An optional `String` representing the user ID.
-    public init(show: ShowData, userId: String? = nil) {
+    ///   - userId: A `String` representing the unique user identifier associated with the action.
+    public init(show: ShowData, userId: String) {
         self.show = show
         self.userId = userId
     }
@@ -30,14 +30,14 @@ public class Collect {
         actionName: CollectorRequest.CollectorActionType,
         completion: ((Bool, APIClientError?) -> Void)? = nil
     ) {
-        let sdkVersion = "2.0.4" // Define the current SDK version.
+        let sdkVersion = "2.0.5" // Define the current SDK version.
 
         // Check if "Do Not Track" (DNT) mode is enabled.
         if Config.shared.isDntMode() == false {
             // If DNT mode is off, proceed with collecting analytics.
 
             Networking.collect(
-                userId: userId ?? "NOT SET", // Use the user ID if available, otherwise default to "NOT SET".
+                userId: userId,
                 category: actionName.associatedCategory, // Determine the category based on the action type.
                 version: sdkVersion, // Pass the SDK version.
                 action: actionName, // Specify the action being performed.

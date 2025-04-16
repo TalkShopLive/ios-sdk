@@ -455,7 +455,7 @@ This initializer creates a Collect instance using a show details object and, opt
 
 - Parameters:
     - `show`: An object containing the show details.
-    - `userId`((optional)): The identifier of the user associated with the action.
+    - `userId`: A string representing the user identifier associated with the action.
 
 ```
 let showInstance = Talkshoplive.Show()
