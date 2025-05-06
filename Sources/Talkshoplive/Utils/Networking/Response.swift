@@ -42,6 +42,10 @@ public struct GetShowsResponse: Codable {
     let product : ShowData
 }
 
+public struct GetShows2Response: Codable {
+    let data : Show2Data
+}
+
 //MARK: - No Response
 
 public struct NoResponse: Codable {

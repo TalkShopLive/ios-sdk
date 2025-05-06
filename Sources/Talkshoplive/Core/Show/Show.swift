@@ -15,6 +15,7 @@ public class Show {
     // MARK: - Properties
     public static let shared = Show()// Singleton instance for Show class
     private var showInstance = ShowData()
+    private var show2Instance = Show2Data()
     private var incrementedView = [String: Bool]()
    
     // MARK: - Initializer
@@ -33,6 +34,26 @@ public class Show {
             case .success(let showData):
                 // Update the show instance with fetched data
                 self.showInstance = showData
+                // Set the details and invoke the completion with success.
+                completion(.success(showData))
+            case .failure(let error):
+                // Invoke the completion with failure if an error occurs.
+                Config.shared.isDebugMode() ? print(String(describing: self),"::",error.localizedDescription) : ()
+                completion(.failure(error))
+            }
+        }
+    }
+    
+    public func getDetails2(
+        showKey: String,
+        completion: @escaping (Result<Show2Data, APIClientError>) -> Void)
+    {
+        // Fetch show details using the provider
+        ShowProvider().fetchShow2(showKey: showKey) { result in
+            switch result {
+            case .success(let showData):
+                // Update the show instance with fetched data
+                self.show2Instance = showData
                 // Set the details and invoke the completion with success.
                 completion(.success(showData))
             case .failure(let error):

@@ -33,6 +33,16 @@ public class ShowProvider {
         })
     }
     
+    internal func fetchShow2(
+        showKey: String,
+        completion: @escaping (Result<Show2Data, APIClientError>) -> Void)
+    {
+        // Call the network function to fetch show details
+        Networking.getShows2(showKey: showKey, completion: { result in
+            completion(result)
+        })
+    }
+    
     /// Fetch the current event details from the network.
     /// - Parameters:
     ///   - showKey: The key of the show to fetch the current event for.
