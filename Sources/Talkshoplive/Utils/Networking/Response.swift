@@ -37,13 +37,8 @@ public struct MessagingTokenResponse: Codable {
 }
 
 //MARK: - GetShows Response
-
 public struct GetShowsResponse: Codable {
-    let product : ShowData
-}
-
-public struct GetShows2Response: Codable {
-    let data : Show2Data
+    let data : ShowData
 }
 
 //MARK: - No Response

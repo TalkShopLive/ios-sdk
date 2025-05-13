@@ -59,22 +59,6 @@ class Networking {
             switch result {
             case .success(let apiResponse):
                 // Successfully retrieved shows data
-                completion(.success(apiResponse.product))
-            case .failure(_):
-                // Error occurred due to invalid show key
-                completion(.failure(APIClientError.SHOW_NOT_FOUND))
-            }
-        }
-    }
-    
-    static func getShows2(
-        showKey: String,
-        completion: @escaping (Result<Show2Data, APIClientError>) -> Void)
-    {
-        APIHandler().request(endpoint: APIEndpoint.getShows2(showKey: showKey), method: .get, body: nil, responseType: GetShows2Response.self) { result in
-            switch result {
-            case .success(let apiResponse):
-                // Successfully retrieved shows data
                 completion(.success(apiResponse.data))
             case .failure(_):
                 // Error occurred due to invalid show key

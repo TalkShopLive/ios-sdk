@@ -13,7 +13,6 @@ import Foundation
 public enum APIEndpoint {
     case messagingToken
     case getShows(showKey: String)
-    case getShows2(showKey: String)
     case getCurrentEvent(showKey: String)
     case getClosedCaptions(fileName: String)
     case getProducts(productIds: [Int])
@@ -31,7 +30,7 @@ public enum APIEndpoint {
     var baseURL: String {
         do {
             switch self {
-            case .messagingToken, .getShows, .getCurrentEvent,.register,.getGuestUserToken,.getFederatedUserToken,.deleteMessage,.getUserMetadata,.getProducts,.unlikeComment,.getShows2:
+            case .messagingToken, .getShows, .getCurrentEvent,.register,.getGuestUserToken,.getFederatedUserToken,.deleteMessage,.getUserMetadata,.getProducts,.unlikeComment:
                 return try Config.loadAPIConfig().BASE_URL
             case .getClosedCaptions,.getHlsUrl:
                 return try Config.loadAPIConfig().ASSETS_URL
@@ -50,10 +49,8 @@ public enum APIEndpoint {
         switch self {
         case .messagingToken:
             return "/api/messaging_tokens"
-        case .getShows2(let showKey):
-            return "/api/v1/shows/\(showKey)?expand=channel,fundraiser,assets,show_products"
         case .getShows(let showKey):
-            return "/api/products/digital/streaming_content/\(showKey)"
+            return "/api/v1/shows/\(showKey)?expand=channel,fundraiser,assets,show_products"
         case .getCurrentEvent(showKey: let showKey):
             return "/api/shows/\(showKey)/streams/current"
         case .getProducts(productIds: let productIds):
