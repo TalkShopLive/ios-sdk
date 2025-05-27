@@ -219,7 +219,20 @@ class Networking {
                         videoStatus: String? = nil,
                         videoTime: Int? = nil,
                         screenResolution: String? = nil,
+                        showTitle: String? = nil,
                         _ completion: ((Bool, APIClientError?) -> Void)? = nil) {
+        let collectorConfig = Config.loadCollectorURLConfig()
+        let pageUrl = collectorConfig.pageUrl + (showKey ?? "")
+        
+        // Prepare page metrics data
+        let pageMetrics = PageMetrics(
+            origin: collectorConfig.origin,
+            host: collectorConfig.host,
+            referrer: collectorConfig.referrer,
+            pageUrl: pageUrl,
+            pageUrlRaw: pageUrl,
+            pageTitle: showTitle
+        )
         // Create an instance of CollectorRequest
         let payload = CollectorRequest(timestampUtc: Int(Date().milliseconds),
                                        userId: userId ?? "NOT_SET",
@@ -235,7 +248,8 @@ class Networking {
                                                   videoTime: videoTime),
                                        aspect: Aspect(
                                         screenResolution: screenResolution ?? "NOT_SET"
-                                           ))
+                                       ),
+                                       pageMetrics: pageMetrics)
         // Make a request to send analytics data to the server
         APIHandler().request(endpoint: APIEndpoint.getCollector, method: .post, body: payload, responseType: NoResponse.self) { result in
             let actionType = payload.action!.rawValue
