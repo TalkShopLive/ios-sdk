@@ -46,7 +46,8 @@ public class Collect {
                 storeId: show?.currentEvent?.storeId ?? nil, // Extract the store ID from the event if available.
                 videoStatus: show?.status ?? "NOT SET", // Provide the current video status.
                 videoTime: show?.duration ?? nil, // Capture the total event duration.
-                screenResolution: getScreenResolution() // Get the current screen resolution.
+                screenResolution: getScreenResolution(), // Get the current screen resolution.
+                showTitle: show?.name ?? "NOT SET" // Show title 
             ) { result, error in
                 // Execute the completion handler with the result.
                 completion?(result, error)

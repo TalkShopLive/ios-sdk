@@ -117,3 +117,22 @@ public class Config {
     }
 }
 
+extension Config {
+    public static func loadCollectorURLConfig() -> CollectorURLConfig {
+        if Config.shared.isTestMode() {
+            return CollectorURLConfig(
+                origin: "https://publish.talkshop.live",
+                host: "publish.talkshop.live",
+                referrer: "https://www.walmart.com/",
+                pageUrl: "https://stg.frontend.tslstg.com/watch/"
+            )
+        } else {
+            return CollectorURLConfig(
+                origin: "https://publish.talkshop.live",
+                host: "publish.talkshop.live",
+                referrer: "https://www.walmart.com/",
+                pageUrl: "https://talkshop.live/watch/"
+            )
+        }
+    }
+}

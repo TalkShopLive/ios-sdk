@@ -19,6 +19,7 @@ public struct CollectorRequest: Codable {
     let application: String?
     let meta: Meta?
     let aspect: Aspect?
+    let pageMetrics: PageMetrics?
     
     // MARK: CollectorCategory
     /// An enumeration representing the category of the collector request.
@@ -67,6 +68,7 @@ public struct CollectorRequest: Codable {
         case application
         case meta
         case aspect
+        case pageMetrics = "page_metrics"  
     }
 }
 
@@ -102,3 +104,24 @@ struct Aspect: Codable {
         case screenResolution = "screen_resolution"
     }
 }
+
+//MARK: - Aspect Object
+/// A structure representing page metrics information.
+struct PageMetrics: Codable {
+    let origin: String?
+    let host: String?
+    let referrer: String?
+    let pageUrl: String?
+    let pageUrlRaw: String?
+    let pageTitle: String?
+
+    enum CodingKeys: String, CodingKey {
+        case origin
+        case host
+        case referrer
+        case pageUrl = "page_url"
+        case pageUrlRaw = "page_url_raw"
+        case pageTitle = "page_title"
+    }
+}
+
