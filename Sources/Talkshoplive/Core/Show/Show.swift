@@ -55,7 +55,6 @@ public class Show {
                 let incremented = self.incrementedView[showKey]
                 if !(incremented ?? false),
                    let eventId = eventInstance.id,
-                    eventInstance.streamInCloud == true,
                     eventInstance.status == "live"
                 {
                     ShowProvider().incrementView(eventId: eventId) { status, error in

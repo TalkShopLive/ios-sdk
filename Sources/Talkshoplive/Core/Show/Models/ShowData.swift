@@ -46,7 +46,8 @@ public struct ShowData: Codable {
         case channelLogo,channelName,channel
         case showProducts = "show_products",entranceProductsIds
         case assets
-        case hlsPlaybackUrl, hlsUrl, trailerUrl, cc, eventId, duration, trailerDuration,videoThumbnailUrl
+        case hlsPlaybackUrl, hlsUrl, trailerUrl, cc, eventId, duration, trailerDuration
+        case videoThumbnailUrl = "thumbnail_image"
     }
     
     // MARK: Initializers
@@ -87,6 +88,7 @@ public struct ShowData: Codable {
         airDate = try? container.decodeIfPresent(String.self, forKey: .airDate)
         endedAt = try? container.decodeIfPresent(String.self, forKey: .endedAt)
         productsIds = try? container.decodeIfPresent([Int].self, forKey: .productsIds)
+        videoThumbnailUrl = try? container.decodeIfPresent(String.self, forKey: .videoThumbnailUrl)
         
         channel = try? container.decodeIfPresent(Channel.self, forKey: .channel)
         channelLogo = channel?.thumbnailImage
@@ -111,9 +113,7 @@ public struct ShowData: Codable {
         
         eventId = assets?.first?.id.intValue
         duration = assets?.first(where: { $0.type == .vod })?.duration
-        trailerDuration = assets?.first(where: { $0.type == .trailer })?.duration
-        videoThumbnailUrl = assets?.first(where: { $0.thumbnailImageUrl != nil })?.thumbnailImageUrl
-        
+        trailerDuration = assets?.first(where: { $0.type == .trailer })?.duration        
     }
 }
 
