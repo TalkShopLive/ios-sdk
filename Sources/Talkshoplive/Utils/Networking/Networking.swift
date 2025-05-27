@@ -59,7 +59,7 @@ class Networking {
             switch result {
             case .success(let apiResponse):
                 // Successfully retrieved shows data
-                completion(.success(apiResponse.product))
+                completion(.success(apiResponse.data))
             case .failure(_):
                 // Error occurred due to invalid show key
                 completion(.failure(APIClientError.SHOW_NOT_FOUND))

@@ -50,7 +50,7 @@ public enum APIEndpoint {
         case .messagingToken:
             return "/api/messaging_tokens"
         case .getShows(let showKey):
-            return "/api/products/digital/streaming_content/\(showKey)"
+            return "/api/v1/shows/\(showKey)?expand=channel,fundraiser,assets,show_products"
         case .getCurrentEvent(showKey: let showKey):
             return "/api/shows/\(showKey)/streams/current"
         case .getProducts(productIds: let productIds):

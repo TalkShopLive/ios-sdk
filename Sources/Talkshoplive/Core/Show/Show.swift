@@ -25,7 +25,7 @@ public class Show {
     /// Get the details of the show.
     public func getDetails(
         showKey: String,
-        completion: @escaping (Result<ShowData, APIClientError>) -> Void) 
+        completion: @escaping (Result<ShowData, APIClientError>) -> Void)
     {
         // Fetch show details using the provider
         ShowProvider().fetchShow(showKey: showKey) { result in
@@ -55,7 +55,6 @@ public class Show {
                 let incremented = self.incrementedView[showKey]
                 if !(incremented ?? false),
                    let eventId = eventInstance.id,
-                    eventInstance.streamInCloud == true,
                     eventInstance.status == "live"
                 {
                     ShowProvider().incrementView(eventId: eventId) { status, error in
@@ -83,7 +82,7 @@ public class Show {
         preLive: Bool = false,
         completion: @escaping (Result<[ProductData], APIClientError>) -> Void)
     {
-        let productIds = (preLive && (self.showInstance.entranceProductsRequired ?? false)) ? self.showInstance.entranceProductsIds : self.showInstance.productsIds
+        let productIds = preLive ? self.showInstance.entranceProductsIds : self.showInstance.productsIds
         // Fetch show details using the provider
         if let productIds = productIds, productIds.count > 0 {
             // Fetch products using the ShowProvider

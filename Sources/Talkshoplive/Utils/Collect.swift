@@ -43,7 +43,7 @@ public class Collect {
                 action: actionName, // Specify the action being performed.
                 eventId: show?.eventId ?? nil, // Use the event ID if available.
                 showKey: show?.showKey ?? "NOT SET", // Use the show key if available, otherwise default.
-                storeId: show?.currentEvent?.storeId ?? nil, // Extract the store ID from the event if available.
+                storeId: show?.channel?.id ?? nil, // Extract the store ID from the event if available.
                 videoStatus: show?.status ?? "NOT SET", // Provide the current video status.
                 videoTime: show?.duration ?? nil, // Capture the total event duration.
                 screenResolution: getScreenResolution(), // Get the current screen resolution.
