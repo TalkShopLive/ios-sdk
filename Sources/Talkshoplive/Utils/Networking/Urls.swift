@@ -52,7 +52,7 @@ public enum APIEndpoint {
         case .getShows(let showKey):
             return "/api/v1/shows/\(showKey)?expand=channel,fundraiser,assets,show_products"
         case .getCurrentEvent(showKey: let showKey):
-            return "/api/shows/\(showKey)/streams/current"
+            return "/api/v1/shows/\(showKey)/status"
         case .getProducts(productIds: let productIds):
             let perPage = 50
             let order = "array_order"

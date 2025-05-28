@@ -75,11 +75,11 @@ class Networking {
         showKey: String,
         completion: @escaping (Result<EventData, APIClientError>) -> Void)
     {
-        APIHandler().request(endpoint: APIEndpoint.getCurrentEvent(showKey: showKey), method: .get, body: nil, responseType: EventData.self) { result in
+        APIHandler().request(endpoint: APIEndpoint.getCurrentEvent(showKey: showKey), method: .get, body: nil, responseType: EventResponse.self) { result in
             switch result {
             case .success(let apiResponse):
                 // Successfully retrieved current event data
-                completion(.success(apiResponse))
+                completion(.success(apiResponse.data))
             case .failure(_):
                 // Error occurred due to event not found
                 completion(.failure(APIClientError.EVENT_NOT_FOUND))
