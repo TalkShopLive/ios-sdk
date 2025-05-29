@@ -9,15 +9,15 @@ import Foundation
 
 /// `Collect` is responsible for sending analytics events related to user interactions and system processes.
 public class Collect {
-    private let show: ShowData?  // Holds data related to the current show/event.
+    private let event: EventData?  // Holds data related to the current show/event.
     private let userId: String  // The ID of the user performing the action.
 
     /// Initializes the `Collect` instance with a show and an optional user ID.
     /// - Parameters:
     ///   - show: The `ShowData` object representing the current event.
     ///   - userId: A `String` representing the unique user identifier associated with the action.
-    public init(show: ShowData, userId: String) {
-        self.show = show
+    public init(event: EventData, userId: String) {
+        self.event = event
         self.userId = userId
     }
 
@@ -30,24 +30,24 @@ public class Collect {
         actionName: CollectorRequest.CollectorActionType,
         completion: ((Bool, APIClientError?) -> Void)? = nil
     ) {
-        let sdkVersion = "2.0.5" // Define the current SDK version.
+        let sdkVersion = "3.0.0" // Define the current SDK version.
 
         // Check if "Do Not Track" (DNT) mode is enabled.
         if Config.shared.isDntMode() == false {
             // If DNT mode is off, proceed with collecting analytics.
-
+            let showInstance = Show.shared.showData
             Networking.collect(
                 userId: userId,
                 category: actionName.associatedCategory, // Determine the category based on the action type.
                 version: sdkVersion, // Pass the SDK version.
                 action: actionName, // Specify the action being performed.
-                eventId: show?.eventId ?? nil, // Use the event ID if available.
-                showKey: show?.showKey ?? "NOT SET", // Use the show key if available, otherwise default.
-                storeId: show?.channel?.id ?? nil, // Extract the store ID from the event if available.
-                videoStatus: show?.status ?? "NOT SET", // Provide the current video status.
-                videoTime: show?.duration ?? nil, // Capture the total event duration.
+                eventId: showInstance.eventId ?? nil, // Use the event ID if available.
+                showKey: showInstance.showKey ?? "NOT SET", // Use the show key if available, otherwise default.
+                storeId: showInstance.channel?.id ?? nil, // Extract the store ID from the event if available.
+                videoStatus: event?.status ?? "NOT SET", // Provide the current video status.
+                videoTime: event?.duration ?? nil, // Capture the total event duration.
                 screenResolution: getScreenResolution(), // Get the current screen resolution.
-                showTitle: show?.name ?? "NOT SET" // Show title 
+                showTitle: showInstance.name ?? "NOT SET"
             ) { result, error in
                 // Execute the completion handler with the result.
                 completion?(result, error)

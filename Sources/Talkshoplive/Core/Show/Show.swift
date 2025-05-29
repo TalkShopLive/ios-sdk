@@ -17,8 +17,14 @@ public class Show {
     private var showInstance = ShowData()
     private var incrementedView = [String: Bool]()
    
+    // MARK: - Public getter for showInstance
+    /// Provide read-only access to the current show data.
+    public var showData: ShowData {
+        return showInstance
+    }
+    
     // MARK: - Initializer
-    public init() {
+    private init() {
         
     }
     // MARK: - Public Methods

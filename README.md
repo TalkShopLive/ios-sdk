@@ -74,7 +74,7 @@ Get detailed information about a specific show.
     - `completion`: A closure that will be called once the show details are fetched. It takes a `Result` enum containing either the `ShowData` on success or an `Error` on failure.
 
 ```
-let showInstance = Talkshoplive.Show()
+let showInstance = Talkshoplive.Show.shared
 showInstance.getDetails(showKey: "yourShowKey") { result in
     switch result {
     case .success(let show):
@@ -126,7 +126,7 @@ Get the current event of a show.
     - `completion`: A closure that will be called once the show details are fetched. It takes a `Result` enum containing either the `ShowData` on success or an `Error` on failure.
 
 ```
-let showInstance = Talkshoplive.Show()
+let showInstance = Talkshoplive.Show.shared
 showInstance.getStatus(showKey: "YourShowKey") { result in
     switch result {
     case .success(let eventData):
@@ -458,9 +458,11 @@ This initializer creates a Collect instance using a show details object and, opt
     - `userId`: A string representing the user identifier associated with the action.
 
 ```
-let showInstance = Talkshoplive.Show()
-// Create a Collect instance with the current show and a user identifier.
-let collectInstance = Collect(show: showInstance, userId: "UserId")
+// Event data instance, typically retrieved from show.getStatus()
+var eventObject : Talkshoplive.EventData? 
+
+// Initialize a Collect instance using the current event data and a user ID
+let collectInstance = Collect(event: eventInstance, userId: "UserId")
 
 // Track a specific user action by calling the collect method with an action name.
 collectInstance.collect(actionName: .actionName)
