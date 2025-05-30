@@ -15,6 +15,14 @@ public struct APIConfig: Codable {
     public let EVENTS_BASE_URL: String
 }
 
+// MARK: - CollectorURLConfig Structure
+public struct CollectorURLConfig {
+    let origin: String
+    let host: String
+    let referrer: String
+    let pageUrl: String
+}
+
 // MARK: - HTTP methods
 public enum HTTPMethod: String {
     case get = "GET"

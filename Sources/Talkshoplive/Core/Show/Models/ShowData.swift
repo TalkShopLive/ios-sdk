@@ -7,63 +7,47 @@
 
 import Foundation
 
-//MARK: - ShowData 
-
-// Define the main struct representing the top-level data
 public struct ShowData: Codable {
+    
     public let id: Int?
     public let showKey: String?
     public let name: String?
     public let showDescription: String?
     public var status: String?
+    public let airDate: String?
+    public let endedAt: String?
+    public let productsIds: [Int]?
+    public let channelLogo: String?
+    public let channelName: String?
+    let channel:Channel?
+    public let entranceProductsIds: [Int]?
+    private let showProducts : [ShowProduct]?
+    private let assets: [Asset]?
+    
     public let hlsPlaybackUrl: String?
     public let hlsUrl: String?
     public let trailerUrl: String?
-    public let airDate: String?
-    public let eventId: Int?
     public let cc: String?
-    public let endedAt: String?
+    public let eventId: Int?
     public let duration: Int?
-    public let currentEvent: EventData?
-    public let videoThumbnailUrl: String?
-    public let channelLogo: String?
-    public let channelName: String?
     public let trailerDuration: Int?
-    private let events: [EventData]?
-    private let streamingContent: StreamingContent?
-    private let owningStore: OwningStore?
-    private let master: Master?
-    public let productsIds: [Int]?
-    public let entranceProductsIds: [Int]?
-    public let entranceProductsRequired: Bool?
-
-
-    // MARK: Coding Keys
+    public let videoThumbnailUrl: String?
+    
+    
     enum CodingKeys: String, CodingKey {
         case id
-        case showKey = "product_key"
-        case name
-        case status
-        case hlsPlaybackUrl
-        case hlsUrl
-        case trailerUrl
-        case airDate
-        case eventId
-        case cc
-        case endedAt
-        case duration
-        case currentEvent = "current_event"
-        case events
-        case streamingContent = "streaming_content"
-        case owningStore = "owning_store"
+        case showKey = "key"
+        case name = "title"
         case showDescription = "description"
-        case master
-        case videoThumbnailUrl
-        case channelLogo
-        case channelName = "brand_name"
-        case trailerDuration
-        case productsIds
-        case entranceProductsIds
+        case status = "state"
+        case airDate = "scheduled_live_at"
+        case endedAt = "ended_at"
+        case productsIds = "show_product_ids"
+        case channelLogo,channelName,channel
+        case showProducts = "show_products",entranceProductsIds
+        case assets
+        case hlsPlaybackUrl, hlsUrl, trailerUrl, cc, eventId, duration, trailerDuration
+        case videoThumbnailUrl = "thumbnail_image"
     }
     
     // MARK: Initializers
@@ -73,201 +57,104 @@ public struct ShowData: Codable {
         name = nil
         showDescription = nil
         status = nil
+        airDate = nil
+        endedAt = nil
+        productsIds = nil
+        channelLogo = nil
+        channelName = nil
+        channel = nil
+        showProducts = nil
+        entranceProductsIds = nil
+        assets = nil
         hlsPlaybackUrl = nil
         hlsUrl = nil
         trailerUrl = nil
-        airDate = nil
-        eventId = nil
         cc = nil
-        endedAt = nil
+        eventId = nil
         duration = nil
-        currentEvent = nil
-        events = nil
-        streamingContent = nil
-        owningStore = nil
-        master = nil
-        videoThumbnailUrl = nil
-        channelLogo = nil
-        channelName = nil
         trailerDuration = nil
-        productsIds = []
-        entranceProductsIds = []
-        entranceProductsRequired = false
+        videoThumbnailUrl = nil
     }
     
     // Custom initializer to handle decoding from JSON
     public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
-
         // Decode each property and use nil coalescing to handle optional values
         id = try? container.decodeIfPresent(Int.self, forKey: .id)
         showKey = try? container.decodeIfPresent(String.self, forKey: .showKey)
         name = try? container.decodeIfPresent(String.self, forKey: .name)
         showDescription = try? container.decodeIfPresent(String.self, forKey: .showDescription)
-        currentEvent = try? container.decodeIfPresent(EventData.self, forKey: .currentEvent)
-        events = try? container.decodeIfPresent([EventData].self, forKey: .events)
-        streamingContent = try? container.decodeIfPresent(StreamingContent.self, forKey: .streamingContent)
-        owningStore = try? container.decodeIfPresent(OwningStore.self, forKey: .owningStore)
-        master = try? container.decodeIfPresent(Master.self, forKey: .master)
-        endedAt = currentEvent?.endedAt
-        channelName = try? container.decodeIfPresent(String.self, forKey: .channelName)
-
-        // If there is no current event, set playback URL, status, and duration to nil.
-        if currentEvent == nil {
-            hlsPlaybackUrl = nil
-            status = "created"
-            duration = nil
-        } else {
-            // If there is a current event, assign its playback URL, status, and duration.
-            hlsPlaybackUrl = currentEvent?.hlsPlaybackUrl
-            status = currentEvent?.status
-            duration = currentEvent?.duration
-        }
+        status = try? container.decodeIfPresent(String.self, forKey: .status)
+        airDate = try? container.decodeIfPresent(String.self, forKey: .airDate)
+        endedAt = try? container.decodeIfPresent(String.self, forKey: .endedAt)
+        productsIds = try? container.decodeIfPresent([Int].self, forKey: .productsIds)
+        videoThumbnailUrl = try? container.decodeIfPresent(String.self, forKey: .videoThumbnailUrl)
         
-        // Check if the current event's filename is available.
-        if let fileName = currentEvent?.filename {
-            // If filename exists, construct the HLS URL using the filename.
-            let url = APIEndpoint.getHlsUrl(fileName: fileName)
-            hlsUrl = url.baseURL + url.path
-        } else {
-            // If filename is not available, set the HLS URL to nil.
-            hlsUrl = nil
-        }
+        channel = try? container.decodeIfPresent(Channel.self, forKey: .channel)
+        channelLogo = channel?.thumbnailImage
+        channelName = channel?.name
         
-        trailerUrl = streamingContent?.trailers?.first?.video
-        eventId = streamingContent?.airDates?.first?.eventID
-        airDate = streamingContent?.airDates?.first?.date
-        channelLogo = owningStore?.image?.attachment?.large
-        videoThumbnailUrl = master?.images?.first?.attachment?.large
-        trailerDuration = streamingContent?.trailers?.first?.duration
+        showProducts = try? container.decodeIfPresent([ShowProduct].self, forKey: .showProducts)
+        entranceProductsIds = try? container.decodeIfPresent([ShowProduct].self, forKey: .showProducts)?
+            .filter { $0.kind == "entrance" }
+            .map { $0.productId }
         
-        // Check if the current event's stream key is available and if it's not a test event.
-        if let fileName = currentEvent?.streamKey, currentEvent?.isTest == false {
-            // If stream key exists and it's not a test event, retrieve closed captions URL.
-            let captionUrl = APIEndpoint.getClosedCaptions(fileName: fileName)
-            let fileNameURL = captionUrl.baseURL + captionUrl.path
-            cc = fileNameURL
+        assets = try? container.decodeIfPresent([Asset].self, forKey: .assets)
+        
+        hlsPlaybackUrl = assets?.first(where: { $0.type == .live })?.url
+        hlsUrl = assets?.first(where: { $0.type == .vod})?.url
+        trailerUrl = assets?.first(where: { $0.type == .trailer })?.url
+        
+        if let vodUrl = hlsUrl {
+            cc = vodUrl.replacingOccurrences(of: "mp4", with: "transcript.vtt")
         } else {
-            // If stream key is not available or it's a test event, set closed captions URL to nil.
             cc = nil
         }
-
-        productsIds = streamingContent?.inShowProductIds
-        entranceProductsIds = streamingContent?.entranceProductIds
-        entranceProductsRequired = streamingContent?.entranceProductsRequired
+        
+        eventId = assets?.first?.id.intValue
+        duration = assets?.first(where: { $0.type == .vod })?.duration
+        trailerDuration = assets?.first(where: { $0.type == .trailer })?.duration        
     }
 }
 
-//MARK: - StreamingContent Object
-
-struct StreamingContent: Codable {
+public struct Channel: Codable {
+    
     let id: Int?
-    let trailers: [Trailer]?
-    let airDates: [AirDate]?
-    let inShowProductIds: [Int]?
-    let entranceProductIds: [Int]?
-    let entranceProductsRequired: Bool?
+    public let name: String?
+    public let code: String?
+    public let thumbnailImage: String?
     
-    // MARK: Coding Keys
-    private enum CodingKeys: String, CodingKey {
-        case id
-        case trailers
-        case airDates = "air_dates"
-        case inShowProductIds = "in_show_product_ids"
-        case entranceProductIds = "entrance_product_ids"
-        case entranceProductsRequired = "entrance_products_required"
-    }
-    
-    // Custom initializer to handle decoding from JSON
-    public init(from decoder: Decoder) throws {
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-
-        // Decode each property and use nil coalescing to handle optional values
-        id = try? container.decodeIfPresent(Int.self, forKey: .id)
-        trailers = try? container.decodeIfPresent([Trailer].self, forKey: .trailers)
-        airDates = try? container.decodeIfPresent([AirDate].self, forKey: .airDates)
-        inShowProductIds = try? container.decodeIfPresent([Int].self, forKey: .inShowProductIds)
-        entranceProductIds = try? container.decodeIfPresent([Int].self, forKey: .entranceProductIds)
-        entranceProductsRequired = try? container.decodeIfPresent(Bool.self, forKey: .entranceProductsRequired)
-    }
-}
-
-//MARK: - Trailer Object
-
-struct Trailer: Codable {
-    let id: Int?
-    let video: String?
-    let duration : Int?
-    
-    // MARK: Coding Keys
-    private enum CodingKeys: String, CodingKey {
-        case id
-        case video
-        case duration
-    }
-    
-    // Custom initializer to handle decoding from JSON
-    public init(from decoder: Decoder) throws {
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-
-        // Decode each property and use nil coalescing to handle optional values
-        id = try? container.decodeIfPresent(Int.self, forKey: .id)
-        video = try? container.decodeIfPresent(String.self, forKey: .video)
-        duration = try? container.decodeIfPresent(Int.self, forKey: .duration)
-    }
-}
-
-//MARK: - AirDate Object
-
-struct AirDate: Codable {
-    let id: Int?
-    let name: String?
-    let eventID: Int? // Renamed for camelCase convention
-    let date: String?
-    
-    // MARK: Coding Keys
-    private enum CodingKeys: String, CodingKey {
+    enum CodingKeys: String, CodingKey {
         case id
         case name
-        case eventID = "event_id"
-        case date
+        case code
+        case thumbnailImage = "thumbnail_image"
     }
     
-    // Custom initializer to handle decoding from JSON
+    // MARK: - Initializers
+    public init() {
+        id = nil
+        name = nil
+        code = nil
+        thumbnailImage = nil
+    }
+    
     public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
-
-        // Decode each property and use nil coalescing to handle optional values
         id = try? container.decodeIfPresent(Int.self, forKey: .id)
         name = try? container.decodeIfPresent(String.self, forKey: .name)
-        eventID = try? container.decodeIfPresent(Int.self, forKey: .eventID)
-        date = try? container.decodeIfPresent(String.self, forKey: .date)
-
+        code = try? container.decodeIfPresent(String.self, forKey: .code)
+        thumbnailImage = try? container.decodeIfPresent(String.self, forKey: .thumbnailImage)
     }
 }
 
-//MARK: - OwningStore Object
-
-struct OwningStore : Codable {
-    let id: Int?
-    let name: String?
-    let image: ImageAttachment?
+struct ShowProduct: Codable {
+    let productId: Int
+    let kind: String
     
-    // MARK: Coding Keys
-    private enum CodingKeys: String, CodingKey {
-        case id
-        case name
-        case image
-    }
-    
-    // Custom initializer to handle decoding from JSON
-    public init(from decoder: Decoder) throws {
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-
-        // Decode each property and use nil coalescing to handle optional values
-        id = try? container.decodeIfPresent(Int.self, forKey: .id)
-        name = try? container.decodeIfPresent(String.self, forKey: .name)
-        image = try? container.decodeIfPresent(ImageAttachment.self, forKey: .image)
+    enum CodingKeys: String, CodingKey {
+        case productId = "product_id"
+        case kind
     }
 }
 
