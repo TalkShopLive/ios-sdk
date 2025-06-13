@@ -60,7 +60,7 @@ public class APIHandler {
     {
         // Check if the SDK is initialized or not
         guard Config.shared.isInitialized() else {
-            print("SDK is not initialized")
+            Config.shared.isDebugMode() ? print("SDK is not initialized") : ()
             completion(.failure(APIClientError.AUTHENTICATION_EXCEPTION))
             return
         }
@@ -220,7 +220,7 @@ public class APIHandler {
     {
         // Check if the SDK is initialized or not
         guard Config.shared.isInitialized() else {
-            print("SDK is not initialized")
+            Config.shared.isDebugMode() ? print("SDK is not initialized") : ()
             completion(.failure(APIClientError.AUTHENTICATION_EXCEPTION))
             return
         }
@@ -307,7 +307,7 @@ public class APIHandler {
     {
         // Check if the SDK is initialized or not
         guard Config.shared.isInitialized() else {
-            print("SDK is not initialized")
+            Config.shared.isDebugMode() ? print("SDK is not initialized") : ()
             completion(.failure(APIClientError.AUTHENTICATION_EXCEPTION))
             return
         }

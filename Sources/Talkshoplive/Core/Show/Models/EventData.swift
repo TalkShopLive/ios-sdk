@@ -41,7 +41,7 @@ public struct EventData: Codable {
         let url = try? container.decodeIfPresent(String.self, forKey: .url)
 
         // Map URL to proper field based on status
-        switch status {
+        switch status?.lowercased() {
         case "live":
             hlsPlaybackUrl = url
             hlsUrl = nil
