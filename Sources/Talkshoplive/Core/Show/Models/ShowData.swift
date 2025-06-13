@@ -99,7 +99,12 @@ public struct ShowData: Codable {
             .filter { $0.kind == "entrance" }
             .map { $0.productId }
         
-        assets = try? container.decodeIfPresent([Asset].self, forKey: .assets)
+        do {
+            assets = try container.decodeIfPresent([Asset].self, forKey: .assets)
+        } catch {
+            Config.shared.isDebugMode() ? print("Failed to decode assets: \(error)") : ()
+            assets = nil
+        }
         
         hlsPlaybackUrl = assets?.first(where: { $0.type == .live })?.url
         hlsUrl = assets?.first(where: { $0.type == .vod})?.url
@@ -111,7 +116,7 @@ public struct ShowData: Codable {
             cc = nil
         }
         
-        eventId = assets?.first?.id.intValue
+        eventId = assets?.first?.id ?? nil
         duration = assets?.first(where: { $0.type == .vod })?.duration
         trailerDuration = assets?.first(where: { $0.type == .trailer })?.duration        
     }
