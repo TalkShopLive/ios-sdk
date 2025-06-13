@@ -27,18 +27,18 @@ class Networking {
             case .success(let apiResponse):
                 // If the client key is valid, SDK initialized successfully
                 if apiResponse.validKey == true {
-                    print("SDK Initialized")
+                    Config.shared.isDebugMode() ? print("SDK Initialized") : ()
                     // Set the SDK initialization status to true
                     Config.shared.setInitialized(true)
                     completion(.success(()))
                 } else {
                     // If the client key is invalid, SDK initialization failed due to authentication error
-                    print("SDK Initialization Failed: TSL.\(APIClientError.AUTHENTICATION_EXCEPTION.localizedDescription)")
+                    Config.shared.isDebugMode() ? print("SDK Initialization Failed: TSL.\(APIClientError.AUTHENTICATION_EXCEPTION.localizedDescription)") : ()
                     completion(.failure(APIClientError.AUTHENTICATION_FAILED))
                 }
             case .failure(_):
                 // SDK initialization failed due to request failure or invalid response
-                print("SDK Initialization Failed: TSL.\(APIClientError.AUTHENTICATION_EXCEPTION.localizedDescription)")
+                Config.shared.isDebugMode() ? print("SDK Initialization Failed: TSL.\(APIClientError.AUTHENTICATION_EXCEPTION.localizedDescription)") : ()
                 completion(.failure(APIClientError.AUTHENTICATION_EXCEPTION))
             }
         }

@@ -393,7 +393,7 @@ public class ChatProvider {
         // Check if the message length is within the specified limit
         guard message.count <= 200 else {
             // Handle the case where the message exceeds the maximum length
-            print("Message Sending Failed: Message exceeds maximum length of 200 characters.")
+            Config.shared.isDebugMode() ? print("Message Sending Failed: Message exceeds maximum length of 200 characters.") : ()
             return
         }
         

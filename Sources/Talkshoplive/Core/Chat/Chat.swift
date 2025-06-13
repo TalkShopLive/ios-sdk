@@ -55,7 +55,7 @@ public class Chat {
                 if let error = error {
                     Config.shared.isDebugMode() ? print(String(describing: self),"::",error) : ()
                 } else {
-                    print("Token Created!")
+                    Config.shared.isDebugMode() ? print("Token Created!") : ()
                 }
             }
             completion?(result,error)
