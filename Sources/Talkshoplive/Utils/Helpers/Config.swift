@@ -104,7 +104,7 @@ public class Config {
                 BASE_URL: "https://stg.cms.tslstg.com",
                 ASSETS_URL: "https://assets-dev.talkshop.live",
                 COLLECTOR_BASE_URL: "https://stg.collector.tslstg.com",
-                EVENTS_BASE_URL: "https://stg.events-api.talkshop.live"
+                EVENTS_BASE_URL: "https://stg.events-api.tslstg.com"
             )
         case .production:
             return APIConfig(
