@@ -82,6 +82,7 @@ struct Meta: Codable {
     let storeId: Int?
     let videoStatus: String?
     let videoTime: Int?
+    let showId: Int?
 
     // MARK: Coding Keys
     enum CodingKeys: String, CodingKey {
@@ -91,6 +92,7 @@ struct Meta: Codable {
         case storeId = "store_id"
         case videoStatus = "video_status"
         case videoTime = "total_event_duration"
+        case showId = "show_id"
     }
 }
 //MARK: - Aspect Object
