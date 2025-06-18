@@ -220,6 +220,7 @@ class Networking {
                         videoTime: Int? = nil,
                         screenResolution: String? = nil,
                         showTitle: String? = nil,
+                        showId: Int? = nil,
                         _ completion: ((Bool, APIClientError?) -> Void)? = nil) {
         let collectorConfig = Config.loadCollectorURLConfig()
         let pageUrl = collectorConfig.pageUrl + (showKey ?? "")
@@ -245,7 +246,8 @@ class Networking {
                                                   streamingContentKey: showKey ?? "NOT_SET",
                                                   storeId: storeId,
                                                   videoStatus: videoStatus ?? "NOT_SET",
-                                                  videoTime: videoTime),
+                                                  videoTime: videoTime,
+                                                  showId: showId),
                                        aspect: Aspect(
                                         screenResolution: screenResolution ?? "NOT_SET"
                                        ),
