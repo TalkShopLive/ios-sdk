@@ -30,7 +30,7 @@ public class Collect {
         actionName: CollectorRequest.CollectorActionType,
         completion: ((Bool, APIClientError?) -> Void)? = nil
     ) {
-        let sdkVersion = "3.0.0" // Define the current SDK version.
+        let sdkVersion = "3.0.2" // Define the current SDK version.
 
         // Check if "Do Not Track" (DNT) mode is enabled.
         if Config.shared.isDntMode() == false {
