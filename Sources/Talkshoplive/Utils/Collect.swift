@@ -47,7 +47,8 @@ public class Collect {
                 videoStatus: event?.status ?? "NOT SET", // Provide the current video status.
                 videoTime: event?.duration ?? nil, // Capture the total event duration.
                 screenResolution: getScreenResolution(), // Get the current screen resolution.
-                showTitle: showInstance.name ?? "NOT SET"
+                showTitle: showInstance.name ?? "NOT SET",
+                showId: showInstance.id ?? nil
             ) { result, error in
                 // Execute the completion handler with the result.
                 completion?(result, error)
