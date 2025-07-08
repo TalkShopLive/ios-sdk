@@ -9,7 +9,7 @@ import Foundation
 
 /// `Collect` is responsible for sending analytics events related to user interactions and system processes.
 public class Collect {
-    private let event: EventData?  // Holds data related to the current show/event.
+    private let event: EventData  // Holds data related to the current show/event.
     private let userId: String  // The ID of the user performing the action.
 
     /// Initializes the `Collect` instance with a show and an optional user ID.
@@ -28,9 +28,10 @@ public class Collect {
     ///   - completion: An optional completion handler returning a success flag and an error if applicable.
     public func collect(
         actionName: CollectorRequest.CollectorActionType,
+        videoTime:Int,
         completion: ((Bool, APIClientError?) -> Void)? = nil
     ) {
-        let sdkVersion = "3.0.2" // Define the current SDK version.
+        let sdkVersion = "3.0.3" // Define the current SDK version.
 
         // Check if "Do Not Track" (DNT) mode is enabled.
         if Config.shared.isDntMode() == false {
@@ -44,8 +45,8 @@ public class Collect {
                 eventId: showInstance.eventId ?? nil, // Use the event ID if available.
                 showKey: showInstance.showKey ?? "NOT SET", // Use the show key if available, otherwise default.
                 storeId: showInstance.channel?.id ?? nil, // Extract the store ID from the event if available.
-                videoStatus: event?.status ?? "NOT SET", // Provide the current video status.
-                videoTime: event?.duration ?? nil, // Capture the total event duration.
+                videoStatus: event.status ?? "NOT SET", // Provide the current video status.
+                videoTime: videoTime, // Capture the event current duration.
                 screenResolution: getScreenResolution(), // Get the current screen resolution.
                 showTitle: showInstance.name ?? "NOT SET",
                 showId: showInstance.id ?? nil
