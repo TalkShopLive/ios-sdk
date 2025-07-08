@@ -91,7 +91,7 @@ struct Meta: Codable {
         case streamingContentKey = "streaming_content_key"
         case storeId = "store_id"
         case videoStatus = "video_status"
-        case videoTime = "total_event_duration"
+        case videoTime = "video_time"
         case showId = "show_id"
     }
 }
