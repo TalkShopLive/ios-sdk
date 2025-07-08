@@ -464,8 +464,8 @@ var eventObject : Talkshoplive.EventData?
 // Initialize a Collect instance using the current event data and a user ID
 let collectInstance = Collect(event: eventInstance, userId: "UserId")
 
-// Track a specific user action by calling the collect method with an action name.
-collectInstance.collect(actionName: .actionName)
+// Track a specific user action by calling the collect method with an action name and and current video time (in seconds).
+collectInstance.collect(actionName: .actionName, videoTime: currentVideoTimeInSeconds)
 ```
     
 ## Run the Tests: 
