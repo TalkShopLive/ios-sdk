@@ -29,6 +29,15 @@ public struct ProductData: Codable {
     public var source: String?
     private let master: ProductMaster?
     
+    // Computed Properties
+    public var hasVariants: Bool {
+        return !(variants?.isEmpty ?? true)
+    }
+    
+    public var variantId: Int? {
+        return hasVariants ? nil : master?.id
+    }
+    
     // MARK: Coding Keys
     enum CodingKeys: String, CodingKey {
         case id

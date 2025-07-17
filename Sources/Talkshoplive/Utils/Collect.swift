@@ -29,6 +29,8 @@ public class Collect {
     public func collect(
         actionName: CollectorRequest.CollectorActionType,
         videoTime:Int,
+        variantId: Int? = nil,
+        productKey: String? = nil,
         completion: ((Bool, APIClientError?) -> Void)? = nil
     ) {
         let sdkVersion = "3.0.3" // Define the current SDK version.
@@ -49,7 +51,9 @@ public class Collect {
                 videoTime: videoTime, // Capture the event current duration.
                 screenResolution: getScreenResolution(), // Get the current screen resolution.
                 showTitle: showInstance.name ?? "NOT SET",
-                showId: showInstance.id ?? nil
+                showId: showInstance.id ?? nil,
+                variantId: variantId,
+                productKey: productKey
             ) { result, error in
                 // Execute the completion handler with the result.
                 completion?(result, error)

@@ -221,6 +221,8 @@ class Networking {
                         screenResolution: String? = nil,
                         showTitle: String? = nil,
                         showId: Int? = nil,
+                        variantId: Int? = nil,
+                        productKey: String? = nil,
                         _ completion: ((Bool, APIClientError?) -> Void)? = nil) {
         let collectorConfig = Config.loadCollectorURLConfig()
         let pageUrl = collectorConfig.pageUrl + (showKey ?? "")
@@ -247,7 +249,9 @@ class Networking {
                                                   storeId: storeId,
                                                   videoStatus: videoStatus ?? "NOT_SET",
                                                   videoTime: videoTime,
-                                                  showId: showId),
+                                                  showId: showId,
+                                                  variantId: variantId,
+                                                  productKey: productKey),
                                        aspect: Aspect(
                                         screenResolution: screenResolution ?? "NOT_SET"
                                        ),
