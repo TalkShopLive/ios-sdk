@@ -31,6 +31,7 @@ public class Collect {
         videoTime:Int,
         variantId: Int? = nil,
         productKey: String? = nil,
+        productId: Int? = nil,
         completion: ((Bool, APIClientError?) -> Void)? = nil
     ) {
         let sdkVersion = "3.0.4" // Define the current SDK version.
@@ -53,7 +54,9 @@ public class Collect {
                 showTitle: showInstance.name ?? "NOT SET",
                 showId: showInstance.id ?? nil,
                 variantId: variantId,
-                productKey: productKey
+                productKey: productKey,
+                productId: productId,
+                channelId: showInstance.channelId ?? nil
             ) { result, error in
                 // Execute the completion handler with the result.
                 completion?(result, error)
