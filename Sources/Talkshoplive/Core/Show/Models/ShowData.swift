@@ -113,12 +113,7 @@ public struct ShowData: Codable {
         hlsPlaybackUrl = assets?.first(where: { $0.type == .live })?.url
         hlsUrl = assets?.first(where: { $0.type == .vod})?.url
         trailerUrl = assets?.first(where: { $0.type == .trailer })?.url
-        
-        if let vodUrl = hlsUrl {
-            cc = vodUrl.replacingOccurrences(of: "mp4", with: "transcript.vtt")
-        } else {
-            cc = nil
-        }
+        cc = assets?.first(where: { $0.type == .vod })?.transcriptionUrl
         
         eventId = assets?.first?.id ?? nil
         duration = assets?.first(where: { $0.type == .vod })?.duration
