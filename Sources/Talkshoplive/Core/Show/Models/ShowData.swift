@@ -111,7 +111,15 @@ public struct ShowData: Codable {
         }
         
         hlsPlaybackUrl = assets?.first(where: { $0.type == .live })?.url
-        hlsUrl = assets?.first(where: { $0.type == .vod})?.url
+        if let vodAssets = assets?.filter({ $0.type == .vod }) {
+            if let vod_m3u8 = vodAssets.first(where: { $0.fileExtension == "m3u8" }) {
+                hlsUrl = vod_m3u8.url
+            } else {
+                hlsUrl = vodAssets.first?.url
+            }
+        } else {
+            hlsUrl = nil
+        }
         trailerUrl = assets?.first(where: { $0.type == .trailer })?.url
         cc = assets?.first(where: { $0.type == .vod })?.transcriptionUrl
         
