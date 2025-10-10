@@ -16,7 +16,6 @@ public struct EventData: Codable {
     public var status: String?
     public var hlsPlaybackUrl: String?
     public var hlsUrl: String?
-    public var totalViews: Int?
     private var url: String?
     public var duration: Int?
 
@@ -25,7 +24,6 @@ public struct EventData: Codable {
         case id
         case status = "state"
         case url      // ← Used only inside init
-        case totalViews = "total_views"
         case duration
     }
 
@@ -35,7 +33,6 @@ public struct EventData: Codable {
 
         id = try? container.decodeIfPresent(Int.self, forKey: .id)
         status = try? container.decodeIfPresent(String.self, forKey: .status)
-        totalViews = try? container.decodeIfPresent(Int.self, forKey: .totalViews)
         duration = try? container.decodeIfPresent(Int.self, forKey: .duration)
 
         let url = try? container.decodeIfPresent(String.self, forKey: .url)
@@ -61,7 +58,6 @@ public struct EventData: Codable {
         url = nil
         hlsPlaybackUrl = nil
         hlsUrl = nil
-        totalViews = nil
         duration = nil
     }
 }
