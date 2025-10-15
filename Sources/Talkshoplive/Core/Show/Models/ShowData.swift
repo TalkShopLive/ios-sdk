@@ -19,6 +19,7 @@ public struct ShowData: Codable {
     public let productsIds: [Int]?
     public let channelLogo: String?
     public let channelName: String?
+    public let channelId: Int?
     let channel:Channel?
     public let entranceProductsIds: [Int]?
     private let showProducts : [ShowProduct]?
@@ -48,6 +49,7 @@ public struct ShowData: Codable {
         case assets
         case hlsPlaybackUrl, hlsUrl, trailerUrl, cc, eventId, duration, trailerDuration
         case videoThumbnailUrl = "thumbnail_image"
+        case channelId
     }
     
     // MARK: Initializers
@@ -74,6 +76,7 @@ public struct ShowData: Codable {
         duration = nil
         trailerDuration = nil
         videoThumbnailUrl = nil
+        channelId = nil
     }
     
     // Custom initializer to handle decoding from JSON
@@ -93,6 +96,7 @@ public struct ShowData: Codable {
         channel = try? container.decodeIfPresent(Channel.self, forKey: .channel)
         channelLogo = channel?.thumbnailImage
         channelName = channel?.name
+        channelId = channel?.id
         
         showProducts = try? container.decodeIfPresent([ShowProduct].self, forKey: .showProducts)
         entranceProductsIds = try? container.decodeIfPresent([ShowProduct].self, forKey: .showProducts)?
@@ -107,14 +111,17 @@ public struct ShowData: Codable {
         }
         
         hlsPlaybackUrl = assets?.first(where: { $0.type == .live })?.url
-        hlsUrl = assets?.first(where: { $0.type == .vod})?.url
-        trailerUrl = assets?.first(where: { $0.type == .trailer })?.url
-        
-        if let vodUrl = hlsUrl {
-            cc = vodUrl.replacingOccurrences(of: "mp4", with: "transcript.vtt")
+        if let vodAssets = assets?.filter({ $0.type == .vod }) {
+            if let vod_m3u8 = vodAssets.first(where: { $0.fileExtension == "m3u8" }) {
+                hlsUrl = vod_m3u8.url
+            } else {
+                hlsUrl = vodAssets.first?.url
+            }
         } else {
-            cc = nil
+            hlsUrl = nil
         }
+        trailerUrl = assets?.first(where: { $0.type == .trailer })?.url
+        cc = assets?.first(where: { $0.type == .vod })?.transcriptionUrl
         
         eventId = assets?.first?.id ?? nil
         duration = assets?.first(where: { $0.type == .vod })?.duration
@@ -124,7 +131,7 @@ public struct ShowData: Codable {
 
 public struct Channel: Codable {
     
-    let id: Int?
+    public let id: Int?
     public let name: String?
     public let code: String?
     public let thumbnailImage: String?

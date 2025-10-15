@@ -11,6 +11,8 @@ public struct Asset: Codable {
     let url: String?
     let duration: Int?
     let totalViews: Int?
+    let transcriptionUrl: String?
+    let fileExtension: String?
 
     enum CodingKeys: String, CodingKey {
         case type
@@ -18,6 +20,8 @@ public struct Asset: Codable {
         case url
         case duration
         case totalViews = "total_views"
+        case transcriptionUrl = "transcription_url"
+        case fileExtension = "file_extension"
     }
 }
 
