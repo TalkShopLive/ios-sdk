@@ -449,12 +449,12 @@ The Collect functionality logs user actions related to shows and product views. 
 
 ### Initialization
     
-#### `Collect(show:userId:)`
+#### `Collect(event:userId:)`
 
 This initializer creates a Collect instance using a show details object and, optionally, a user identifier.
 
 - Parameters:
-    - `show`: An object containing the show details.
+    - `event`: An object containing the event details.
     - `userId`: A string representing the user identifier associated with the action.
 
 ```
@@ -464,9 +464,9 @@ var eventObject : Talkshoplive.EventData?
 // Initialize a Collect instance using the current event data and a user ID
 let collectInstance = Collect(event: eventInstance, userId: "UserId")
 
-// Track a specific user action by calling the collect method with an action name, current video time (in seconds), and optional variantId and productKey.
-// Pass variantId and productKey only for product-related actions.
-collectInstance.collect(actionName: .actionName, videoTime: currentVideoTimeInSeconds, variantId: variantId, productKey: productKey)
+// Track a specific user action by calling the collect method with an action name, current video time (in seconds), and optional variantId, productKey and ProductId
+// Pass variantId, productKey and ProductId only for product-related actions.
+collectInstance.collect(actionName: .actionName, videoTime: currentVideoTimeInSeconds, variantId: variantId, productKey: productKey, productId:productId)
 
 ```
     
