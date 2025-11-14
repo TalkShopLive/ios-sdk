@@ -210,7 +210,7 @@ public class APIHandler {
     }
     
     /// Performs an API request with a JWT token.
-    public func requestToken<T: Decodable>(
+    public func requestWithToken<T: Decodable>(
         jwtToken: String,
         endpoint: APIEndpoint,
         method: HTTPMethod,

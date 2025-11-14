@@ -34,6 +34,10 @@ public enum APIClientError: Error{
     case PERMISSION_DENIED
     case CHAT_CONNECTION_ERROR
     case CHAT_TOKEN_EXPIRED
+    case CHANNEL_NOT_FOUND
+    case SHOPPETTES_TOKEN_NOT_FOUND
+    case SHOPPETTES_NOT_FOUND
+
 }
 
 // MARK: - APIClientError extension
@@ -93,6 +97,12 @@ extension APIClientError: LocalizedError {
             return "Chat connection error"
         case .CHAT_TOKEN_EXPIRED :
             return "Chat token expired"
+        case .CHANNEL_NOT_FOUND:
+            return "Channel not found"
+        case .SHOPPETTES_NOT_FOUND:
+            return "Shoppettes not found"
+        case .SHOPPETTES_TOKEN_NOT_FOUND:
+            return "JWT token not found"
         }
     }
 }

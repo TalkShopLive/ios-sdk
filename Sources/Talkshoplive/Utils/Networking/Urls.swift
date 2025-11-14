@@ -25,12 +25,13 @@ public enum APIEndpoint {
     case getIncrementViewCount(eventId: Int)
     case getUserMetadata(uuid: String)
     case unlikeComment(eventId:String,messageTimeToken:String, actionTimeToken:String)
+    case getShoppettes(channelId: String)
     
     /// Base URL for the API endpoint.
     var baseURL: String {
         do {
             switch self {
-            case .messagingToken, .getShows, .getCurrentEvent,.register,.getGuestUserToken,.getFederatedUserToken,.deleteMessage,.getUserMetadata,.getProducts,.unlikeComment:
+            case .messagingToken, .getShows, .getCurrentEvent,.register,.getGuestUserToken,.getFederatedUserToken,.deleteMessage,.getUserMetadata,.getProducts,.unlikeComment,.getShoppettes:
                 return try Config.loadAPIConfig().BASE_URL
             case .getClosedCaptions,.getHlsUrl:
                 return try Config.loadAPIConfig().ASSETS_URL
@@ -78,6 +79,8 @@ public enum APIEndpoint {
             return "/api/messaging/senders/\(uuid)"
         case .unlikeComment(eventId: let eventId, messageTimeToken: let messageTimeToken, actionTimeToken: let actionTimeToken):
             return "/api2/v1/sdk/chat/messages/\(eventId)/\(messageTimeToken)/\(actionTimeToken)"
+        case .getShoppettes(channelId: let channelId):
+            return "/api/shoppettes?channel_id=\(channelId)&per_page=10&page=1"
         }
     }
 }

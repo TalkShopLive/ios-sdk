@@ -146,7 +146,7 @@ class Networking {
         // Determine the endpoint based on whether the user is a guest or federated
         let endpoint = isGuest ? APIEndpoint.getGuestUserToken : APIEndpoint.getFederatedUserToken
         // Make a request to retrieve the messaging token
-        APIHandler().requestToken(jwtToken: jwtToken, endpoint: endpoint, method: .post, body: nil, responseType: MessagingTokenResponse.self) { result in
+        APIHandler().requestWithToken(jwtToken: jwtToken, endpoint: endpoint, method: .post, body: nil, responseType: MessagingTokenResponse.self) { result in
             switch result {
             case .success(let apiResponse):
                 // Successfully retrieved messaging token
@@ -303,6 +303,22 @@ class Networking {
         }
     }
 
+    static func getShoppettes(
+        jwtToken: String,
+        channelId: String,
+        completion: @escaping (Result<[ShoppetteData], APIClientError>) -> Void)
+    {
+        APIHandler().requestWithToken(jwtToken: jwtToken, endpoint: APIEndpoint.getShoppettes(channelId: channelId), method: .get, body: nil, responseType:  GetShoppettesResponse.self) { result in
+            switch result {
+            case .success(let apiResponse):
+                // Successfully retrieved shows data
+                completion(.success(apiResponse.shoppettes))
+            case .failure(_):
+                // Error occurred due to invalid show key
+                completion(.failure(APIClientError.SHOPPETTES_NOT_FOUND))
+            }
+        }
+    }
     
 }
 
