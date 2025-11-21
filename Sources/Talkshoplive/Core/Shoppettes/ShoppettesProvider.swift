@@ -28,11 +28,12 @@ public class ShoppettesProvider {
     ///   - completion: A closure to be executed once the fetching is complete.
     internal func fetchShoppettes(
         channelId: String,
-        completion: @escaping (Result<[ShoppetteData], APIClientError>) -> Void)
+        page: Int,
+        completion: @escaping (Result<([ShoppettesData],ShoppettesMeta), APIClientError>) -> Void)
     {
         if let jwtToken = self.jwtToken {
             // Call the network function to fetch show details
-            Networking.getShoppettes(jwtToken: jwtToken, channelId: channelId, completion: { result in
+            Networking.getShoppettes(jwtToken: jwtToken, channelId: channelId, page: page, completion: { result in
                 completion(result)
             })
         } else {

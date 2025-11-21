@@ -103,7 +103,7 @@ public struct UserMetaResponse: Codable {
 
 //MARK: - GetShoppettes Response
 public struct GetShoppettesResponse: Codable {
-    public let shoppettes: [ShoppetteData]
-    public let meta: ShoppettesMetaData
+    public let shoppettes: [ShoppettesData]
+    public let meta: ShoppettesMeta
 }
 

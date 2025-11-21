@@ -10,6 +10,7 @@ TSL takes care of the infrastructure and APIs needed for live streaming of diffe
 * [Configure TSL-iOS-SDK](#configure-tsl-ios-sdk)
 * [Shows](#shows)
 * [Chats](#chats)
+* [Shoppettes](#shoppettes)
 * [Collect](#collect)
 
 ## Requirements
@@ -440,6 +441,61 @@ func onStatusChange(error: Talkshoplive.APIClientError) {
     }
 }
 ```
+
+## Shoppettes
+
+### Overview
+
+The Shoppettes module provides methods to fetch Shoppettes for a specific channel. Shoppettes represent product collections or bundles associated with a show. The API supports pagination and returns both the data and metadata.
+
+### Initialization
+    
+#### `Shoppettes(jwtToken:)`
+
+This initializer creates a Shoppettes instance using a JWT token.
+
+- Parameters:
+    - `jwtToken`: Generated JWT token
+
+```
+let shoppettesInstance = Shoppettes(jwtToken: token)
+```
+
+#### `getShoppettes(channelId:page:)`
+
+Use this method to retrieve the Shoppettes list for a specific channel. The response includes metadata for pagination.
+
+- Parameters:
+  - `channelId`: The channel ID for which Shoppettes need to be fetched. 
+  - `page`: The page number for pagination.
+  - `completion`: A closure invoked upon fetching shoppettes list. It receives a Result enum with an array of (`ShoppettesData` and `ShoppettesMeta`) on success or an `Error` on failure.
+  
+```
+shoppettesInstance.getShoppettes(channelId: channelId, page: currentPage) { result in
+    DispatchQueue.main.async {
+        switch result {
+        case let .success((shoppettesArray, meta)):
+            self.shoppettes = shoppettesArray
+            self.shoppettesMetaData = meta
+            self.currentPage = meta.currentPage ?? currentPage // sync from server
+            
+            print(shoppette[0].videoStatus)
+            /*VIDEO_STATUS_LIST = ['Deleting','Deleted','Draft','Scheduled','Ready To Publish','Published','Publishing','Retrying to publish','Error Publishing','Published Without Audio','Disconnected'];*/
+            
+            print(shoppette[0].status)
+            /*VIDEO_PROCESSING_STATUS_LIST = ['processing','completed','error','not_started'];*/
+            
+            if shoppettesArray.isEmpty {
+                self.shoppettesResult = "No shoppettes found for channel \(channelId)."
+            }
+            
+        case .failure(let error):
+            self.shoppettesResult = "Error: \(error.localizedDescription)"
+        }
+    }
+}
+```
+
 
 ## Collect
 
