@@ -306,13 +306,14 @@ class Networking {
     static func getShoppettes(
         jwtToken: String,
         channelId: String,
-        completion: @escaping (Result<[ShoppetteData], APIClientError>) -> Void)
+        page: Int,
+        completion: @escaping (Result<([ShoppettesData],ShoppettesMeta), APIClientError>) -> Void)
     {
-        APIHandler().requestWithToken(jwtToken: jwtToken, endpoint: APIEndpoint.getShoppettes(channelId: channelId), method: .get, body: nil, responseType:  GetShoppettesResponse.self) { result in
+        APIHandler().requestWithToken(jwtToken: jwtToken, endpoint: APIEndpoint.getShoppettes(channelId: channelId, page: page), method: .get, body: nil, responseType:  GetShoppettesResponse.self) { result in
             switch result {
             case .success(let apiResponse):
                 // Successfully retrieved shows data
-                completion(.success(apiResponse.shoppettes))
+                completion(.success((apiResponse.shoppettes,apiResponse.meta)))
             case .failure(_):
                 // Error occurred due to invalid show key
                 completion(.failure(APIClientError.SHOPPETTES_NOT_FOUND))

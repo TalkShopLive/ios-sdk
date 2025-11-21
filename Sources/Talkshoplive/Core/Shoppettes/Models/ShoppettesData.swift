@@ -7,8 +7,8 @@
 
 import Foundation
 
-// MARK: - ShoppetteData
-public struct ShoppetteData: Codable {
+// MARK: - ShoppettesData
+public struct ShoppettesData: Codable {
     public var id: Int?
     public var uuid: String?
     public var name: String?
@@ -77,7 +77,7 @@ public struct ShoppetteData: Codable {
 }
 
 // MARK: - MetaData
-public struct ShoppettesMetaData: Codable {
+public struct ShoppettesMeta: Codable {
     public var currentPage: Int?
     public var nextPage: Int?
     public var prevPage: Int?
