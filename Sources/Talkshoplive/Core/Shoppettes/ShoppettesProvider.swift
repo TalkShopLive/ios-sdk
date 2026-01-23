@@ -15,9 +15,8 @@ public class ShoppettesProvider {
     private var jwtToken: String?
     
     // MARK: - Initializer
-    public init(
-        jwtToken: String) {
-            self.jwtToken = jwtToken
+    public init() {
+           
     }
     
     // MARK: - Private Methods
@@ -31,13 +30,9 @@ public class ShoppettesProvider {
         page: Int,
         completion: @escaping (Result<([ShoppettesData],ShoppettesMeta), APIClientError>) -> Void)
     {
-        if let jwtToken = self.jwtToken {
-            // Call the network function to fetch show details
-            Networking.getShoppettes(jwtToken: jwtToken, channelId: channelId, page: page, completion: { result in
-                completion(result)
-            })
-        } else {
-            completion(.failure(APIClientError.SHOPPETTES_TOKEN_NOT_FOUND))
-        }
+        // Call the network function to fetch show details
+        Networking.getShoppettes(channelId: channelId, page: page, completion: { result in
+            completion(result)
+        })
     }
 }

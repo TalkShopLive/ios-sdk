@@ -35,7 +35,6 @@ public enum APIClientError: Error{
     case CHAT_CONNECTION_ERROR
     case CHAT_TOKEN_EXPIRED
     case CHANNEL_NOT_FOUND
-    case SHOPPETTES_TOKEN_NOT_FOUND
     case SHOPPETTES_NOT_FOUND
 
 }
@@ -101,8 +100,6 @@ extension APIClientError: LocalizedError {
             return "Channel not found"
         case .SHOPPETTES_NOT_FOUND:
             return "Shoppettes not found"
-        case .SHOPPETTES_TOKEN_NOT_FOUND:
-            return "JWT token not found"
         }
     }
 }

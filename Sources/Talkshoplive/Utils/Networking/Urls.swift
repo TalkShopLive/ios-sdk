@@ -80,7 +80,7 @@ public enum APIEndpoint {
         case .unlikeComment(eventId: let eventId, messageTimeToken: let messageTimeToken, actionTimeToken: let actionTimeToken):
             return "/api2/v1/sdk/chat/messages/\(eventId)/\(messageTimeToken)/\(actionTimeToken)"
         case .getShoppettes(channelId: let channelId, page: let page):
-            return "/api/shoppettes?channel_id=\(channelId)&per_page=10&page=\(page)"
+            return "/api2/v1/shoppettes?channel_id=\(channelId)&per_page=10&page=\(page)"
         }
     }
 }

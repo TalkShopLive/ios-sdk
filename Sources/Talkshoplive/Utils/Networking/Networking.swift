@@ -304,12 +304,11 @@ class Networking {
     }
 
     static func getShoppettes(
-        jwtToken: String,
         channelId: String,
         page: Int,
         completion: @escaping (Result<([ShoppettesData],ShoppettesMeta), APIClientError>) -> Void)
     {
-        APIHandler().requestWithToken(jwtToken: jwtToken, endpoint: APIEndpoint.getShoppettes(channelId: channelId, page: page), method: .get, body: nil, responseType:  GetShoppettesResponse.self) { result in
+        APIHandler().requestWithToken(endpoint: APIEndpoint.getShoppettes(channelId: channelId, page: page), method: .get, body: nil, responseType:  GetShoppettesResponse.self) { result in
             switch result {
             case .success(let apiResponse):
                 // Successfully retrieved shows data

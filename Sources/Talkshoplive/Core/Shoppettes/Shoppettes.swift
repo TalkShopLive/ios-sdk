@@ -17,9 +17,9 @@ public class Shoppettes {
 
     
     // MARK: - Initializer
-    public init(jwtToken:String)
+    public init()
     {
-        self.shoppettesProvider = ShoppettesProvider(jwtToken: jwtToken)
+        self.shoppettesProvider = ShoppettesProvider()
     }
     
     // MARK: - Public Methods

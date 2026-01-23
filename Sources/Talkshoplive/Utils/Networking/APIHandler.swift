@@ -116,7 +116,7 @@ public class APIHandler {
                             completion(.success(emptyInstance))
                             return
                         }
-                        
+                        print(json)
                         let apiResponse = try JSONDecoder().decode(responseType, from: data)
                         completion(.success(apiResponse))
                     } catch {
@@ -211,7 +211,7 @@ public class APIHandler {
     
     /// Performs an API request with a JWT token.
     public func requestWithToken<T: Decodable>(
-        jwtToken: String,
+        jwtToken: String? = nil,
         endpoint: APIEndpoint,
         method: HTTPMethod,
         body: Encodable?,
@@ -241,9 +241,12 @@ public class APIHandler {
         if let clientKey = Config.shared.getClientKey() {
             request.addValue(clientKey, forHTTPHeaderField: "x-tsl-sdk-key")
         }
-
+        
         // Add the JWT token to the Authorization header
-        request.setValue("Bearer \(jwtToken)", forHTTPHeaderField: "Authorization")
+        if let jwtToken = jwtToken {
+            request.setValue("Bearer \(jwtToken)", forHTTPHeaderField: "Authorization")
+        }
+
         
         if let param = body {
             do {
@@ -284,8 +287,8 @@ public class APIHandler {
             
             do {
                 // Convert the response data to a JSON string
-//                let json = try JSONSerialization.jsonObject(with: data, options: .allowFragments)
-//                print("API Response: ", json)
+                let json = try JSONSerialization.jsonObject(with: data, options: .allowFragments)
+                print("API Response: ", json)
                 
                 let apiResponse = try JSONDecoder().decode(responseType, from: data)
                 completion(.success(apiResponse))
