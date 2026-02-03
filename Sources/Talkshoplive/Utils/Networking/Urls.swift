@@ -19,6 +19,7 @@ public enum APIEndpoint {
     case register
     case getGuestUserToken
     case getFederatedUserToken
+    case getV2FederatedUserToken
     case getHlsUrl(fileName: String)
     case deleteMessage(eventId: String,timetoken: String)
     case getCollector
@@ -39,6 +40,8 @@ public enum APIEndpoint {
                 return try Config.loadAPIConfig().COLLECTOR_BASE_URL
             case .getIncrementViewCount:
                 return try Config.loadAPIConfig().EVENTS_BASE_URL
+            case .getV2FederatedUserToken:
+                return try Config.loadAPIConfig().CHAT_BASE_URL
             }
         } catch {
             fatalError("Failed to load configuration: \(error)")
@@ -67,6 +70,8 @@ public enum APIEndpoint {
             return "/api2/v1/sdk/chat/guest_token"
         case .getFederatedUserToken:
             return "/api2/v1/sdk/chat/federated_user_token"
+        case .getV2FederatedUserToken:
+            return "/api/v1/tokens/federated-user"
         case .getHlsUrl(fileName: let fileName):
             return "/events/\(fileName)"
         case .deleteMessage(eventId: let eventId, timetoken: let timetoken):

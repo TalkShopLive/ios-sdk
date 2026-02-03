@@ -164,12 +164,17 @@ public class ChatProvider {
                     self.eventsChannel = "events.\(eventId)"
                     self.channels = [self.publishChannel!, self.eventsChannel!]
                     
-                    if let messageToken = self.messageToken {
+                    if let messageToken = self.messageToken,
+                       let publishKey = messageToken.publishKey,
+                       let subscribeKey = messageToken.subscribeKey,
+                       let userId = messageToken.userId,
+                       let token =   messageToken.token
+                    {
                         let configuration = PubNubConfiguration(
-                            publishKey: messageToken.publishKey,
-                            subscribeKey: messageToken.subscribeKey,
-                            userId: messageToken.userId,
-                            authKey: messageToken.token
+                            publishKey: publishKey,
+                            subscribeKey: subscribeKey,
+                            userId: userId,
+                            authKey: token
                             // Add more configuration parameters as needed
                         )
                         // Initialize PubNub instance

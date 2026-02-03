@@ -104,14 +104,16 @@ public class Config {
                 BASE_URL: "https://stg.cms.tslstg.com",
                 ASSETS_URL: "https://assets-dev.talkshop.live",
                 COLLECTOR_BASE_URL: "https://stg.collector.tslstg.com",
-                EVENTS_BASE_URL: "https://stg.events-api.tslstg.com"
+                EVENTS_BASE_URL: "https://stg.events-api.tslstg.com",
+                CHAT_BASE_URL: "https://stg.chat-api.tslstg.com"
             )
         case .production:
             return APIConfig(
                 BASE_URL: "https://cms.talkshop.live",
                 ASSETS_URL: "https://assets.talkshop.live",
                 COLLECTOR_BASE_URL: "https://collector.talkshop.live",
-                EVENTS_BASE_URL: "https://events-api.talkshop.live"
+                EVENTS_BASE_URL: "https://events-api.talkshop.live",
+                CHAT_BASE_URL: "https://chat-api.talkshop.live"
             )
         }
     }

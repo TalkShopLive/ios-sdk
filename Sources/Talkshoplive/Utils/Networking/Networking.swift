@@ -144,9 +144,19 @@ class Networking {
         completion: @escaping (Result<MessagingTokenResponse, APIClientError>) -> Void)
     {
         // Determine the endpoint based on whether the user is a guest or federated
-        let endpoint = isGuest ? APIEndpoint.getGuestUserToken : APIEndpoint.getFederatedUserToken
+        let showType = Show.shared.showData.type
+        let chatVersion = ChatVersionProvider.getVersion(showType: showType, isGuest: isGuest)
+        let endpoint: APIEndpoint
+        var requestBody: V2MessagingTokenRequest? = nil
+        if chatVersion == .v1 {
+            endpoint = isGuest ? .getGuestUserToken : .getFederatedUserToken
+        } else {
+            endpoint = .getV2FederatedUserToken   // Chat 2.0 for federated v2 shows
+            requestBody = V2MessagingTokenRequest(showId: Show.shared.showData.id ?? nil)
+        }
+        
         // Make a request to retrieve the messaging token
-        APIHandler().requestWithToken(jwtToken: jwtToken, endpoint: endpoint, method: .post, body: nil, responseType: MessagingTokenResponse.self) { result in
+        APIHandler().requestWithToken(jwtToken: jwtToken, endpoint: endpoint, method: .post, body: requestBody, responseType: MessagingTokenResponse.self) { result in
             switch result {
             case .success(let apiResponse):
                 // Successfully retrieved messaging token
