@@ -41,6 +41,7 @@ public class ChatProvider {
     private var usersProvider = UsersProvider.shared
     private var triedToReconnectBefore = false
     private var listener: SubscriptionListener?
+    private var chatVersion: ChatVersion?
 
     // MARK: - Initializer
     
@@ -59,6 +60,9 @@ public class ChatProvider {
         self.isGuest = isGuest
         self.showKey = showKey
         self.setJwtToken(jwtToken)
+        let showType = Show.shared.showData.type
+        let chatVersion = ChatVersionProvider.getVersion(showType: showType, isGuest: isGuest)
+        self.setChatVersion(chatVersion)
         self.createMessagingToken(jwtToken: jwtToken){result,error  in
             completion?(result,error)
         }
@@ -86,6 +90,20 @@ public class ChatProvider {
         return self.jwtToken
     }
     
+    // MARK: - Chat Verison
+    
+    /// Method to save the JWT token.
+    /// - Parameter token: The JWT token to be saved.
+    func setChatVersion(_ version: ChatVersion) {
+        self.chatVersion = version
+    }
+    
+    /// Get the saved JWT token.
+    /// - Returns: The saved JWT token, if available.
+    private func getChatVersion() -> ChatVersion? {
+        return self.chatVersion
+    }
+    
     // MARK: - Messaging Token
     
     ///Save the messaging token
@@ -107,12 +125,6 @@ public class ChatProvider {
     func setCurrentEvent(_ event: EventData) {
         self.eventInstance = event
     }
-    
-    /// Get the saved messaging token
-    /// - Returns: The saved messaging token, if available.
-    public func getCurrentEvent() -> EventData? {
-        return self.eventInstance
-    }
 
     // MARK: - Create Messaging Token
     
@@ -130,11 +142,16 @@ public class ChatProvider {
                 // Set the retrieved token for later use
                 self.setMessagingToken(result)
                 
-                // Initialize PubNub following with the steps :
-                // Get eventId based on showKey
-                // Initialize pubnub with needed data.
-                self.initializePubNub{result,error in
-                    completion?(result,error)
+                self.getChannels { result in
+                    switch result {
+                    case .success(let channels):
+                        self.publishChannel = channels.chat
+                        self.eventsChannel = channels.events
+                        self.channels = [self.publishChannel!, self.eventsChannel!]
+                        self.initializePubNub(channels: channels, completion)
+                    case .failure(let error):
+                        completion?(false, error)
+                    }
                 }
             case .failure(let error):
                 // Handle token retrieval failure
@@ -148,64 +165,80 @@ public class ChatProvider {
     
     // MARK: - Channel Subscription
 
+    private func getChannels(
+        _ completion: @escaping (Result<SubscribableChannel, APIClientError>) -> Void
+    ) {
+        guard let chatVersion = getChatVersion() else {
+            completion(.failure(.USER_TOKEN_EXCEPTION))
+            return
+        }
+        switch chatVersion {
+        case .v2:
+            guard let token = self.messageToken,let channels = token.channels else {
+                completion(.failure(.USER_TOKEN_EXCEPTION))
+                return
+            }
+            completion(.success(channels))
+        case .v1:
+            Networking.getCurrentEvent(showKey: self.showKey) { result in
+                switch result {
+                case .success(let eventData):
+                    self.setCurrentEvent(eventData)
+                    guard let eventId = self.eventInstance?.id else {
+                        completion(.failure(.SHOW_NOT_LIVE))
+                        return
+                    }
+                    let channels = SubscribableChannel(
+                        chat: "chat.\(eventId)",
+                        events: "events.\(eventId)")
+                    completion(.success(channels))
+                case .failure:
+                    // Invoke the completion with failure if an error occurs.
+                    Config.shared.isDebugMode() ? print(String(describing: self),"::",APIClientError.SHOW_NOT_FOUND) : ()
+                    completion(.failure(.SHOW_NOT_FOUND))
+                }
+            }
+        }
+    }
+
+    
     /// Subscribe to channels based on the showKey.
     /// - Parameter showKey: The show key used to determine which channels to subscribe to.
     private func initializePubNub(
+        channels: SubscribableChannel,
         _ completion: ((Bool, APIClientError?) -> Void)? = nil)
     {
-        Networking.getCurrentEvent(showKey: self.showKey, completion: { result in
-            switch result {
-            case .success(let eventData):
-                self.setCurrentEvent(eventData)
-                // Set the details and invoke the completion with success.
-                if let event = self.eventInstance, let eventId = event.id {
-                    self.eventId = eventId
-                    self.publishChannel = "chat.\(eventId)"
-                    self.eventsChannel = "events.\(eventId)"
-                    self.channels = [self.publishChannel!, self.eventsChannel!]
-                    
-                    if let messageToken = self.messageToken,
-                       let publishKey = messageToken.publishKey,
-                       let subscribeKey = messageToken.subscribeKey,
-                       let userId = messageToken.userId,
-                       let token =   messageToken.token
-                    {
-                        let configuration = PubNubConfiguration(
-                            publishKey: publishKey,
-                            subscribeKey: subscribeKey,
-                            userId: userId,
-                            authKey: token
-                            // Add more configuration parameters as needed
-                        )
-                        // Initialize PubNub instance
-                        self.pubnub = PubNub(configuration: configuration)
-                        
-                        // Log the initialization
-                        Config.shared.isDebugMode() ? print("Initialized Pubnub", self.pubnub!) : ()
-                        
-                        // Initialize PubNub with the obtained token
-                        DispatchQueue.main.asyncAfter(deadline: DispatchTime.now() + 1.0, execute: {
-                            self.subscribe()
-                            if self.isUpdateUser {
-                                self.isUpdateUser = false
-                            }
-                            completion?(true,nil)
-                           
-                        })
-                    } else {
-                        Config.shared.isDebugMode() ? print(String(describing: self),"::",APIClientError.USER_TOKEN_EXCEPTION) : ()
-                        completion?(false,APIClientError.USER_TOKEN_EXCEPTION)
-                    }
-                } else {
-                    Config.shared.isDebugMode() ? print(String(describing: self),"::",APIClientError.SHOW_NOT_LIVE) : ()
-                    completion?(false,APIClientError.SHOW_NOT_LIVE)
+        if let messageToken = self.messageToken,
+           let publishKey = messageToken.publishKey,
+           let subscribeKey = messageToken.subscribeKey,
+           let userId = messageToken.userId,
+           let token =   messageToken.token
+        {
+            let configuration = PubNubConfiguration(
+                publishKey: publishKey,
+                subscribeKey: subscribeKey,
+                userId: userId,
+                authKey: token
+                // Add more configuration parameters as needed
+            )
+            // Initialize PubNub instance
+            self.pubnub = PubNub(configuration: configuration)
+            
+            // Log the initialization
+            Config.shared.isDebugMode() ? print("Initialized Pubnub", self.pubnub!) : ()
+            
+            // Initialize PubNub with the obtained token
+            DispatchQueue.main.asyncAfter(deadline: DispatchTime.now() + 1.0, execute: {
+                self.subscribe()
+                if self.isUpdateUser {
+                    self.isUpdateUser = false
                 }
-            case .failure(_):
-                // Invoke the completion with failure if an error occurs.
-                Config.shared.isDebugMode() ? print(String(describing: self),"::",APIClientError.SHOW_NOT_FOUND) : ()
-                completion?(false,APIClientError.SHOW_NOT_FOUND)
-            }
-        })
+                completion?(true,nil)
+            })
+        } else {
+            Config.shared.isDebugMode() ? print(String(describing: self),"::",APIClientError.USER_TOKEN_EXCEPTION) : ()
+            completion?(false,APIClientError.USER_TOKEN_EXCEPTION)
+        }
     }
 
     // Unsubscribe from all channels

@@ -48,6 +48,12 @@ public struct SubscribableChannel: Codable {
         case chat
         case events
     }
+    
+    // Default initializer for manual creation
+    public init(chat: String?, events: String?) {
+        self.chat = chat
+        self.events = events
+    }
 
     public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
