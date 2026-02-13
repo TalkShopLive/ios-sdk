@@ -144,13 +144,13 @@ class Networking {
         completion: @escaping (Result<MessagingTokenResponse, APIClientError>) -> Void)
     {
         // Determine the endpoint based on whether the user is a guest or federated
-        let showType = Show.shared.showData.type
-        let chatVersion = ChatVersionProvider.getVersion(showType: showType, isGuest: isGuest)
+        let chatVersion = Config.shared.getChatVersion()
         let endpoint: APIEndpoint
         var requestBody: V2MessagingTokenRequest? = nil
-        if chatVersion == .v1 {
+        switch chatVersion {
+        case .v1:
             endpoint = isGuest ? .getGuestUserToken : .getFederatedUserToken
-        } else {
+        case .v2:
             endpoint = .getV2FederatedUserToken   // Chat 2.0 for federated v2 shows
             requestBody = V2MessagingTokenRequest(showId: Show.shared.showData.id ?? nil)
         }
@@ -176,7 +176,17 @@ class Networking {
     ///   - completion: A closure to be called upon completion, containing a result indicating whether the message was successfully deleted or an error.
     static func deleteMessage(jwtToken: String, eventId: String, timeToken: String, completion: @escaping (Result<Bool, APIClientError>) -> Void) {
         // Make a request to delete the message
-        APIHandler().requestDelete(jwtToken: jwtToken, endpoint: APIEndpoint.deleteMessage(eventId: eventId, timetoken: timeToken), method: .delete, body: nil) { result in
+        let chatVersion = Config.shared.getChatVersion()
+        let endpoint: APIEndpoint
+        var requestBody: V2MessagingTokenRequest? = nil
+        switch chatVersion {
+        case .v1:
+            endpoint = APIEndpoint.deleteMessage(eventId: eventId, timetoken: timeToken)
+        case .v2:
+            endpoint = APIEndpoint.deleteMessageV2(channelName: eventId, timetoken: timeToken)
+            requestBody = V2MessagingTokenRequest(showId: Show.shared.showData.id ?? nil)
+        }
+        APIHandler().requestDelete(jwtToken: jwtToken, endpoint: endpoint, method: .delete, body: requestBody) { result in
             switch result {
             case .success(_):
                 // Successfully deleted the message
@@ -190,8 +200,18 @@ class Networking {
     
     // Unlike a comment with the provided JWT token, event ID, messageTimetoken and actionTimeToken
     static func unlikeComment(jwtToken:String, eventId: String, messageTimetoken: String, actionTimeToken: String,_ completion: @escaping (Result<Bool, APIClientError>) -> Void?) {
+        let chatVersion = Config.shared.getChatVersion()
+        let endpoint: APIEndpoint
+        var requestBody: V2MessagingTokenRequest? = nil
+        switch chatVersion {
+        case .v1:
+            endpoint = APIEndpoint.unlikeComment(eventId: eventId, messageTimeToken: messageTimetoken, actionTimeToken: actionTimeToken)
+        case .v2:
+            endpoint = APIEndpoint.unlikeCommentV2(channelName: eventId, messageTimeToken: messageTimetoken, actionTimeToken: actionTimeToken)
+            requestBody = V2MessagingTokenRequest(showId: Show.shared.showData.id ?? nil)
+        }
         // Make a request to unlike the comment
-        APIHandler().requestDelete(jwtToken: jwtToken, endpoint: APIEndpoint.unlikeComment(eventId: eventId, messageTimeToken: messageTimetoken, actionTimeToken: actionTimeToken), method: .delete, body: nil) { result in
+        APIHandler().requestDelete(jwtToken: jwtToken, endpoint: endpoint, method: .delete, body: requestBody) { result in
             switch result {
             case .success(_):
                 // Successfully unliked a comment
