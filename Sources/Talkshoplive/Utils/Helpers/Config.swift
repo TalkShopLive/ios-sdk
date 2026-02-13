@@ -25,7 +25,7 @@ public class Config {
     private var testMode: Bool = false // Switch to staging if true
     private var hasInitialized: Bool = false // SDK initialization
     private var dntMode: Bool = false // Do not track - needed for Abbey/Collector
-    private var chatVersion: ChatVersion? // Chat verison - configuration according to show type
+    private var chatVersion: ChatVersion? // Chat version - configuration according to show type
     
     // MARK: - Client Key Methods
     
@@ -87,7 +87,7 @@ public class Config {
         return self.dntMode
     }
     
-    // MARK: - Chat Verison
+    // MARK: - Chat Version
     
     /// Method to save the  chat version
     /// - Parameter version: version to be saved
