@@ -13,6 +13,7 @@ public struct APIConfig: Codable {
     public let ASSETS_URL: String
     public let COLLECTOR_BASE_URL: String
     public let EVENTS_BASE_URL: String
+    public let CHAT_BASE_URL: String
 }
 
 // MARK: - CollectorURLConfig Structure

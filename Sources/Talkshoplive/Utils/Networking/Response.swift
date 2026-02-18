@@ -11,28 +11,55 @@ import Foundation
 
 /// A structure representing the response received when creating a messaging token.
 public struct MessagingTokenResponse: Codable {
-    let publishKey: String
-    let subscribeKey: String
-    let userId: String
-    let token: String
-    
-    // MARK: Coding Keys
+    let publishKey: String?
+    let subscribeKey: String?
+    let userId: String?
+    let token: String?
+    let channels: SubscribableChannel?
+    let chatId: Int?
+
     enum CodingKeys: String, CodingKey {
         case publishKey = "publish_key"
         case subscribeKey = "subscribe_key"
         case userId = "user_id"
         case token
+        case channels
+        case chatId
     }
-    
-    // Custom initializer to handle decoding from JSON
+
     public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
 
-        // Decode each property and use nil coalescing to handle optional values
-        publishKey = try container.decode(String.self, forKey: .publishKey)
-        subscribeKey = try container.decode(String.self, forKey: .subscribeKey)
-        userId = try container.decode(String.self, forKey: .userId)
-        token = try container.decode(String.self, forKey: .token)
+        publishKey = try container.decodeIfPresent(String.self, forKey: .publishKey)
+        subscribeKey = try container.decodeIfPresent(String.self, forKey: .subscribeKey)
+        userId = try container.decodeIfPresent(String.self, forKey: .userId) ?? container.decodeIfPresent(String.self, forKey: CodingKeys(rawValue: "userId")!)
+        token = try container.decodeIfPresent(String.self, forKey: .token)
+        channels = try container.decodeIfPresent(SubscribableChannel.self, forKey: .channels)
+        chatId = try container.decodeIfPresent(Int.self, forKey: .chatId)
+    }
+}
+
+//MARK: - GetShows Response
+public struct SubscribableChannel: Codable {
+    let chat: String?
+    let events: String?
+
+    enum CodingKeys: String, CodingKey {
+        case chat
+        case events
+    }
+    
+    // Default initializer for manual creation
+    public init(chat: String?, events: String?) {
+        self.chat = chat
+        self.events = events
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+
+        chat = try container.decodeIfPresent(String.self, forKey: .chat)
+        events = try container.decodeIfPresent(String.self, forKey: .events)
     }
 }
 

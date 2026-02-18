@@ -25,7 +25,7 @@ public class Config {
     private var testMode: Bool = false // Switch to staging if true
     private var hasInitialized: Bool = false // SDK initialization
     private var dntMode: Bool = false // Do not track - needed for Abbey/Collector
-    
+    private var chatVersion: ChatVersion? // Chat version - configuration according to show type
     
     // MARK: - Client Key Methods
     
@@ -87,6 +87,21 @@ public class Config {
         return self.dntMode
     }
     
+    // MARK: - Chat Version
+    
+    /// Method to save the  chat version
+    /// - Parameter version: version to be saved
+    func setChatVersion(_ version: ChatVersion) {
+        self.chatVersion = version
+    }
+    
+    /// Get the saved chat version
+    /// - Returns: The saved chat version, if available.
+    func getChatVersion() -> ChatVersion {
+        return self.chatVersion ?? .v1
+    }
+
+    
     // MARK: - Configuration Loading Methods
     
     /// Load API configuration based on the test mode ("Staging.json" for testMode=true, "Production.json" otherwise).
@@ -104,14 +119,16 @@ public class Config {
                 BASE_URL: "https://stg.cms.tslstg.com",
                 ASSETS_URL: "https://assets-dev.talkshop.live",
                 COLLECTOR_BASE_URL: "https://stg.collector.tslstg.com",
-                EVENTS_BASE_URL: "https://stg.events-api.tslstg.com"
+                EVENTS_BASE_URL: "https://stg.events-api.tslstg.com",
+                CHAT_BASE_URL: "https://stg.chat-api.tslstg.com"
             )
         case .production:
             return APIConfig(
                 BASE_URL: "https://cms.talkshop.live",
                 ASSETS_URL: "https://assets.talkshop.live",
                 COLLECTOR_BASE_URL: "https://collector.talkshop.live",
-                EVENTS_BASE_URL: "https://events-api.talkshop.live"
+                EVENTS_BASE_URL: "https://events-api.talkshop.live",
+                CHAT_BASE_URL: "https://chat-api.talkshop.live"
             )
         }
     }

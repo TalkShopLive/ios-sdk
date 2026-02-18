@@ -135,3 +135,9 @@ struct PageMetrics: Codable {
     }
 }
 
+//MARK: - Chat2.0 Messaging token Request Object
+struct V2MessagingTokenRequest: Encodable {
+    let showId: Int?
+    
+    
+}
