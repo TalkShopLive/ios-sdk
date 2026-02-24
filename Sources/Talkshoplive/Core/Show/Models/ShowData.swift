@@ -7,6 +7,11 @@
 
 import Foundation
 
+public enum ShowType: String, Codable {
+    case legacy = "legacy"
+    case v2 = "v2"
+}
+
 public struct ShowData: Codable {
     
     public let id: Int?
@@ -33,6 +38,7 @@ public struct ShowData: Codable {
     public let duration: Int?
     public let trailerDuration: Int?
     public let videoThumbnailUrl: String?
+    public let type: ShowType
     
     
     enum CodingKeys: String, CodingKey {
@@ -50,6 +56,7 @@ public struct ShowData: Codable {
         case hlsPlaybackUrl, hlsUrl, trailerUrl, cc, eventId, duration, trailerDuration
         case videoThumbnailUrl = "thumbnail_image"
         case channelId
+        case type
     }
     
     // MARK: Initializers
@@ -77,6 +84,7 @@ public struct ShowData: Codable {
         trailerDuration = nil
         videoThumbnailUrl = nil
         channelId = nil
+        type = .legacy
     }
     
     // Custom initializer to handle decoding from JSON
@@ -125,7 +133,14 @@ public struct ShowData: Codable {
         
         eventId = assets?.first?.id ?? nil
         duration = assets?.first(where: { $0.type == .vod })?.duration
-        trailerDuration = assets?.first(where: { $0.type == .trailer })?.duration        
+        trailerDuration = assets?.first(where: { $0.type == .trailer })?.duration
+        if let typeString = try? container.decodeIfPresent(String.self, forKey: .type),
+           let parsedType = ShowType(rawValue: typeString) {
+            type = parsedType
+        } else {
+            type = .legacy
+        }
+
     }
 }
 

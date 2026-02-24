@@ -13,6 +13,7 @@ public struct APIConfig: Codable {
     public let ASSETS_URL: String
     public let COLLECTOR_BASE_URL: String
     public let EVENTS_BASE_URL: String
+    public let CHAT_BASE_URL: String
 }
 
 // MARK: - CollectorURLConfig Structure
@@ -210,7 +211,7 @@ public class APIHandler {
     }
     
     /// Performs an API request with a JWT token.
-    public func requestToken<T: Decodable>(
+    public func requestWithToken<T: Decodable>(
         jwtToken: String,
         endpoint: APIEndpoint,
         method: HTTPMethod,

@@ -41,6 +41,7 @@ public class ChatProvider {
     private var usersProvider = UsersProvider.shared
     private var triedToReconnectBefore = false
     private var listener: SubscriptionListener?
+    private var chatVersion: ChatVersion?
 
     // MARK: - Initializer
     
@@ -59,6 +60,9 @@ public class ChatProvider {
         self.isGuest = isGuest
         self.showKey = showKey
         self.setJwtToken(jwtToken)
+        let showType = Show.shared.showData.type
+        self.chatVersion = ChatVersionProvider.getVersion(showType: showType, isGuest: isGuest)
+        Config.shared.setChatVersion(chatVersion!)
         self.createMessagingToken(jwtToken: jwtToken){result,error  in
             completion?(result,error)
         }
@@ -107,12 +111,6 @@ public class ChatProvider {
     func setCurrentEvent(_ event: EventData) {
         self.eventInstance = event
     }
-    
-    /// Get the saved messaging token
-    /// - Returns: The saved messaging token, if available.
-    public func getCurrentEvent() -> EventData? {
-        return self.eventInstance
-    }
 
     // MARK: - Create Messaging Token
     
@@ -130,11 +128,16 @@ public class ChatProvider {
                 // Set the retrieved token for later use
                 self.setMessagingToken(result)
                 
-                // Initialize PubNub following with the steps :
-                // Get eventId based on showKey
-                // Initialize pubnub with needed data.
-                self.initializePubNub{result,error in
-                    completion?(result,error)
+                self.getChannels { result in
+                    switch result {
+                    case .success(let channels):
+                        self.publishChannel = channels.chat
+                        self.eventsChannel = channels.events
+                        self.channels = [self.publishChannel!, self.eventsChannel!]
+                        self.initializePubNub(channels: channels, completion)
+                    case .failure(let error):
+                        completion?(false, error)
+                    }
                 }
             case .failure(let error):
                 // Handle token retrieval failure
@@ -148,59 +151,77 @@ public class ChatProvider {
     
     // MARK: - Channel Subscription
 
+    private func getChannels(
+        _ completion: @escaping (Result<SubscribableChannel, APIClientError>) -> Void
+    ) {
+        let chatVersion = Config.shared.getChatVersion()
+        switch chatVersion {
+        case .v2:
+            guard let token = self.messageToken,let channels = token.channels else {
+                completion(.failure(.USER_TOKEN_EXCEPTION))
+                return
+            }
+            completion(.success(channels))
+        case .v1:
+            Networking.getCurrentEvent(showKey: self.showKey) { result in
+                switch result {
+                case .success(let eventData):
+                    self.setCurrentEvent(eventData)
+                    guard let eventId = self.eventInstance?.id else {
+                        completion(.failure(.SHOW_NOT_LIVE))
+                        return
+                    }
+                    let channels = SubscribableChannel(
+                        chat: "chat.\(eventId)",
+                        events: "events.\(eventId)")
+                    completion(.success(channels))
+                case .failure:
+                    // Invoke the completion with failure if an error occurs.
+                    Config.shared.isDebugMode() ? print(String(describing: self),"::",APIClientError.SHOW_NOT_FOUND) : ()
+                    completion(.failure(.SHOW_NOT_FOUND))
+                }
+            }
+        }
+    }
+
+    
     /// Subscribe to channels based on the showKey.
     /// - Parameter showKey: The show key used to determine which channels to subscribe to.
     private func initializePubNub(
+        channels: SubscribableChannel,
         _ completion: ((Bool, APIClientError?) -> Void)? = nil)
     {
-        Networking.getCurrentEvent(showKey: self.showKey, completion: { result in
-            switch result {
-            case .success(let eventData):
-                self.setCurrentEvent(eventData)
-                // Set the details and invoke the completion with success.
-                if let event = self.eventInstance, let eventId = event.id {
-                    self.eventId = eventId
-                    self.publishChannel = "chat.\(eventId)"
-                    self.eventsChannel = "events.\(eventId)"
-                    self.channels = [self.publishChannel!, self.eventsChannel!]
-                    
-                    if let messageToken = self.messageToken {
-                        let configuration = PubNubConfiguration(
-                            publishKey: messageToken.publishKey,
-                            subscribeKey: messageToken.subscribeKey,
-                            userId: messageToken.userId,
-                            authKey: messageToken.token
-                            // Add more configuration parameters as needed
-                        )
-                        // Initialize PubNub instance
-                        self.pubnub = PubNub(configuration: configuration)
-                        
-                        // Log the initialization
-                        Config.shared.isDebugMode() ? print("Initialized Pubnub", self.pubnub!) : ()
-                        
-                        // Initialize PubNub with the obtained token
-                        DispatchQueue.main.asyncAfter(deadline: DispatchTime.now() + 1.0, execute: {
-                            self.subscribe()
-                            if self.isUpdateUser {
-                                self.isUpdateUser = false
-                            }
-                            completion?(true,nil)
-                           
-                        })
-                    } else {
-                        Config.shared.isDebugMode() ? print(String(describing: self),"::",APIClientError.USER_TOKEN_EXCEPTION) : ()
-                        completion?(false,APIClientError.USER_TOKEN_EXCEPTION)
-                    }
-                } else {
-                    Config.shared.isDebugMode() ? print(String(describing: self),"::",APIClientError.SHOW_NOT_LIVE) : ()
-                    completion?(false,APIClientError.SHOW_NOT_LIVE)
+        if let messageToken = self.messageToken,
+           let publishKey = messageToken.publishKey,
+           let subscribeKey = messageToken.subscribeKey,
+           let userId = messageToken.userId,
+           let token =   messageToken.token
+        {
+            let configuration = PubNubConfiguration(
+                publishKey: publishKey,
+                subscribeKey: subscribeKey,
+                userId: userId,
+                authKey: token
+                // Add more configuration parameters as needed
+            )
+            // Initialize PubNub instance
+            self.pubnub = PubNub(configuration: configuration)
+            
+            // Log the initialization
+            Config.shared.isDebugMode() ? print("Initialized Pubnub", self.pubnub!) : ()
+            
+            // Initialize PubNub with the obtained token
+            DispatchQueue.main.asyncAfter(deadline: DispatchTime.now() + 1.0, execute: {
+                self.subscribe()
+                if self.isUpdateUser {
+                    self.isUpdateUser = false
                 }
-            case .failure(_):
-                // Invoke the completion with failure if an error occurs.
-                Config.shared.isDebugMode() ? print(String(describing: self),"::",APIClientError.SHOW_NOT_FOUND) : ()
-                completion?(false,APIClientError.SHOW_NOT_FOUND)
-            }
-        })
+                completion?(true,nil)
+            })
+        } else {
+            Config.shared.isDebugMode() ? print(String(describing: self),"::",APIClientError.USER_TOKEN_EXCEPTION) : ()
+            completion?(false,APIClientError.USER_TOKEN_EXCEPTION)
+        }
     }
 
     // Unsubscribe from all channels
@@ -229,24 +250,50 @@ public class ChatProvider {
                     // Check if the sender ID exists in the converted message payload.
                         if let senderId = convertedMessage.payload?.sender?.id {
                             // Fetch user metadata using the sender ID.
-                            self.usersProvider.fetchUserMetaData(uuid: senderId) { result in
-                                switch result {
-                                case .success(let senderData):
-                                    // Update the sender information in the converted message payload.
-                                    convertedMessage.payload?.sender = senderData
-                                    
-                                    // Notify the delegate on the main thread about the received message.
-                                    DispatchQueue.main.async {
-                                        self.delegate?.onMessageReceived(convertedMessage)
+                            let showType = Show.shared.showData.type
+                            switch showType {
+                            case .legacy:
+                                self.usersProvider.fetchUserMetaData(uuid: senderId) { result in
+                                    switch result {
+                                    case .success(let senderData):
+                                        // Update the sender information in the converted message payload.
+                                        convertedMessage.payload?.sender = senderData
+                                        
+                                        // Notify the delegate on the main thread about the received message.
+                                        DispatchQueue.main.async {
+                                            self.delegate?.onMessageReceived(convertedMessage)
+                                        }
+
+                                    case .failure(let error):
+                                        // Print the error if debug mode is enabled.
+                                        Config.shared.isDebugMode() ? print(String(describing: self),"::","Error fetching user metadata: \(error.localizedDescription)") : ()
+                                        
+                                        // Notify the delegate on the main thread about the received message even if there's an error.
+                                        DispatchQueue.main.async {
+                                            self.delegate?.onMessageReceived(convertedMessage)
+                                        }
                                     }
-                                    
-                                case .failure(let error):
-                                    // Print the error if debug mode is enabled.
-                                    Config.shared.isDebugMode() ? print(String(describing: self),"::","Error fetching user metadata: \(error.localizedDescription)") : ()
-                                    
-                                    // Notify the delegate on the main thread about the received message even if there's an error.
-                                    DispatchQueue.main.async {
-                                        self.delegate?.onMessageReceived(convertedMessage)
+                                }
+                                break
+                            case .v2:
+                                self.pubnub?.fetchUserMetadata(senderId) { result in
+                                    switch result {
+                                    case .success(let userMetadata):
+                                        let senderData = Sender(
+                                            id: userMetadata.metadataId,
+                                            name: userMetadata.name,
+                                            profileUrl: userMetadata.profileURL,
+                                            externalId: userMetadata.externalId)
+                                        // Update the sender information in the converted message payload.
+                                        convertedMessage.payload?.sender = senderData
+                                        
+                                        // Notify the delegate on the main thread about the received message.
+                                        DispatchQueue.main.async {
+                                            self.delegate?.onMessageReceived(convertedMessage)
+                                        }
+
+                                    case .failure(let error):
+                                       break
                                     }
                                 }
                             }
@@ -464,110 +511,144 @@ public class ChatProvider {
     ///   - start: timestamp of last fetched message or now
     ///   - completion: A closure to be called upon completion, providing a Result with an array of MessageBase objects,
     ///                 an optional MessagePage for pagination, or an error if the operation fails.
-    internal func fetchPastMessages(
-        limit: Int = 25,
-        start: Int? = nil,
-        includeActions: Bool = true,
-        includeMeta: Bool = true,
-        includeUUID: Bool = true,
-        completion: @escaping (Result<([MessageBase], MessagePage?), APIClientError>) -> Void)
-    {
-        // Use PubNub's fetchMessageHistory method to retrieve message history for specified channels
-        let startTimeToken = start != nil ? UInt64(start!) : UInt64(Date().nanoseconds)
-        pubnub?.fetchMessageHistory(for: self.channels, includeActions: includeActions, includeMeta: includeMeta, includeUUID: includeUUID, page: PubNubBoundedPageBase(start: startTimeToken, limit: limit), completion: { result in
-            do {
-                switch result {
-                case let .success(response):
-                    // Check if there is a next page for pagination and print it in debug mode
-                    if let nextPage = response.next {
-                        Config.shared.isDebugMode() ? print("History : Next page used for pagination: \(nextPage)") : ()
-                    }
-                    
-                    var messageArray: [MessageBase] = []
-
-                    // Check if the messages for the specified channel exist in the response
-                    if let myChannelMessages = response.messagesByChannel[self.publishChannel!] {
+        internal func fetchPastMessages(
+            limit: Int = 25,
+            start: Int? = nil,
+            includeActions: Bool = true,
+            includeMeta: Bool = true,
+            includeUUID: Bool = true,
+            completion: @escaping (Result<([MessageBase], MessagePage?), APIClientError>) -> Void)
+        {
+            // Use PubNub's fetchMessageHistory method to retrieve message history for specified channels
+            let startTimeToken = start != nil ? UInt64(start!) : UInt64(Date().nanoseconds)
+            pubnub?.fetchMessageHistory(for: self.channels, includeActions: includeActions, includeMeta: includeMeta, includeUUID: includeUUID, page: PubNubBoundedPageBase(start: startTimeToken, limit: limit), completion: { result in
+                do {
+                    switch result {
+                    case let .success(response):
+                        // Check if there is a next page for pagination and print it in debug mode
+                        if let nextPage = response.next {
+                            Config.shared.isDebugMode() ? print("History : Next page used for pagination: \(nextPage)") : ()
+                        }
                         
-                        // Dispatch group to handle asynchronous tasks completion
-                        let dispatchGroup = DispatchGroup()
-                        
-                        for message in myChannelMessages {
-                            // Enter the dispatch group for each message
-                            dispatchGroup.enter()
-                            
-                            // Convert the PubNub message to a MessageBase object
-                            var convertedMessage = MessageBase(pubNubMessage: message)
-                            
-                            // Check if the converted message has text content
-                            guard convertedMessage.payload?.text != nil else {
-                                // Skip converted messages without text
-                                dispatchGroup.leave()
-                                continue
-                            }
-                            
-                            // Fetch user metadata for the sender of the message
-                            if let senderId = convertedMessage.payload?.sender?.id {
-                                // Append the message to the message array
-                                messageArray.append(convertedMessage)
+                        var messageArray: [MessageBase] = []
 
-                                self.usersProvider.fetchUserMetaData(uuid: senderId) { result in
-                                    switch result {
-                                    case .success(let senderData):
-                                        // Update the sender information in the converted message payload
-                                        convertedMessage.payload?.sender = senderData
-                                        
-                                        // Fetch the index of specific message
-                                        if let index = messageArray.firstIndex(where: { objMessage in
-                                            objMessage.published == convertedMessage.published
-                                        }) {
-                                            // If index is found, replace it with the updated message
-                                            messageArray[index] = convertedMessage
-                                        }
-                                        // Leave the dispatch group as message processing is complete
-                                        dispatchGroup.leave()
-                                    case .failure(_):
-                                        // Leave the dispatch group as message processing is complete
-                                        dispatchGroup.leave()
-                                    }
+                        // Check if the messages for the specified channel exist in the response
+                        if let myChannelMessages = response.messagesByChannel[self.publishChannel!] {
+                            
+                            // Dispatch group to handle asynchronous tasks completion
+                            let dispatchGroup = DispatchGroup()
+                            
+                            for message in myChannelMessages {
+                                // Enter the dispatch group for each message
+                                dispatchGroup.enter()
+                                
+                                // Convert the PubNub message to a MessageBase object
+                                var convertedMessage = MessageBase(pubNubMessage: message)
+                                
+                                // Check if the converted message has text content
+                                guard convertedMessage.payload?.text != nil else {
+                                    // Skip converted messages without text
+                                    dispatchGroup.leave()
+                                    continue
                                 }
-                            } else {
-                                // If sender ID is not available, leave the dispatch group
-                                dispatchGroup.leave()
+                                
+                                // Fetch user metadata for the sender of the message
+                                if let senderId = convertedMessage.payload?.sender?.id {
+                                    // Append the message to the message array
+                                    messageArray.append(convertedMessage)
+                                    
+                                    let showType = Show.shared.showData.type
+                                    switch showType {
+                                    case .legacy:
+                                        self.usersProvider.fetchUserMetaData(uuid: senderId) { result in
+                                            switch result {
+                                            case .success(let senderData):
+                                                // Update the sender information in the converted message payload
+                                                convertedMessage.payload?.sender = senderData
+                                                
+                                                // Fetch the index of specific message
+                                                if let index = messageArray.firstIndex(where: { objMessage in
+                                                    objMessage.published == convertedMessage.published
+                                                }) {
+                                                    // If index is found, replace it with the updated message
+                                                    messageArray[index] = convertedMessage
+                                                }
+                                                // Leave the dispatch group as message processing is complete
+                                                dispatchGroup.leave()
+                                            case .failure(_):
+                                                // Leave the dispatch group as message processing is complete
+                                                dispatchGroup.leave()
+                                            }
+                                        }
+                                    case .v2:
+                                        self.pubnub?.fetchUserMetadata(senderId) { result in
+                                            switch result {
+                                            case .success(let userMetadata):
+                                                let senderData = Sender(
+                                                    id: userMetadata.metadataId,
+                                                    name: userMetadata.name,
+                                                    profileUrl: userMetadata.profileURL,
+                                                    externalId: userMetadata.externalId)
+                                                // Update the sender information in the converted message payload.
+                                                convertedMessage.payload?.sender = senderData
+                                                print(senderData.profileUrl)
+                                                
+                                                // Fetch the index of specific message
+                                                if let index = messageArray.firstIndex(where: { objMessage in
+                                                    objMessage.published == convertedMessage.published
+                                                }) {
+                                                    // If index is found, replace it with the updated message
+                                                    messageArray[index] = convertedMessage
+                                                }
+                                                // Leave the dispatch group as message processing is complete
+                                                dispatchGroup.leave()
+
+                                            case .failure(let error):
+                                                // Leave the dispatch group as message processing is complete
+                                                dispatchGroup.leave()
+                                            }
+                                        }
+                                        break
+                                    }
+
+                                } else {
+                                    // If sender ID is not available, leave the dispatch group
+                                    dispatchGroup.leave()
+                                }
                             }
+                            
+                            // Notify when all message processing is complete
+                            dispatchGroup.notify(queue: .main) {
+                               Config.shared.isDebugMode() ? print("History : Fetched successfully!") : ()
+                                // Create a MessagePage object based on the next page information
+                                let page = MessagePage(page: response.next as! PubNubBoundedPageBase)
+                                // Invoke the completion closure with success and the obtained messages and page
+                                completion(.success((messageArray, page)))
+                            }
+                        } else {
+                            // Invoke the completion closure with success and the obtained messages and page
+                            completion(.success((messageArray,  response.next != nil ? MessagePage(page: response.next as! PubNubBoundedPageBase) : nil)))
                         }
                         
-                        // Notify when all message processing is complete
-                        dispatchGroup.notify(queue: .main) {
-                           Config.shared.isDebugMode() ? print("History : Fetched successfully!") : ()
-                            // Create a MessagePage object based on the next page information
-                            let page = MessagePage(page: response.next as! PubNubBoundedPageBase)
-                            // Invoke the completion closure with success and the obtained messages and page
-                            completion(.success((messageArray, page)))
-                        }
-                    } else {
-                        // Invoke the completion closure with success and the obtained messages and page
-                        completion(.success((messageArray,  response.next != nil ? MessagePage(page: response.next as! PubNubBoundedPageBase) : nil)))
-                    }
-                    
-                case let .failure(error):
-                    // Print an error message in case of a failure and invoke the completion closure with the error
-                    Config.shared.isDebugMode() ? print("History : Fetch History Failed: \(error.localizedDescription)") : ()
-                    if (error as? PubNubError)?.reason.rawValue == 403 {
-                        if error.localizedDescription.contains("expired") {
-                            Config.shared.isDebugMode() ? print(String(describing: self),"::",APIClientError.CHAT_TOKEN_EXPIRED) : ()
-                            self.delegate?.onStatusChange(error: APIClientError.CHAT_TOKEN_EXPIRED)
+                    case let .failure(error):
+                        // Print an error message in case of a failure and invoke the completion closure with the error
+                        Config.shared.isDebugMode() ? print("History : Fetch History Failed: \(error.localizedDescription)") : ()
+                        if (error as? PubNubError)?.reason.rawValue == 403 {
+                            if error.localizedDescription.contains("expired") {
+                                Config.shared.isDebugMode() ? print(String(describing: self),"::",APIClientError.CHAT_TOKEN_EXPIRED) : ()
+                                self.delegate?.onStatusChange(error: APIClientError.CHAT_TOKEN_EXPIRED)
+                            } else {
+                                Config.shared.isDebugMode() ? print(String(describing: self),"::",APIClientError.PERMISSION_DENIED) : ()
+                                self.delegate?.onStatusChange(error: APIClientError.PERMISSION_DENIED)
+                            }
                         } else {
-                            Config.shared.isDebugMode() ? print(String(describing: self),"::",APIClientError.PERMISSION_DENIED) : ()
-                            self.delegate?.onStatusChange(error: APIClientError.PERMISSION_DENIED)
+                            Config.shared.isDebugMode() ? print(String(describing: self),"::",APIClientError.MESSAGE_LIST_FAILED) : ()
+                            completion(.failure(APIClientError.MESSAGE_LIST_FAILED))
                         }
-                    } else {
-                        Config.shared.isDebugMode() ? print(String(describing: self),"::",APIClientError.MESSAGE_LIST_FAILED) : ()
-                        completion(.failure(APIClientError.MESSAGE_LIST_FAILED))
                     }
                 }
-            }
-        })
-    }
+            })
+        }
 
     
     // MARK: - Clears the connection
@@ -688,9 +769,9 @@ public class ChatProvider {
     // Method to unlike a comment using the chat provider.
     internal func unlikeComment(timeToken: String,actionTimeToken: Int, _ completion: @escaping (Result<Bool, APIClientError>) -> Void?) {
         // Check if the publish channel and JWT token are available
-        if let _ = publishChannel, let jwtToken = self.getJwtToken(), let eventId = self.eventId {
+        if let channelName = publishChannel, let jwtToken = self.getJwtToken() {
             // Call the Networking's unlikeComment method to unlike a comment
-            Networking.unlikeComment(jwtToken: jwtToken, eventId: "\(eventId)", messageTimetoken: timeToken, actionTimeToken: "\(actionTimeToken)") { result in
+            Networking.unlikeComment(jwtToken: jwtToken, eventId: (chatVersion == .v1 ? "\(eventId)" : channelName) , messageTimetoken: timeToken, actionTimeToken: "\(actionTimeToken)") { result in
                 // Invoke the completion handler with the result of the unlike comment operation
                 switch result {
                 case .success(let status):
