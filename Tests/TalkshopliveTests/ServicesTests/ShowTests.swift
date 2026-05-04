@@ -32,9 +32,9 @@ final class ShowTests: XCTestCase {
     }
     
     func testFetchShows() {
-        
+
         // Given
-        let showInstance = Show()
+        let showInstance = Show.shared
         let showKey = "8WtAFFgRO1K0"
         
         // Create an expectation for the asynchronous code
@@ -61,7 +61,7 @@ final class ShowTests: XCTestCase {
     
     func testFetchCurrentEvent() {
         // Given
-        let eventInstance = Show()
+        let eventInstance = Show.shared
         let showKey = "8WtAFFgRO1K0"
         
         // Create an expectation for the asynchronous code
