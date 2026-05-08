@@ -1,12 +1,12 @@
 //
-//  MessageDataModel.swift
+//  MessageData.swift
 //
 //
 //  Created by TalkShopLive on 2024-01-30.
 //
 
 import Foundation
-import PubNub
+import PubNubSDK
 
 // MARK: Base Class
 
@@ -62,7 +62,9 @@ public struct MessageBase: JSONCodable {
     }
     
     /// Custom initializer to create a MessageBase object from a PubNubMessage.
-    public init(pubNubMessage: PubNubMessage) {
+    public init(
+        pubNubMessage: PubNubMessage)
+    {
         if let payloadString = pubNubMessage.payload.jsonStringify {
             if let payload = convertToModel(from: payloadString, responseType: MessageData.self) {
                 self.payload = payload
@@ -71,13 +73,15 @@ public struct MessageBase: JSONCodable {
         self.publisher = pubNubMessage.publisher
         self.channel = pubNubMessage.channel
         self.subscription = pubNubMessage.subscription
-        self.published = pubNubMessage.published.description.jsonStringify
+        self.published = String(pubNubMessage.published)
         self.messageType = MessageType(rawValue: pubNubMessage.messageType.rawValue) ?? .unknown
         self.metaData = pubNubMessage.metadata?.jsonStringify
         self.actions = self.toMessageActions(actions: pubNubMessage.actions)
     }
     
-    public func toMessageActions(actions : [PubNubMessageAction]) -> [MessageAction]{
+    public func toMessageActions(
+        actions: [PubNubMessageAction]) -> [MessageAction]
+    {
         var actionsArray = [MessageAction]()
         for i in actions {
             let actionObject = MessageAction(action: i)
@@ -122,6 +126,7 @@ public struct Sender : JSONCodable{
     public let id: String? //User ID obtained from the backend after creating a messaging token.
     public let name: String?
     public let profileUrl: String?
+    public let externalId: String?
     
     // MARK: - Coding Keys
     
@@ -130,6 +135,7 @@ public struct Sender : JSONCodable{
         case id
         case name
         case profileUrl
+        case externalId
     }
     
     // MARK: - Initializers
@@ -139,13 +145,20 @@ public struct Sender : JSONCodable{
         self.id = nil
         self.name = nil
         self.profileUrl = nil
+        self.externalId = nil
     }
     
     /// Custom initializer with parameters for all properties.
-    public init(id: String? = nil, name: String? = nil, profileUrl:String? = nil) {
+    public init(
+        id: String? = nil,
+        name: String? = nil,
+        profileUrl:String? = nil,
+        externalId:String? = nil)
+    {
         self.id = id
         self.name = name
         self.profileUrl = profileUrl
+        self.externalId = externalId
     }
     
     // MARK: - Codable
@@ -161,7 +174,7 @@ public struct Sender : JSONCodable{
         } else {
             profileUrl = nil
         }
-
+        externalId = try container.decodeIfPresent(String.self, forKey: .externalId)
     }
     
     /// Encoder method to convert the struct to an encoded format.
@@ -171,36 +184,26 @@ public struct Sender : JSONCodable{
         try container.encode(id, forKey: .id)
         try container.encode(name, forKey: .name)
         try container.encode(profileUrl, forKey: .profileUrl)
+        try container.encode(externalId, forKey: .externalId)
 
     }
 }
 
-// MARK: Message Data Class
+// MARK: Threaded Message Class
 
 /// A struct representing the data structure for chat messages.
-public struct MessageData: JSONCodable {
+public struct OriginalMessageData: Codable {
     
     // MARK: - Properties
-    
     public var id: Int? // Represents the current date converted to String.
     public var createdAt: String? // Represents the current timestamp in seconds.
     public var sender: Sender? //
     public var text: String? //The message to be sent.
     public var type: MessageType? // Enum representing the MessageType. Use .question if the text contains "?".
     public var platform: String? // Platform identifier, e.g., "sdk".
+    public var key: MessagePayloadKey? // Platform identifier, e.g., "sdk".
+    public var timeToken: String?
     
-    /// Enum defining different types of messages.
-    public enum MessageType: String, Codable {
-        case comment
-        case question
-        case giphy
-        
-        public init(from decoder: Decoder) throws {
-                let stringValue = try decoder.singleValueContainer().decode(String.self)
-                self = MessageType(rawValue: stringValue.lowercased()) ?? .comment
-        }
-    }
-
     
     // MARK: - Coding Keys
     
@@ -212,6 +215,9 @@ public struct MessageData: JSONCodable {
         case text
         case type
         case platform
+        case key
+        case timeToken
+        case original
     }
     
     // MARK: - Initializers
@@ -224,16 +230,29 @@ public struct MessageData: JSONCodable {
         self.text = nil
         self.type = .comment // Default value, adjust as needed
         self.platform = nil
+        self.key = nil
+        self.timeToken = nil
     }
     
     /// Custom initializer with parameters for all properties.
-    public init(id: Int? = nil, createdAt: String? = nil, sender: Sender? = nil, text: String? = nil, type: MessageType? = nil, platform: String? = nil) {
+    public init(
+        id: Int? = nil,
+        createdAt: String? = nil,
+        sender: Sender? = nil,
+        text: String? = nil,
+        type: MessageType? = nil,
+        platform: String? = nil,
+        key: MessagePayloadKey? = nil,
+        payload: String? = nil)
+    {
         self.id = id
         self.createdAt = createdAt
         self.sender = sender
         self.text = text
         self.type = type ?? .comment // Default value, adjust as needed
         self.platform = platform
+        self.key = key
+        self.timeToken = payload
     }
     
     // MARK: - Codable
@@ -247,14 +266,16 @@ public struct MessageData: JSONCodable {
         text = try container.decodeIfPresent(String.self, forKey: .text)
         type = try container.decodeIfPresent(MessageType.self, forKey: .type)
         platform = try container.decodeIfPresent(String.self, forKey: .platform)
+        key = try container.decodeIfPresent(MessagePayloadKey.self, forKey: .key)
+        timeToken = try container.decodeIfPresent(String.self, forKey: .timeToken)
         
         do {
             // Try to decode the "sender" key as a Sender object
-            sender = try container.decode(Sender.self, forKey: .sender)
+            sender = try container.decodeIfPresent(Sender.self, forKey: .sender)
         } catch DecodingError.typeMismatch {
             // If decoding as Sender fails due to type mismatch (probably it's a String),
             // try to decode it as a String and create a Sender object with the provided value
-            let senderString = try container.decode(String.self, forKey: .sender)
+            let senderString = try container.decodeIfPresent(String.self, forKey: .sender)
             sender = Sender(id: senderString, name: senderString)
         }
     }
@@ -269,6 +290,166 @@ public struct MessageData: JSONCodable {
         try container.encode(text, forKey: .text)
         try container.encode(type, forKey: .type)
         try container.encode(platform, forKey: .platform)
+        try container.encode(key, forKey: .key)
+        try container.encode(timeToken, forKey: .timeToken)
+    }
+}
+
+/// A struct representing the data structure for chat messages.
+public struct OriginalMessageBase: Codable {
+    public var message : OriginalMessageData?
+    
+    // MARK: - Coding Keys
+    
+    /// Coding keys for encoding and decoding.
+    enum CodingKeys: String, CodingKey {
+        case message
+    }
+    
+    /// Default initializer with default values.
+    public init() {
+        self.message = nil
+    }
+    
+    public init(
+        message: OriginalMessageData? = nil)
+    {
+        self.message = message
+    }
+    
+    // MARK: - Codable
+    
+    /// Decoder initializer for creating an instance from encoded data.
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        message = try? container.decodeIfPresent(OriginalMessageData.self, forKey: .message)
+    }
+    
+    /// Encoder method to convert the struct to an encoded format.
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(message, forKey: .message)
+    }
+}
+
+
+// MARK: Message Class
+
+/// A struct representing the data structure for chat messages.
+public struct MessageData: JSONCodable {
+    
+    // MARK: - Properties
+    
+    public var id: Int? // Represents the current date converted to String.
+    public var createdAt: String? // Represents the current timestamp in seconds.
+    public var sender: Sender? //
+    public var text: String? //The message to be sent.
+    public var type: MessageType? // Enum representing the MessageType. Use .question if the text contains "?".
+    public var aspectRatio: Double? //The message to be sent.
+    public var platform: String? // Platform identifier, e.g., "sdk".
+    public var key: MessagePayloadKey? // Platform identifier, e.g., "sdk".
+    public var timeToken: String?
+    public var original: OriginalMessageBase?
+        
+    // MARK: - Coding Keys
+    
+    /// Coding keys for encoding and decoding.
+    enum CodingKeys: String, CodingKey {
+        case id
+        case createdAt
+        case sender
+        case text
+        case type
+        case platform
+        case key
+        case timeToken = "payload"
+        case original
+        case aspectRatio
+    }
+    
+    // MARK: - Initializers
+    
+    /// Default initializer with default values.
+    public init() {
+        self.id = nil
+        self.createdAt = nil
+        self.sender = nil
+        self.text = nil
+        self.type = .comment // Default value, adjust as needed
+        self.platform = nil
+        self.key = nil
+        self.timeToken = nil
+        self.original = nil
+        self.aspectRatio = nil
+    }
+    
+    /// Custom initializer with parameters for all properties.
+    public init(
+        id: Int? = nil,
+        createdAt: String? = nil,
+        sender: Sender? = nil,
+        text: String? = nil,
+        type: MessageType? = nil,
+        aspectRatio: Double? = nil,
+        platform: String? = nil,
+        key: MessagePayloadKey? = nil,
+        payload: String? = nil,
+        original: OriginalMessageBase? = nil)
+    {
+        self.id = id
+        self.createdAt = createdAt
+        self.sender = sender
+        self.text = text
+        self.type = type ?? .comment // Default value, adjust as needed
+        self.aspectRatio = aspectRatio
+        self.platform = platform
+        self.key = key
+        self.timeToken = payload
+        self.original = original
+    }
+    
+    // MARK: - Codable
+    
+    /// Decoder initializer for creating an instance from encoded data.
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        
+        id = try? container.decodeIfPresent(Int.self, forKey: .id)
+        createdAt = try container.decodeIfPresent(String.self, forKey: .createdAt)
+        text = try container.decodeIfPresent(String.self, forKey: .text)
+        aspectRatio = try container.decodeIfPresent(Double.self, forKey: .aspectRatio)
+        type = try container.decodeIfPresent(MessageType.self, forKey: .type)
+        platform = try container.decodeIfPresent(String.self, forKey: .platform)
+        key = try container.decodeIfPresent(MessagePayloadKey.self, forKey: .key)
+        timeToken = try container.decodeIfPresent(String.self, forKey: .timeToken)
+        original = try container.decodeIfPresent(OriginalMessageBase.self, forKey: .original)
+
+        
+        do {
+            // Try to decode the "sender" key as a Sender object
+            sender = try container.decodeIfPresent(Sender.self, forKey: .sender)
+        } catch DecodingError.typeMismatch {
+            // If decoding as Sender fails due to type mismatch (probably it's a String),
+            // try to decode it as a String and create a Sender object with the provided value
+            let senderString = try container.decodeIfPresent(String.self, forKey: .sender)
+            sender = Sender(id: senderString, name: senderString)
+        }
+    }
+    
+    /// Encoder method to convert the struct to an encoded format.
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        
+        try container.encode(id, forKey: .id)
+        try container.encode(createdAt, forKey: .createdAt)
+        try container.encode(sender, forKey: .sender)
+        try container.encode(text, forKey: .text)
+        try container.encode(aspectRatio, forKey: .aspectRatio)
+        try container.encode(type, forKey: .type)
+        try container.encode(platform, forKey: .platform)
+        try container.encode(key, forKey: .key)
+        try container.encode(timeToken, forKey: .timeToken)
+        try container.encode(original, forKey: .original)
     }
 }
 
@@ -305,7 +486,7 @@ public struct MessagePage: JSONCodable {
     }
     
     /// Custom initializer to create a MessagePage object from a PubNubBoundedPageBase.
-    public init(page : PubNubBoundedPageBase) {
+    public init(page: PubNubBoundedPageBase) {
         self.start = page.start.map { Int($0) }
         self.limit = page.limit
     }
@@ -334,6 +515,8 @@ public struct MessagePage: JSONCodable {
     }
 }
 
+// MARK: MessageAction Class
+
 public struct MessageAction : JSONCodable{
    
     // MARK: - Properties
@@ -341,6 +524,7 @@ public struct MessageAction : JSONCodable{
     public var actionValue: String?
     public var actionTimetoken: Int?
     public var publisher: String?
+    public var messageTimetoken: String?
     
     // MARK: - Coding Keys
     
@@ -350,6 +534,7 @@ public struct MessageAction : JSONCodable{
         case actionValue
         case actionTimetoken
         case publisher
+        case messageTimetoken
     }
     
     // MARK: - Initializers
@@ -360,14 +545,16 @@ public struct MessageAction : JSONCodable{
         actionValue = nil
         actionTimetoken = nil
         publisher = nil
+        messageTimetoken = nil
     }
     
     /// Custom initializer to create a MessagePage object from a PubNubBoundedPageBase.
-    public init(action : PubNubMessageAction) {
+    public init(action: PubNubMessageAction) {
         actionType = action.actionType
         actionValue = action.actionValue
         actionTimetoken = Int(action.actionTimetoken)
         publisher = action.publisher
+        messageTimetoken = String(action.messageTimetoken)
     }
     
     // MARK: - Codable Protocol
@@ -380,6 +567,7 @@ public struct MessageAction : JSONCodable{
         actionValue = try container.decodeIfPresent(String.self, forKey: .actionValue)
         actionTimetoken = try container.decodeIfPresent(Int.self, forKey: .actionTimetoken)
         publisher = try container.decodeIfPresent(String.self, forKey: .publisher)
+        messageTimetoken = try container.decodeIfPresent(String.self, forKey: .messageTimetoken)
     }
     
     /// Encoder method to convert the struct to an encoded format.
@@ -389,6 +577,63 @@ public struct MessageAction : JSONCodable{
         try container.encode(actionType, forKey: .actionType)
         try container.encode(actionValue, forKey: .actionValue)
         try container.encode(publisher, forKey: .publisher)
+        try container.encode(messageTimetoken, forKey: .messageTimetoken)
     }
     
+}
+
+
+//MARK: - Enums
+public enum MessagePayloadKey: Codable {
+    case messageDeleted
+    case custom(String) // Handle any custom message types
+    // Add more cases as needed
+    
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        if let rawValue = try? container.decode(String.self) {
+            switch rawValue {
+            case "message_deleted":
+                self = .messageDeleted
+            default:
+                self = .custom(rawValue)
+            }
+        } else {
+            throw DecodingError.dataCorruptedError(in: container, debugDescription: "Invalid payload key")
+        }
+    }
+    
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.singleValueContainer()
+        switch self {
+        case .messageDeleted:
+            try container.encode("message_deleted")
+        case .custom(let value):
+            try container.encode(value)
+        }
+    }
+    
+    // Function to check equality
+    public func isEqual(to other: MessagePayloadKey) -> Bool {
+        switch (self, other) {
+        case (.messageDeleted, .messageDeleted):
+            return true
+        case let (.custom(value1), .custom(value2)):
+            return value1 == value2
+        default:
+            return false
+        }
+    }
+}
+
+/// Enum defining different types of messages.
+public enum MessageType: String, Codable {
+    case comment
+    case question
+    case giphy
+    
+    public init(from decoder: Decoder) throws {
+        let stringValue = try decoder.singleValueContainer().decode(String.self)
+        self = MessageType(rawValue: stringValue.lowercased()) ?? .comment
+    }
 }

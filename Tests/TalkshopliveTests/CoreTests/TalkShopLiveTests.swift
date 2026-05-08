@@ -25,7 +25,7 @@ final class TalkShopLiveTests: XCTestCase {
         // Use XCTest expectations to wait for asynchronous operations
         let initializationExpectation = expectation(description: "TalkShopLive initialization with valid client key")
         
-        let talkShopLive = TalkShopLive(clientKey: clientKey,testMode: true) { result in
+        _ = TalkShopLive(clientKey: clientKey,testMode: true) { result in
             switch result {
             case .success:
                 // Test passed

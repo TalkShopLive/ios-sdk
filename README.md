@@ -10,6 +10,8 @@ TSL takes care of the infrastructure and APIs needed for live streaming of diffe
 * [Configure TSL-iOS-SDK](#configure-tsl-ios-sdk)
 * [Shows](#shows)
 * [Chats](#chats)
+* [Shoppettes](#shoppettes)
+* [Collect](#collect)
 
 ## Requirements
 
@@ -63,7 +65,7 @@ For more information, see Apple's guide on [Adding Package Dependencies to Your 
 The TSL iOS SDK provides methods for fetching details of a specific show and its current event, enabling you to get show and current event details in your app.
 
 ### Methods
-
+    
 #### `getDetails(showKey:completion:)`
 
 Get detailed information about a specific show.
@@ -73,7 +75,7 @@ Get detailed information about a specific show.
     - `completion`: A closure that will be called once the show details are fetched. It takes a `Result` enum containing either the `ShowData` on success or an `Error` on failure.
 
 ```
-let showInstance = Talkshoplive.Show()
+let showInstance = Talkshoplive.Show.shared
 showInstance.getDetails(showKey: "yourShowKey") { result in
     switch result {
     case .success(let show):
@@ -81,6 +83,37 @@ showInstance.getDetails(showKey: "yourShowKey") { result in
     case .failure(let error):
         // Handle error case
         print("Error fetching show details: \(error)")
+    }
+}
+```
+
+#### `getProducts(showKey:preLive:completion:)`
+
+Get Products list from specific show's details.
+
+- Parameters:
+    - `showKey`: The unique identifier of the show.
+    - `preLive`(optional): A flag indicating whether the request is related to pre products. Default is `false`.
+    - `completion`: A closure that will be called once the products are fetched. It takes a `Result` enum containing either the `[ProductData]` on success or an `Error` on failure.
+
+```
+showInstance.getProducts(showKey: "yourShowKey", preLive: "true/false") { result in
+    switch result {
+    case .success(let products):
+        print("Products: \(products)")
+        
+        //Please use following to find product's variants information
+        for i in products {
+            print("Product Details", i)
+            if let variants = i.variants, variants.count > 0 {
+                for j in variants {
+                    print("SKU", (i.sku ?? ""))
+                }
+            }
+        }
+    case .failure(let error):
+        // Handle error case
+        print("Error fetching products list: \(error)")
     }
 }
 ```
@@ -94,7 +127,7 @@ Get the current event of a show.
     - `completion`: A closure that will be called once the show details are fetched. It takes a `Result` enum containing either the `ShowData` on success or an `Error` on failure.
 
 ```
-let showInstance = Talkshoplive.Show()
+let showInstance = Talkshoplive.Show.shared
 showInstance.getStatus(showKey: "YourShowKey") { result in
     switch result {
     case .success(let eventData):
@@ -114,18 +147,22 @@ The TSL iOS SDK provides methods for fetching details of a specific current even
 
 ### Methods
 
-#### `init(jwtToken:isGuest:showKey:mode:refresh:)`
+#### `init(jwtToken:isGuest:showKey:completion:)`
 
-Initializes a new instance of the Chat class.
+Initializes a new instance of the Chat class and confirm the delegate to recieve chat events.
 
 - Parameters:
   - `jwtToken`: Generated JWT token
     - Example: eyJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJzZGtfMmVhMjFkZTE5Y2M4YmM1ZTg2NDBjN2IyMjdmZWYyZjMiLCJleHAiOjE3MTAwMjM0NDEsImp0aSI6InRXc3NBd1Nvb2VoaHp5UTA5NUV1eXk9PSJ9.XtPM3iibdTt-fp8fhm2Gh2T7X0XXuUuIPY17bW648Gk
   - `isGuest`: A boolean indicating whether the user is a guest user (true) or a federated user (false).
   - `showKey`: show_key for which you want to subscribe to the channel.  
+  - `completion`: (optional)
+      - `status`: A boolean value indicating whether token created successfully or not.
+      - `error`: An optional error that occurred during the token creation process, if any.
 
 ```
 let chatInstance = Talkshoplive.Chat(jwtToken: "YourJWTToken", isGuest:true/false, showKey: "YourShowKey")
+chatInstance.delegate = someContentViewModel
 
 ```
 
@@ -135,6 +172,8 @@ Use initialized instance of the Chat class and sends a message using that instan
 
 - Parameters:
   - `message`: The text message to be sent.
+  - `type`: Default will be "comment", Other types are `giphy` and `question`.
+  - `aspectRatio`: When type is "giphy", aspectRatio is mandatory.
   
 - Completion:
   - `status`: A boolean value indicating whether the message was sent successfully or not.
@@ -142,15 +181,26 @@ Use initialized instance of the Chat class and sends a message using that instan
 
 - Send Message
 ```
-self.chatInstance.sendMessage(message: "Your Message Here") { status, error in
-    if let error = error {
-        print("Error occurred: \(error.localizedDescription)")
+self.chatInstance.sendMessage(message: newMessage, completion: {status, error in
+    if status {
+        print("Message Sent!", status)
     } else {
-        if status {
-            print("Message sent successfully!")
-        } else {
-            print("Failed to send message.")
-        }
+        //If Token is revoked, it will return "PERMISSION_DENIED"
+        //If Token is expired, it will return "CHAT_TOKEN_EXPIRED"
+        print("Message Sending Failed: \(error.localizedDescription)")
+    }
+}
+```
+
+- Send Giphy
+```
+self.chatInstance.sendMessage(message: "GiphyId", type: .giphy, aspectRatio: "GiphyWidth/GiphyHeight",completion: {status, error in
+    if status {
+        print("Giphy Sent!", status)
+    } else {
+        //If aspectRatio will be missing, it will return "MESSAGE_SENDING_GIPHY_DATA_NOT_FOUND"
+        //If Token is revoked, it will return "PERMISSION_DENIED"
+        print("Giphy Sending Failed: \(error.localizedDescription)")
     }
 }
 ```
@@ -160,10 +210,57 @@ self.chatInstance.sendMessage(message: "Your Message Here") { status, error in
 class ContentViewModel: ObservableObject, ChatDelegate {
     func onNewMessage(_ message: MessageData) {
         // Handle the received message
+        print("Recieved New Message", message)
+        
+        //If it's threaded message, it will have original message details
+        if let originalMessage = message.payload?.original?.message {
+            print("Original message's sender details", originalMessage.sender)
+            print("Original message details", originalMessage.text)
+        }
+        
+        //When MessageType is "giphy"
+        if message.payload?.type == .giphy {
+            print("Giphy ID", message.payload?.text)
+            //Use giphyId with respective giphy URL to load the gif.
+        }
     }
 }
 
 ```
+
+#### `deleteMessage(timeToken:)`
+
+
+- Parameters:
+  - `timeToken `: The time token when message was published.
+  
+- Completion:
+  - `status`: A boolean value indicating whether the message was deleted successfully or not.
+  - `error`: An optional error that occurred during the deletion process, if any.
+
+- Delete Message
+```
+self.chatInstance.deleteMessage(timeToken: timetoken, completion: { status, error in
+        if status {
+            print("Message Deleted!")
+        } else {
+            //If Token is revoked, it will return "PERMISSION_DENIED"
+            //If Token is expired, it will return "CHAT_TOKEN_EXPIRED"
+            print("Message Deletion Failed : “\(error.localizedDescription))
+        }
+}
+```
+
+- Recieve Delete message event listener
+```
+class ContentViewModel: ObservableObject, ChatDelegate {
+    func onDeleteMessage(_ message: Talkshoplive.MessageBase) {
+        // Handle the deleted message.
+    }
+}
+
+```
+
 #### `getChatMessages(page:includeActions:includeMeta:includeUUID:completion:)`
 
 Use to retrieve messages for a specific page, including or excluding actions, metadata, and UUID in the response.
@@ -184,6 +281,12 @@ self.chatInstance.getChatMessages(page: page, completion: { result in
         
         // Access the actions if 'includeActions' is set to true
         for message in messageArray {
+            //If it's threaded message, it will have original message details
+            if let originalMessage = message.payload?.original?.message {
+                print("Original message's sender details", originalMessage.sender)
+                print("Original message details", originalMessage.text)
+            }
+            
             if let actions = message.actions, actions.count > 0 {
                 for action in actions {
                     print("Message Action:", action)
@@ -192,6 +295,8 @@ self.chatInstance.getChatMessages(page: page, completion: { result in
         }            
     case .failure(let error):
         // Handle error case
+        //If Token is revoked, it will return "PERMISSION_DENIED"
+        //If Token is expired, it will return "CHAT_TOKEN_EXPIRED"
         print("Error: \(error.localizedDescription)")
     }
 })
@@ -203,7 +308,7 @@ Use to clear all resources associated with the chat instance, including connecti
 
 ```
 self.chatInstance.clean()
-
+```
 
 #### `updateUser(jwtToken:isGuest:completion:)`
 
@@ -212,6 +317,9 @@ Use initialized instance of the Chat class and update use with updated jwtToken
 - Parameters:
   - `jwtToken`: Updated JWT token 
   - `isGuest`: A boolean indicating whether the user will updated to guest user (true) or a federated user (false).
+  - `completion`:
+      - `status`: A boolean value indicating whether the user was updated successfully or not.
+      - `error`: An optional error that occurred during the sending process, if any.
 
 ```
 self.chatInstance.updateUser(jwtToken: "Your Updated JWTToken", isGuest:true/false) { status, error in
@@ -221,6 +329,201 @@ self.chatInstance.updateUser(jwtToken: "Your Updated JWTToken", isGuest:true/fal
         print("Error occurred: \(error.localizedDescription)")
     }
 }
+```
+
+#### `countMessages(completion:)`
+
+Use to retrieve the count of messages using a chat instance.
+
+- `completion`:
+  - `count`: An integer value representing the total count of messages.
+  - `error`: An optional error that occurred during the counting process, if any.
+
+```
+self.chatInstance.countMessages({ count, error in
+    if let error = error {
+        //If Token is revoked, it will return "PERMISSION_DENIED"
+        //If Token is expired, it will return "CHAT_TOKEN_EXPIRED"
+        print(error.localizedDescription)
+        print("Error fetching messages count: \(error.localizedDescription))"
+    } else {
+        print("Message Count : \(count)")
+    }
+})
+```
+
+#### `likeComment(timeToken:completion:)`
+
+Use to like a message using a chat instance.
+
+- Parameters:
+  - `timeToken `: The time token when message was published.
+  
+- Completion:
+  - `status`: A boolean value indicating whether the message was liked successfully or not.
+  - `error`: An optional error that occurred during the like comment process, if any.
+
+```
+self.chatInstance.likeComment(timeToken: "timetoken", completion: { status, error in
+    if status {
+        print("Liked comment Successfully", status)
+    } else {
+        print("Liked comment Error", error?.localizedDescription ?? "")
+    }
+})
+```
+
+- Recieve Like comment event listener
+```
+class ContentViewModel: ObservableObject, ChatDelegate {
+    func onLikeComment(_ messageAction: Talkshoplive.MessageAction) {
+        // Handle the liked message action.
+    }
+}
+
+```
+
+
+#### ` UnlikeComment(timeToken:actionTimeToken:completion:)`
+
+Use to Unlike a message using a chat instance.
+
+- Parameters:
+  - `timeToken `: The time token when message was published.
+  - `actionTimeToken `: The time token when message was liked.
+  
+- Completion:
+  - `status`: A boolean value indicating whether the message was unliked successfully or not.
+  - `error`: An optional error that occurred during the unlike comment process, if any.
+
+```
+self.chatInstance.UnlikeComment(timeToken: "timetoken", actionTimeToken: "actionTimetoken", completion: { status, error in
+    if status {
+        print("Unliked comment Successfully", status)
+    } else {
+        print("Unliked comment Error", error?.localizedDescription ?? "")
+    }
+})
+```
+
+- Recieve Unlike comment event listener
+```
+class ContentViewModel: ObservableObject, ChatDelegate {
+    func onUnlikeComment(_ messageAction: MessageAction) {
+        // Handle the Unliked message action.
+    }
+}
+
+```
+
+#### `onStatusChange(error:)`
+
+Use to listen event when token is revoked.
+
+```
+func onStatusChange(error: Talkshoplive.APIClientError) {
+    
+    switch error {
+    case .PERMISSION_DENIED:
+        //If Token is revoked
+        print("Permission Denied")
+    case .CHAT_TOKEN_EXPIRED:
+        //If Token is expired
+        print("Chat token expired")
+    case .CHAT_TIMEOUT:
+        //Chat timeout
+        print("Chat Timeout")
+    case .CHAT_CONNECTION_ERROR:
+        //connection get dismiss and tried to reconnect and fails
+        print("Chat connection error")
+    default:
+        break
+    }
+}
+```
+
+## Shoppettes
+
+### Overview
+
+The Shoppettes module provides methods to fetch Shoppettes for a specific channel. Shoppettes represent product collections or bundles associated with a show. The API supports pagination and returns both the data and metadata.
+
+### Initialization
+    
+#### `Shoppettes(jwtToken:)`
+
+This initializer creates a Shoppettes instance using a JWT token.
+
+- Parameters:
+    - `jwtToken`: Generated JWT token
+
+```
+let shoppettesInstance = Shoppettes(jwtToken: token)
+```
+
+#### `getShoppettes(channelId:page:)`
+
+Use this method to retrieve the Shoppettes list for a specific channel. The response includes metadata for pagination.
+
+- Parameters:
+  - `channelId`: The channel ID for which Shoppettes need to be fetched. 
+  - `page`: The page number for pagination.
+  - `completion`: A closure invoked upon fetching shoppettes list. It receives a Result enum with an array of (`ShoppettesData` and `ShoppettesMeta`) on success or an `Error` on failure.
+  
+```
+shoppettesInstance.getShoppettes(channelId: channelId, page: currentPage) { result in
+    DispatchQueue.main.async {
+        switch result {
+        case let .success((shoppettesArray, meta)):
+            self.shoppettes = shoppettesArray
+            self.shoppettesMetaData = meta
+            self.currentPage = meta.currentPage ?? currentPage // sync from server
+            
+            print(shoppette[0].videoStatus)
+            /*VIDEO_STATUS_LIST = ['Deleting','Deleted','Draft','Scheduled','Ready To Publish','Published','Publishing','Retrying to publish','Error Publishing','Published Without Audio','Disconnected'];*/
+            
+            print(shoppette[0].status)
+            /*VIDEO_PROCESSING_STATUS_LIST = ['processing','completed','error','not_started'];*/
+            
+            if shoppettesArray.isEmpty {
+                self.shoppettesResult = "No shoppettes found for channel \(channelId)."
+            }
+            
+        case .failure(let error):
+            self.shoppettesResult = "Error: \(error.localizedDescription)"
+        }
+    }
+}
+```
+
+
+## Collect
+
+### Overview
+
+The Collect functionality logs user actions related to shows and product views. By capturing these events, the SDK tracks user engagement and interactions within the application, enabling you to analyze user behavior and improve the overall user experience.
+
+### Initialization
+    
+#### `Collect(event:userId:)`
+
+This initializer creates a Collect instance using a show details object and, optionally, a user identifier.
+
+- Parameters:
+    - `event`: An object containing the event details.
+    - `userId`: A string representing the user identifier associated with the action.
+
+```
+// Event data instance, typically retrieved from show.getStatus()
+var eventObject : Talkshoplive.EventData? 
+
+// Initialize a Collect instance using the current event data and a user ID
+let collectInstance = Collect(event: eventInstance, userId: "UserId")
+
+// Track a specific user action by calling the collect method with an action name, current video time (in seconds), and optional variantId, productKey and ProductId
+// Pass variantId, productKey and ProductId only for product-related actions.
+collectInstance.collect(actionName: .actionName, videoTime: currentVideoTimeInSeconds, variantId: variantId, productKey: productKey, productId:productId)
+
 ```
     
 ## Run the Tests: 

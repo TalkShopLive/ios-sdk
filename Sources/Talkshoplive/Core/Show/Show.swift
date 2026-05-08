@@ -1,47 +1,114 @@
 //
-//  File.swift
-//  
+//  Show.swift
+//
 //
 //  Created by TalkShopLive on 2024-01-24.
 //
 
 import Foundation
 
+// MARK: - Show Class
+
+// Show class responsible for managing show-related functionality through ShowProvider
 public class Show {
     
-    public static let shared = Show()
-
+    // MARK: - Properties
+    public static let shared = Show()// Singleton instance for Show class
     private var showInstance = ShowData()
+    private var incrementedView = [String: Bool]()
    
-    public init() {
+    // MARK: - Public getter for showInstance
+    /// Provide read-only access to the current show data.
+    public var showData: ShowData {
+        return showInstance
+    }
+    
+    // MARK: - Initializer
+    private init() {
         
     }
     // MARK: - Public Methods
     /// Get the details of the show.
-    public func getDetails(showKey:String, completion: @escaping (Result<ShowData, Error>) -> Void) {
+    public func getDetails(
+        showKey: String,
+        completion: @escaping (Result<ShowData, APIClientError>) -> Void)
+    {
+        // Fetch show details using the provider
         ShowProvider().fetchShow(showKey: showKey) { result in
             switch result {
             case .success(let showData):
+                // Update the show instance with fetched data
                 self.showInstance = showData
                 // Set the details and invoke the completion with success.
                 completion(.success(showData))
             case .failure(let error):
                 // Invoke the completion with failure if an error occurs.
+                Config.shared.isDebugMode() ? print(String(describing: self),"::",error.localizedDescription) : ()
                 completion(.failure(error))
             }
         }
     }
     
-    public func getStatus(showKey: String, completion: @escaping (Result<EventData, Error>) -> Void) {
+    /// Get the status of the show.
+    public func getStatus(
+        showKey: String,
+        completion: @escaping (Result<EventData, APIClientError>) -> Void)
+    {
+        // Fetch current event status using the provider
         ShowProvider().fetchCurrentEvent(showKey: showKey) { result in
             switch result {
-            case .success(let apiResponse):
+            case .success(let eventInstance):
+                let incremented = self.incrementedView[showKey]
+                if !(incremented ?? false),
+                   let eventId = eventInstance.id,
+                    eventInstance.status == "live"
+                {
+                    ShowProvider().incrementView(eventId: eventId) { status, error in
+                        if status {
+                            self.incrementedView[showKey] = true
+                            Config.shared.isDebugMode() ? print("Incremented View!") : ()
+                        } else {
+                            Config.shared.isDebugMode() ? print(String(describing: self),"::","Increment View Failed: \(error?.localizedDescription ?? "")") : ()
+                        }
+                    }
+                }
                 // Set the details and invoke the completion with success.
-                completion(.success(apiResponse))
+                completion(.success(eventInstance))
             case .failure(let error):
                 // Invoke the completion with failure if an error occurs.
+                Config.shared.isDebugMode() ? print(String(describing: self),"::",error.localizedDescription) : ()
                 completion(.failure(error))
             }
         }
     }
+    
+    /// Get the products list from show details
+    public func getProducts(
+        showKey: String,
+        preLive: Bool = false,
+        completion: @escaping (Result<[ProductData], APIClientError>) -> Void)
+    {
+        let productIds = preLive ? self.showInstance.entranceProductsIds : self.showInstance.productsIds
+        // Fetch show details using the provider
+        if let productIds = productIds, productIds.count > 0 {
+            // Fetch products using the ShowProvider
+            ShowProvider().fetchProducts(productIds: productIds) { result in
+                // Handle the result of fetching products
+                switch result {
+                case .success(let productData):
+                    // If products are fetched successfully, update the show instance with fetched data
+                    // Set the details and invoke the completion with success.
+                    completion(.success(productData))
+                case .failure(let error):
+                    // If there is a failure in fetching products, invoke the completion with failure
+                    completion(.failure(error))
+                }
+            }
+        } else {
+            // If product IDs are not available, invoke the completion with failure indicating product not found
+            completion(.failure(APIClientError.PRODUCT_NOT_FOUND))
+        }
+        
+    }
+
 }

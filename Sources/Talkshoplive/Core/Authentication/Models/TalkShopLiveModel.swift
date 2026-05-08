@@ -1,5 +1,5 @@
 //
-//  File.swift
+//  TalkShopLiveModel.swift
 //  
 //
 //  Created by TalkShopLive on 2024-01-30.
@@ -7,10 +7,14 @@
 
 import Foundation
 
+// MARK: - StatusCode
+
 // Define an enumeration for status codes with a raw value of String
 enum StatusCode: String {
     case ok = "ok"
 }
+
+// MARK: - RegisteredClientData
 
 // Define a struct for registered client data that conforms to Codable
 public struct RegisteredClientData: Codable {

@@ -6,7 +6,8 @@ import PackageDescription
 let package = Package(
     name: "Talkshoplive",
     platforms: [
-            .iOS(.v14),
+        .iOS(.v13),
+        .macOS(.v10_15)
     ],
     products: [
         // Products define the executables and libraries a package produces, making them visible to other packages.
@@ -15,7 +16,7 @@ let package = Package(
             targets: ["Talkshoplive"]),
     ],
     dependencies: [
-            .package(url: "https://github.com/pubnub/swift.git", from: "7.0.0"),
+            .package(url: "https://github.com/pubnub/swift.git", from: "10.1.5"),
             // Add other dependencies if needed
     ],
     targets: [
@@ -24,18 +25,19 @@ let package = Package(
         .target(
             name: "Talkshoplive",
             dependencies: [
-                .product(name: "PubNub", package: "swift")
+                .product(name: "PubNubSDK", package: "swift")
             ],
+            path: "Sources/Talkshoplive",
             resources: [
-                .process("Resources/Keys/env.json"),
-                .process("Resources/Keys/Development.json"),
-                .process("Resources/Keys/Staging.json"),
-                .process("Resources/Keys/Production.json"),
-
                 // Add other resource files as needed
-            ]),
+            ],
+            swiftSettings: [
+                .define("PLATFORM_IOS")
+            ]
+        ),
         .testTarget(
             name: "TalkshopliveTests",
             dependencies: ["Talkshoplive"]),
-    ]
+    ],
+    swiftLanguageVersions: [.v5]
 )
