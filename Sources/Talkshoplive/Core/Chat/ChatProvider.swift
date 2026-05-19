@@ -26,7 +26,12 @@ public protocol _ChatProviderDelegate: AnyObject {
 public class ChatProvider {
     
     // MARK: - Properties
-    public var delegate: _ChatProviderDelegate?
+    // `weak` storage attribute only — the public property *type*
+    // (`_ChatProviderDelegate?`) is unchanged, so this is source-compatible.
+    // `_ChatProviderDelegate` is `: AnyObject` so `weak` is legal.
+    // This breaks the strong delegate edge of the retain cycle and prevents
+    // the dangling-delegate use-after-free when the owner tears down.
+    public weak var delegate: _ChatProviderDelegate?
     public var isUpdateUser: Bool = false
     private var pubnub: PubNub?
     private var messageToken: MessagingTokenResponse?
@@ -42,6 +47,12 @@ public class ChatProvider {
     private var triedToReconnectBefore = false
     private var listener: SubscriptionListener?
     private var chatVersion: ChatVersion?
+    // Per-session APIHandler so this chat session's in-flight HTTP requests
+    // (messaging-token / current-event) can be cancelled on teardown WITHOUT
+    // cancelling requests from any other live chat session. Scoped to this
+    // instance — never global/singleton. Part of the NSURLSession-delegate
+    // use-after-free fix.
+    private let chatAPIHandler = APIHandler()
 
     // MARK: - Initializer
     
@@ -121,14 +132,16 @@ public class ChatProvider {
         _ completion: ((Bool, APIClientError?) -> Void)? = nil)
     {
         // Call Networking to fetch the messaging token
-        Networking.createMessagingToken(jwtToken: jwtToken, isGuest: self.isGuest) { result in
+        Networking.createMessagingToken(jwtToken: jwtToken, isGuest: self.isGuest, apiHandler: self.chatAPIHandler) { [weak self] result in
+            guard let self = self else { return }
             switch result {
             case .success(let result):
                 // Token retrieval successful, extract and print the token
                 // Set the retrieved token for later use
                 self.setMessagingToken(result)
-                
-                self.getChannels { result in
+
+                self.getChannels { [weak self] result in
+                    guard let self = self else { return }
                     switch result {
                     case .success(let channels):
                         self.publishChannel = channels.chat
@@ -163,7 +176,8 @@ public class ChatProvider {
             }
             completion(.success(channels))
         case .v1:
-            Networking.getCurrentEvent(showKey: self.showKey) { result in
+            Networking.getCurrentEvent(showKey: self.showKey, apiHandler: self.chatAPIHandler) { [weak self] result in
+                guard let self = self else { return }
                 switch result {
                 case .success(let eventData):
                     self.setCurrentEvent(eventData)
@@ -211,7 +225,8 @@ public class ChatProvider {
             Config.shared.isDebugMode() ? print("Initialized Pubnub", self.pubnub!) : ()
             
             // Initialize PubNub with the obtained token
-            DispatchQueue.main.asyncAfter(deadline: DispatchTime.now() + 1.0, execute: {
+            DispatchQueue.main.asyncAfter(deadline: DispatchTime.now() + 1.0, execute: { [weak self] in
+                guard let self = self else { return }
                 self.subscribe()
                 if self.isUpdateUser {
                     self.isUpdateUser = false
@@ -234,7 +249,12 @@ public class ChatProvider {
         // Create a listener for subscription events
         listener = SubscriptionListener(queue: .main)
         
-        listener?.didReceiveSubscription = { event in
+        listener?.didReceiveSubscription = { [weak self] event in
+            // THE primary crash closure. PubNub's long-poll subscribe completes
+            // on the NSURLSession-delegate queue; if the owner already tore the
+            // provider down, `self` is nil here and we short-circuit instead of
+            // dereferencing a freed graph (the use-after-free).
+            guard let self = self else { return }
             // Handle different subscription events
             switch event {
             case .messageReceived(let message):
@@ -253,12 +273,13 @@ public class ChatProvider {
                             let showType = Show.shared.showData.type
                             switch showType {
                             case .legacy:
-                                self.usersProvider.fetchUserMetaData(uuid: senderId) { result in
+                                self.usersProvider.fetchUserMetaData(uuid: senderId) { [weak self] result in
+                                    guard let self = self else { return }
                                     switch result {
                                     case .success(let senderData):
                                         // Update the sender information in the converted message payload.
                                         convertedMessage.payload?.sender = senderData
-                                        
+
                                         // Notify the delegate on the main thread about the received message.
                                         DispatchQueue.main.async {
                                             self.delegate?.onMessageReceived(convertedMessage)
@@ -267,7 +288,7 @@ public class ChatProvider {
                                     case .failure(let error):
                                         // Print the error if debug mode is enabled.
                                         Config.shared.isDebugMode() ? print(String(describing: self),"::","Error fetching user metadata: \(error.localizedDescription)") : ()
-                                        
+
                                         // Notify the delegate on the main thread about the received message even if there's an error.
                                         DispatchQueue.main.async {
                                             self.delegate?.onMessageReceived(convertedMessage)
@@ -276,7 +297,8 @@ public class ChatProvider {
                                 }
                                 break
                             case .v2:
-                                self.pubnub?.fetchUserMetadata(senderId) { result in
+                                self.pubnub?.fetchUserMetadata(senderId) { [weak self] result in
+                                    guard let self = self else { return }
                                     switch result {
                                     case .success(let userMetadata):
                                         let senderData = Sender(
@@ -471,7 +493,8 @@ public class ChatProvider {
             // Check if the publish channel is configured
             if let channel = self.publishChannel {
                 // Use PubNub's publish method to send the message
-                pubnub?.publish(channel: channel, message: messageObject) { result in
+                pubnub?.publish(channel: channel, message: messageObject) { [weak self] result in
+                    guard let self = self else { return }
                     switch result {
                     case .success(_):
                         Config.shared.isDebugMode() ? print("Message Sent!") : ()
@@ -521,7 +544,8 @@ public class ChatProvider {
         {
             // Use PubNub's fetchMessageHistory method to retrieve message history for specified channels
             let startTimeToken = start != nil ? UInt64(start!) : UInt64(Date().nanoseconds)
-            pubnub?.fetchMessageHistory(for: self.channels, includeActions: includeActions, includeMeta: includeMeta, includeUUID: includeUUID, page: PubNubBoundedPageBase(start: startTimeToken, limit: limit), completion: { result in
+            pubnub?.fetchMessageHistory(for: self.channels, includeActions: includeActions, includeMeta: includeMeta, includeUUID: includeUUID, page: PubNubBoundedPageBase(start: startTimeToken, limit: limit), completion: { [weak self] result in
+                guard let self = self else { return }
                 do {
                     switch result {
                     case let .success(response):
@@ -560,7 +584,14 @@ public class ChatProvider {
                                     let showType = Show.shared.showData.type
                                     switch showType {
                                     case .legacy:
-                                        self.usersProvider.fetchUserMetaData(uuid: senderId) { result in
+                                        self.usersProvider.fetchUserMetaData(uuid: senderId) { [weak self] result in
+                                            guard self != nil else {
+                                                // Provider torn down mid-history-fetch: balance the
+                                                // dispatch group so the notify() can still fire and
+                                                // we never deref a freed graph.
+                                                dispatchGroup.leave()
+                                                return
+                                            }
                                             switch result {
                                             case .success(let senderData):
                                                 // Update the sender information in the converted message payload
@@ -581,7 +612,14 @@ public class ChatProvider {
                                             }
                                         }
                                     case .v2:
-                                        self.pubnub?.fetchUserMetadata(senderId) { result in
+                                        self.pubnub?.fetchUserMetadata(senderId) { [weak self] result in
+                                            guard self != nil else {
+                                                // Provider torn down mid-history-fetch: balance the
+                                                // dispatch group so the notify() can still fire and
+                                                // we never deref a freed graph.
+                                                dispatchGroup.leave()
+                                                return
+                                            }
                                             switch result {
                                             case .success(let userMetadata):
                                                 let senderData = Sender(
@@ -655,16 +693,50 @@ public class ChatProvider {
     
     /// Clears the connection by unsubscribing from all channels, resetting instance variables to nil, and removing channels from the list.
     internal func clearConnection() {
-        // Unsubscribe from all channels
+        // Teardown ordering invariant (fixes the NSURLSession-delegate UAF):
+        //   remove listener -> nil listener -> unsubscribe
+        //     -> cancel in-flight URLSession tasks -> nil pubnub.
+        //
+        // 1. Remove the listener from PubNub BEFORE tearing anything else down
+        //    so an in-flight long-poll subscribe completion cannot fire into a
+        //    half-freed graph.
+        //
+        //    PubNub 10.1.5 API note (verified against the resolved checkout at
+        //    .build/checkouts/swift, revision ff529423b2 / v10.1.5):
+        //    `SubscriptionListener` is `typealias`'d to `CoreListener` which is a
+        //    `BaseSubscriptionListener`. `PubNub.add(_:)` takes a
+        //    `BaseSubscriptionListener` but there is NO symmetrical
+        //    `PubNub.remove(_:)` for the legacy listener type. The correct,
+        //    resolved teardown is `listener.cancel()`
+        //    (`BaseSubscriptionListener: Cancellable` -> `cancel()` fires the
+        //    `ListenerToken` whose block removes the listener from the
+        //    subscription's weak listener container). This is the documented
+        //    legacy-listener removal path in PubNubSDK 10.1.5.
+        if let listener = self.listener {
+            listener.cancel()
+        }
+        // 2. Nil the listener so the closure graph (and its captured weak self)
+        //    is released.
+        self.listener = nil
+
+        // 3. Unsubscribe from all channels (stops new events).
         self.unSubscribeChannels()
-        
-        // Reset instance variables to nil
+
+        // 4. Cancel in-flight URLSession tasks tied to THIS chat session
+        //    (messaging-token / current-event), between unsubscribe and
+        //    releasing PubNub. Scoped to this session's own APIHandler so no
+        //    other live chat session's requests are affected. This stops a
+        //    completion firing into the about-to-be-freed graph on the
+        //    com.apple.NSURLSession-delegate queue.
+        self.chatAPIHandler.cancelAllRequests()
+
+        // 5. Release PubNub + token + channel state.
         self.pubnub = nil
         self.messageToken = nil
-        
+
         // Remove all channels from the list
         self.channels.removeAll()
-        
+
         // Reset specific channels to nil
         self.publishChannel = nil
         self.eventsChannel = nil
@@ -677,7 +749,8 @@ public class ChatProvider {
           // Check if a channel is provided for counting messages
           if let channel = self.publishChannel {
               // Use PubNub to retrieve message counts for the specified channel
-              self.pubnub?.messageCounts(channels: [channel], completion: { result in
+              self.pubnub?.messageCounts(channels: [channel], completion: { [weak self] result in
+                  guard let self = self else { return }
                   switch result {
                   case let .success(response):
                       // If the count is available for the channel, handle it
@@ -747,7 +820,8 @@ public class ChatProvider {
     internal func likeComment(timeToken: String,_ completion: @escaping (Bool, APIClientError?) -> Void?) {
         // Check if a channel is provided for like comment
         if let channel = self.publishChannel {
-            self.pubnub?.addMessageAction(channel: channel, type: "reaction", value: "like", messageTimetoken:  UInt64(timeToken)!, completion: { result in
+            self.pubnub?.addMessageAction(channel: channel, type: "reaction", value: "like", messageTimetoken:  UInt64(timeToken)!, completion: { [weak self] result in
+                guard self != nil else { return }
                 switch result {
                 case .success(_):
                     Config.shared.isDebugMode() ? print("Liked comment!") : ()

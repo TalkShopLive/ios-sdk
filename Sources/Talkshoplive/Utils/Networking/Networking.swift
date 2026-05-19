@@ -71,11 +71,18 @@ class Networking {
     /// - Parameters:
     ///   - showKey: The key associated with the show.
     ///   - completion: A closure to be called upon completion, containing a result with either the event data or an error.
+    /// - Parameter apiHandler: The APIHandler to issue the request on. Defaults
+    ///   to a fresh instance (unchanged behavior for existing callers). A
+    ///   chat session passes its own retained handler so its in-flight
+    ///   requests can be cancelled on teardown (NSURLSession-delegate UAF fix).
+    ///   `Networking` is `internal`; this default-valued parameter is
+    ///   source-compatible — no public/open API surface changes.
     static func getCurrentEvent(
         showKey: String,
+        apiHandler: APIHandler = APIHandler(),
         completion: @escaping (Result<EventData, APIClientError>) -> Void)
     {
-        APIHandler().request(endpoint: APIEndpoint.getCurrentEvent(showKey: showKey), method: .get, body: nil, responseType: EventResponse.self) { result in
+        apiHandler.request(endpoint: APIEndpoint.getCurrentEvent(showKey: showKey), method: .get, body: nil, responseType: EventResponse.self) { result in
             switch result {
             case .success(let apiResponse):
                 // Successfully retrieved current event data
@@ -138,9 +145,16 @@ class Networking {
     ///   - jwtToken: The JWT token used for authentication.
     ///   - isGuest: A boolean indicating whether the user is a guest or federated user.
     ///   - completion: A closure to be called upon completion, containing a result with either the messaging token response or an error.
+    /// - Parameter apiHandler: The APIHandler to issue the request on. Defaults
+    ///   to a fresh instance (unchanged behavior for existing callers). A
+    ///   chat session passes its own retained handler so its in-flight
+    ///   requests can be cancelled on teardown (NSURLSession-delegate UAF fix).
+    ///   `Networking` is `internal`; this default-valued parameter is
+    ///   source-compatible — no public/open API surface changes.
     static func createMessagingToken(
         jwtToken: String,
         isGuest: Bool,
+        apiHandler: APIHandler = APIHandler(),
         completion: @escaping (Result<MessagingTokenResponse, APIClientError>) -> Void)
     {
         // Determine the endpoint based on whether the user is a guest or federated
@@ -156,7 +170,7 @@ class Networking {
         }
         
         // Make a request to retrieve the messaging token
-        APIHandler().requestWithToken(jwtToken: jwtToken, endpoint: endpoint, method: .post, body: requestBody, responseType: MessagingTokenResponse.self) { result in
+        apiHandler.requestWithToken(jwtToken: jwtToken, endpoint: endpoint, method: .post, body: requestBody, responseType: MessagingTokenResponse.self) { result in
             switch result {
             case .success(let apiResponse):
                 // Successfully retrieved messaging token

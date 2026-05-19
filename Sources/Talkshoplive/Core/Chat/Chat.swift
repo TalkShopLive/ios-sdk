@@ -29,7 +29,11 @@ public class Chat {
     
     private let showKey: String
     private var chatProvider: ChatProvider?
-    public var delegate: ChatDelegate?
+    // `weak` storage attribute only — public property *type* (`ChatDelegate?`)
+    // is unchanged, so this is source-compatible. `ChatDelegate` is `: AnyObject`
+    // so `weak` is legal. Prevents the dangling-delegate path into the
+    // consumer's Live-player view controller after it is torn down.
+    public weak var delegate: ChatDelegate?
     
     // MARK: - Initializer
     
@@ -50,7 +54,12 @@ public class Chat {
         self.showKey = showKey
         
         // Initialize ChatProvider for handling chat functionality using JWT Token
-        self.chatProvider = ChatProvider(jwtToken: jwtToken, isGuest: isGuest, showKey: showKey) {result,error in
+        self.chatProvider = ChatProvider(jwtToken: jwtToken, isGuest: isGuest, showKey: showKey) { [weak self] result, error in
+            // `self` is only used for a debug print; capture weakly so this
+            // init completion cannot keep a torn-down `Chat` alive. Do NOT
+            // early-return on `self == nil`: the `completion?` forward MUST
+            // still fire even if `Chat` was deallocated before the token
+            // round-trip finished.
             if  Config.shared.isDebugMode() {
                 if let error = error {
                     Config.shared.isDebugMode() ? print(String(describing: self),"::",error) : ()
