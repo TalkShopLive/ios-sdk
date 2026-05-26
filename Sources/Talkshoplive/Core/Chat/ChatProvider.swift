@@ -112,6 +112,11 @@ public class ChatProvider {
         self.eventInstance = event
     }
 
+    @available(*, deprecated, message: "Use the eventInstance property via the delegate callbacks instead.")
+    public func getCurrentEvent() -> EventData? {
+        return self.eventInstance
+    }
+
     // MARK: - Create Messaging Token
     
     /// Create a messaging token asynchronously
@@ -292,8 +297,10 @@ public class ChatProvider {
                                             self.delegate?.onMessageReceived(convertedMessage)
                                         }
 
-                                    case .failure(let error):
-                                       break
+                                    case .failure(_):
+                                        DispatchQueue.main.async {
+                                            self.delegate?.onMessageReceived(convertedMessage)
+                                        }
                                     }
                                 }
                             }
@@ -591,8 +598,7 @@ public class ChatProvider {
                                                     externalId: userMetadata.externalId)
                                                 // Update the sender information in the converted message payload.
                                                 convertedMessage.payload?.sender = senderData
-                                                print(senderData.profileUrl)
-                                                
+
                                                 // Fetch the index of specific message
                                                 if let index = messageArray.firstIndex(where: { objMessage in
                                                     objMessage.published == convertedMessage.published
@@ -603,8 +609,7 @@ public class ChatProvider {
                                                 // Leave the dispatch group as message processing is complete
                                                 dispatchGroup.leave()
 
-                                            case .failure(let error):
-                                                // Leave the dispatch group as message processing is complete
+                                            case .failure(_):
                                                 dispatchGroup.leave()
                                             }
                                         }
@@ -770,8 +775,17 @@ public class ChatProvider {
     internal func unlikeComment(timeToken: String,actionTimeToken: Int, _ completion: @escaping (Result<Bool, APIClientError>) -> Void?) {
         // Check if the publish channel and JWT token are available
         if let channelName = publishChannel, let jwtToken = self.getJwtToken() {
-            // Call the Networking's unlikeComment method to unlike a comment
-            Networking.unlikeComment(jwtToken: jwtToken, eventId: (chatVersion == .v1 ? "\(eventId)" : channelName) , messageTimetoken: timeToken, actionTimeToken: "\(actionTimeToken)") { result in
+            let resolvedId: String
+            if chatVersion == .v1 {
+                guard let eid = self.eventId else {
+                    completion(.failure(APIClientError.SHOW_NOT_LIVE))
+                    return
+                }
+                resolvedId = "\(eid)"
+            } else {
+                resolvedId = channelName
+            }
+            Networking.unlikeComment(jwtToken: jwtToken, eventId: resolvedId, messageTimetoken: timeToken, actionTimeToken: "\(actionTimeToken)") { result in
                 // Invoke the completion handler with the result of the unlike comment operation
                 switch result {
                 case .success(let status):

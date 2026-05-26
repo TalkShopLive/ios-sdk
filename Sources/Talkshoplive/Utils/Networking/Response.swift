@@ -24,7 +24,7 @@ public struct MessagingTokenResponse: Codable {
         case userId = "user_id"
         case token
         case channels
-        case chatId
+        case chatId = "chat_id"
     }
 
     public init(from decoder: Decoder) throws {
@@ -32,7 +32,7 @@ public struct MessagingTokenResponse: Codable {
 
         publishKey = try container.decodeIfPresent(String.self, forKey: .publishKey)
         subscribeKey = try container.decodeIfPresent(String.self, forKey: .subscribeKey)
-        userId = try container.decodeIfPresent(String.self, forKey: .userId) ?? container.decodeIfPresent(String.self, forKey: CodingKeys(rawValue: "userId")!)
+        userId = try container.decodeIfPresent(String.self, forKey: .userId)
         token = try container.decodeIfPresent(String.self, forKey: .token)
         channels = try container.decodeIfPresent(SubscribableChannel.self, forKey: .channels)
         chatId = try container.decodeIfPresent(Int.self, forKey: .chatId)
