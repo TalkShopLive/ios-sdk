@@ -297,7 +297,8 @@ public class ChatProvider {
                                             self.delegate?.onMessageReceived(convertedMessage)
                                         }
 
-                                    case .failure(_):
+                                    case .failure(let error):
+                                        Config.shared.isDebugMode() ? print("[TSL][ChatProvider] v2 fetchUserMetadata failed (live): \(error.localizedDescription) — delivering message without sender metadata") : ()
                                         DispatchQueue.main.async {
                                             self.delegate?.onMessageReceived(convertedMessage)
                                         }
@@ -609,7 +610,8 @@ public class ChatProvider {
                                                 // Leave the dispatch group as message processing is complete
                                                 dispatchGroup.leave()
 
-                                            case .failure(_):
+                                            case .failure(let error):
+                                                Config.shared.isDebugMode() ? print("[TSL][ChatProvider] v2 fetchUserMetadata failed (history): \(error.localizedDescription) — message included without sender metadata") : ()
                                                 dispatchGroup.leave()
                                             }
                                         }
@@ -778,6 +780,7 @@ public class ChatProvider {
             let resolvedId: String
             if chatVersion == .v1 {
                 guard let eid = self.eventId else {
+                    Config.shared.isDebugMode() ? print("[TSL][ChatProvider] unlikeComment: eventId is nil for v1 show — cannot build URL") : ()
                     completion(.failure(APIClientError.SHOW_NOT_LIVE))
                     return
                 }
