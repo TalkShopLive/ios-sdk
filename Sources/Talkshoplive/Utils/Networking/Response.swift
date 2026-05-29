@@ -24,18 +24,24 @@ public struct MessagingTokenResponse: Codable {
         case userId = "user_id"
         case token
         case channels
-        case chatId
+        case chatId = "chat_id"
     }
 
     public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
 
-        publishKey = try container.decodeIfPresent(String.self, forKey: .publishKey)
-        subscribeKey = try container.decodeIfPresent(String.self, forKey: .subscribeKey)
-        userId = try container.decodeIfPresent(String.self, forKey: .userId) ?? container.decodeIfPresent(String.self, forKey: CodingKeys(rawValue: "userId")!)
-        token = try container.decodeIfPresent(String.self, forKey: .token)
-        channels = try container.decodeIfPresent(SubscribableChannel.self, forKey: .channels)
-        chatId = try container.decodeIfPresent(Int.self, forKey: .chatId)
+        publishKey  = try container.decodeIfPresent(String.self,           forKey: .publishKey)
+        subscribeKey = try container.decodeIfPresent(String.self,          forKey: .subscribeKey)
+        userId      = try container.decodeIfPresent(String.self,           forKey: .userId)
+        token       = try container.decodeIfPresent(String.self,           forKey: .token)
+        channels    = try container.decodeIfPresent(SubscribableChannel.self, forKey: .channels)
+        chatId      = try container.decodeIfPresent(Int.self,              forKey: .chatId)
+
+        if Config.shared.isDebugMode() {
+            if userId == nil { print("[TSL][MessagingTokenResponse] user_id missing in token response") }
+            if chatId == nil { print("[TSL][MessagingTokenResponse] chat_id missing in token response") }
+            if token  == nil { print("[TSL][MessagingTokenResponse] token missing in token response")  }
+        }
     }
 }
 

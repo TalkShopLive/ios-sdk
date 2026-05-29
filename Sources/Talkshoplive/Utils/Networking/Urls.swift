@@ -79,7 +79,8 @@ public enum APIEndpoint {
         case .deleteMessage(eventId: let eventId, timetoken: let timetoken):
             return "/api2/v1/sdk/chat/messages/\(eventId)/\(timetoken)"
         case .deleteMessageV2(channelName:let channelName, timetoken: let timetoken):
-            return "/api/v1/messages/\(timetoken)?channel-name=\(channelName)"
+            let encodedChannel = channelName.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? channelName
+            return "/api/v1/messages/\(timetoken)?channel-name=\(encodedChannel)"
         case .getCollector:
             return "/collect"
         case .getIncrementViewCount(eventId: let eventId):
@@ -89,7 +90,8 @@ public enum APIEndpoint {
         case .unlikeComment(eventId: let eventId, messageTimeToken: let messageTimeToken, actionTimeToken: let actionTimeToken):
             return "/api2/v1/sdk/chat/messages/\(eventId)/\(messageTimeToken)/\(actionTimeToken)"
         case .unlikeCommentV2(channelName:let channelName, messageTimeToken: let messageTimeToken, actionTimeToken: let actionTimeToken):
-            return "/api/v1/messages/\(messageTimeToken)/actions/\(actionTimeToken)?channel-name=\(channelName)"
+            let encodedChannel = channelName.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? channelName
+            return "/api/v1/messages/\(messageTimeToken)/actions/\(actionTimeToken)?channel-name=\(encodedChannel)"
         case .getShoppettes(channelId: let channelId, page: let page):
             return "/api/shoppettes?channel_id=\(channelId)&per_page=10&page=\(page)"
         }
