@@ -178,15 +178,13 @@ class Networking {
         // Make a request to delete the message
         let chatVersion = Config.shared.getChatVersion()
         let endpoint: APIEndpoint
-        var requestBody: V2MessagingTokenRequest? = nil
         switch chatVersion {
         case .v1:
             endpoint = APIEndpoint.deleteMessage(eventId: eventId, timetoken: timeToken)
         case .v2:
             endpoint = APIEndpoint.deleteMessageV2(channelName: eventId, timetoken: timeToken)
-            requestBody = V2MessagingTokenRequest(showId: Show.shared.showData.id ?? nil)
         }
-        APIHandler().requestDelete(jwtToken: jwtToken, endpoint: endpoint, method: .delete, body: requestBody) { result in
+        APIHandler().requestDelete(jwtToken: jwtToken, endpoint: endpoint, method: .delete, body: nil) { result in
             switch result {
             case .success(_):
                 // Successfully deleted the message
@@ -202,16 +200,13 @@ class Networking {
     static func unlikeComment(jwtToken:String, eventId: String, messageTimetoken: String, actionTimeToken: String,_ completion: @escaping (Result<Bool, APIClientError>) -> Void?) {
         let chatVersion = Config.shared.getChatVersion()
         let endpoint: APIEndpoint
-        var requestBody: V2MessagingTokenRequest? = nil
         switch chatVersion {
         case .v1:
             endpoint = APIEndpoint.unlikeComment(eventId: eventId, messageTimeToken: messageTimetoken, actionTimeToken: actionTimeToken)
         case .v2:
             endpoint = APIEndpoint.unlikeCommentV2(channelName: eventId, messageTimeToken: messageTimetoken, actionTimeToken: actionTimeToken)
-            requestBody = V2MessagingTokenRequest(showId: Show.shared.showData.id ?? nil)
         }
-        // Make a request to unlike the comment
-        APIHandler().requestDelete(jwtToken: jwtToken, endpoint: endpoint, method: .delete, body: requestBody) { result in
+        APIHandler().requestDelete(jwtToken: jwtToken, endpoint: endpoint, method: .delete, body: nil) { result in
             switch result {
             case .success(_):
                 // Successfully unliked a comment
