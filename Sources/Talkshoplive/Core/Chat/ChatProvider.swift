@@ -85,7 +85,7 @@ public class ChatProvider {
         
         let currentSharedShow = Show.shared.showData
         
-        /// In case ChatP initializing with different show key or show have not been fetched and stored before. We need to refetch the show to have everything consistent
+        /// In case Chat initializing with different show key or show have not been fetched and stored before. We need to refetch the show to have everything consistent
         if showKey != currentSharedShow.showKey || currentSharedShow.id == nil {
             Show.shared.getDetails(showKey: showKey) { result in
                 
