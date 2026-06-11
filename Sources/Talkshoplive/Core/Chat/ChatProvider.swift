@@ -62,14 +62,23 @@ public class ChatProvider {
         self.setJwtToken(jwtToken)
         
         let initClosure = { [weak self] in
-            let showType = Show.shared.showData.type
+            let sharedShow = Show.shared.showData
+            
+            /// In case show is in prelive state - throw error that show not started
+            guard sharedShow.statusEnum != .prelive else {
+                completion?(false, APIClientError.SHOW_NOT_LIVE)
+                
+                return
+            }
+            
+            let showType = sharedShow.type
             let chatVersion = ChatVersionProvider.getVersion(showType: showType, isGuest: isGuest)
             
             self?.chatVersion = chatVersion
             
             Config.shared.setChatVersion(chatVersion)
             
-            self?.createMessagingToken(jwtToken: jwtToken){ result,error  in
+            self?.createMessagingToken(jwtToken: jwtToken){ result, error  in
                 completion?(result,error)
             }
         }
@@ -82,19 +91,15 @@ public class ChatProvider {
                 
                 /// After fetching show we check if now key is equal to the one provided, or returning error
                 if case let .success(data) = result, data.showKey == showKey {
-                    
-                    /// In case show is in prelive state - throw error that show not started
-                    if data.statusEnum == .prelive {
-                        completion?(false, APIClientError.SHOW_NOT_LIVE)
-                    }
-                    else {
-                        initClosure()
-                    }
+                    initClosure()
                 }
                 else {
                     completion?(false, APIClientError.SHOW_NOT_FOUND)
                 }
             }
+        }
+        else {
+            initClosure()
         }
     }
     
