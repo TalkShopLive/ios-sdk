@@ -14,6 +14,13 @@ public enum ShowType: String, Codable {
 
 public struct ShowData: Codable {
     
+    public enum Status: String {
+        case prelive
+        case live
+        case vod
+        case transcoding
+    }
+    
     public let id: Int?
     public let showKey: String?
     public let name: String?
@@ -40,6 +47,10 @@ public struct ShowData: Codable {
     public let videoThumbnailUrl: String?
     public let type: ShowType
     
+    // TODO: remove legacy status as string and leave only enumeration
+    public var statusEnum: ShowData.Status? {
+        status.flatMap(ShowData.Status.init(rawValue:))
+    }
     
     enum CodingKeys: String, CodingKey {
         case id

@@ -60,11 +60,41 @@ public class ChatProvider {
         self.isGuest = isGuest
         self.showKey = showKey
         self.setJwtToken(jwtToken)
-        let showType = Show.shared.showData.type
-        self.chatVersion = ChatVersionProvider.getVersion(showType: showType, isGuest: isGuest)
-        Config.shared.setChatVersion(chatVersion!)
-        self.createMessagingToken(jwtToken: jwtToken){result,error  in
-            completion?(result,error)
+        
+        let initClosure = { [weak self] in
+            let showType = Show.shared.showData.type
+            let chatVersion = ChatVersionProvider.getVersion(showType: showType, isGuest: isGuest)
+            
+            self?.chatVersion = chatVersion
+            
+            Config.shared.setChatVersion(chatVersion)
+            
+            self?.createMessagingToken(jwtToken: jwtToken){ result,error  in
+                completion?(result,error)
+            }
+        }
+        
+        let currentSharedShow = Show.shared.showData
+        
+        /// In case ChatP initializing with different show key or show have not been fetched and stored before. We need to refetch the show to have everything consistent
+        if showKey != currentSharedShow.showKey || currentSharedShow.id == nil {
+            Show.shared.getDetails(showKey: showKey) { result in
+                
+                /// After fetching show we check if now key is equal to the one provided, or returning error
+                if case let .success(data) = result, data.showKey == showKey {
+                    
+                    /// In case show is in prelive state - throw error that show not started
+                    if data.statusEnum == .prelive {
+                        completion?(false, APIClientError.SHOW_NOT_LIVE)
+                    }
+                    else {
+                        initClosure()
+                    }
+                }
+                else {
+                    completion?(false, APIClientError.SHOW_NOT_FOUND)
+                }
+            }
         }
     }
     
