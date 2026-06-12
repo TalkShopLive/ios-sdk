@@ -46,6 +46,11 @@ Fix: pass `nil`.
 
 All new log lines follow the existing `Config.shared.isDebugMode()` gate and use the prefix `[TSL][ClassName]` for easy filtering.
 
+**Chat init against empty/mismatched show picked wrong chat version (`ChatProvider.swift`, `ShowData.swift`)**  
+Started with only a show key (no prior `Show.getDetails`), `ChatProvider` read the shared singleton `Show.shared.showData`, found an empty `ShowData()`, and ran the whole flow against it. An empty show decodes as `type = .legacy`, so the resolver picked v1 and issued v1 requests for v2 shows. Root cause: `ChatProvider` assumed the singleton already held the matching show, with no check on key match or emptiness.  
+Fix: `init` now syncs state before initializing — if `showKey` differs from the cached key **or** the cached show is empty (`id == nil`), it refetches via `Show.shared.getDetails` (mismatched key after refetch → `SHOW_NOT_FOUND`; fetch failure forwards the actual error), otherwise proceeds directly. Added a prelive guard returning `SHOW_NOT_LIVE` when the show is `prelive`, backed by a new `ShowData.Status` enum (`prelive`/`live`/`vod`/`transcoding`) and `statusEnum` property.  
+Follow-ups: keeps the singleton architecture (ideally `ChatProvider` would take the show as an injected dependency). The refetch is skipped on a key match, so a show cached while `prelive` and reused once live would still read the stale `prelive` status and fail with `SHOW_NOT_LIVE` — refetch on cached `prelive` if that matters.
+
 ---
 
 ## [4.1.0] — 2026-05-08
