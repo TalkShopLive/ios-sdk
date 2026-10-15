@@ -1,5 +1,28 @@
 # Changelog
 
+## [4.2.0] — Unreleased
+
+### Added
+
+**Video views: `VideoViewTracker` (`Core/VideoViews/`)**  
+Views are now counted at the first rendered frame (`VIDEO_VIEW`, `view_rule: first_frame`), and engaged views after 3 s of watch time (`VIDEO_ENGAGED_VIEW`, `view_rule: engaged_3s`), matching web and embed. The host app forwards its player events to the tracker hooks (`onSourceChanged`, `onFirstFrame`, `onPlaybackStateChanged`, `onPlaybackEnded`) and the SDK applies the rule.
+
+- New action `CollectorActionType.videoEngagedView` (`VIDEO_ENGAGED_VIEW`, category `PROCESS`). This adds a case to a public enum: a host app that switches over `CollectorActionType` exhaustively needs a new case or a `default`.
+- New `meta.view_rule` on view events.
+- New `VideoViewSource` and `ShowData.liveAssetId` (sent as `meta.event_id`).
+
+### Changed
+
+**Anonymous views under DNT (`Networking.swift`)**  
+With `dnt: true`, `VIDEO_VIEW` and `VIDEO_ENGAGED_VIEW` are still sent, anonymously: `meta.anonymous = true`, no `user_id`, `page_metrics` or `aspect`, and only `show_id`, `event_id`, `streaming_content_key`, `store_id`, `video_status`, `view_rule` and `external` in `meta`. All other events stay blocked under DNT.
+
+**`Show.getStatus` no longer counts a view (`Show.swift`)**  
+It used to call `incrementView` whenever a live show status was fetched, without any playback. Views now come only from `VIDEO_VIEW`.
+
+**SDK version** is defined once in `SDKInfo.version` (`Resources/Constants.swift`).
+
+---
+
 ## [4.1.1] — 2026-05-26
 
 ### Critical fixes

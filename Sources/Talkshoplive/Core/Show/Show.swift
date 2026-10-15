@@ -15,7 +15,6 @@ public class Show {
     // MARK: - Properties
     public static let shared = Show()// Singleton instance for Show class
     private var showInstance = ShowData()
-    private var incrementedView = [String: Bool]()
    
     // MARK: - Public getter for showInstance
     /// Provide read-only access to the current show data.
@@ -50,6 +49,7 @@ public class Show {
     }
     
     /// Get the status of the show.
+    /// Since 4.2.0 this no longer counts a view; views come only from `VideoViewTracker`.
     public func getStatus(
         showKey: String,
         completion: @escaping (Result<EventData, APIClientError>) -> Void)
@@ -58,20 +58,7 @@ public class Show {
         ShowProvider().fetchCurrentEvent(showKey: showKey) { result in
             switch result {
             case .success(let eventInstance):
-                let incremented = self.incrementedView[showKey]
-                if !(incremented ?? false),
-                   let eventId = eventInstance.id,
-                    eventInstance.status == "live"
-                {
-                    ShowProvider().incrementView(eventId: eventId) { status, error in
-                        if status {
-                            self.incrementedView[showKey] = true
-                            Config.shared.isDebugMode() ? print("Incremented View!") : ()
-                        } else {
-                            Config.shared.isDebugMode() ? print(String(describing: self),"::","Increment View Failed: \(error?.localizedDescription ?? "")") : ()
-                        }
-                    }
-                }
+                // Views are counted only by VIDEO_VIEW (see VideoViewTracker); a status fetch has no side effects.
                 // Set the details and invoke the completion with success.
                 completion(.success(eventInstance))
             case .failure(let error):

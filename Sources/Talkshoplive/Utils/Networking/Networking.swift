@@ -233,6 +233,9 @@ class Networking {
     ///   - videoStatus: The status of the video being watched (optional).
     ///   - videoTime: The time of the video being watched (optional).
     ///   - screenResolution: The resolution of the screen (optional).
+    ///   - viewRule: The view rule for VIDEO_VIEW / VIDEO_ENGAGED_VIEW (`first_frame` / `engaged_3s`) (optional).
+    ///   - anonymous: Sends an anonymous view event (DNT): no user_id, page_metrics or aspect, and only the
+    ///     whitelisted meta fields (show_id, event_id, streaming_content_key, store_id, video_status, view_rule, external).
     ///   - completion: A closure to be called upon completion, containing a boolean indicating whether the analytics data was sent successfully and an error if applicable.
     static func collect(userId: String? = nil,
                         category: CollectorRequest.CollectorCategory? = nil,
@@ -250,7 +253,36 @@ class Networking {
                         productKey: String? = nil,
                         productId: Int? = nil,
                         channelId: Int? = nil,
+                        viewRule: String? = nil,
+                        anonymous: Bool = false,
                         _ completion: ((Bool, APIClientError?) -> Void)? = nil) {
+        if anonymous {
+            // Anonymous view event (DNT): whitelisted meta only; no user_id, page_metrics or aspect.
+            let payload = CollectorRequest(timestampUtc: Int(Date().milliseconds),
+                                           userId: nil,
+                                           category: category,
+                                           version: version,
+                                           action: action,
+                                           application: "ios",
+                                           meta: Meta(external: true,
+                                                      eventId: eventId,
+                                                      streamingContentKey: showKey,
+                                                      storeId: storeId,
+                                                      videoStatus: videoStatus,
+                                                      videoTime: nil,
+                                                      showId: showId,
+                                                      variantId: nil,
+                                                      productKey: nil,
+                                                      productId: nil,
+                                                      channelId: nil,
+                                                      viewRule: viewRule,
+                                                      anonymous: true),
+                                           aspect: nil,
+                                           pageMetrics: nil)
+            send(payload, completion)
+            return
+        }
+
         let collectorConfig = Config.loadCollectorURLConfig()
         let pageUrl = collectorConfig.pageUrl + (showKey ?? "")
         
@@ -280,11 +312,20 @@ class Networking {
                                                   variantId: variantId,
                                                   productKey: productKey,
                                                   productId: productId,
-                                                  channelId: channelId),
+                                                  channelId: channelId,
+                                                  viewRule: viewRule),
                                        aspect: Aspect(
                                         screenResolution: screenResolution ?? "NOT_SET"
                                        ),
                                        pageMetrics: pageMetrics)
+        send(payload, completion)
+    }
+
+    /// Sends a collector payload to the server.
+    private static func send(
+        _ payload: CollectorRequest,
+        _ completion: ((Bool, APIClientError?) -> Void)?)
+    {
         // Make a request to send analytics data to the server
         APIHandler().request(endpoint: APIEndpoint.getCollector, method: .post, body: payload, responseType: NoResponse.self) { result in
             let actionType = payload.action!.rawValue

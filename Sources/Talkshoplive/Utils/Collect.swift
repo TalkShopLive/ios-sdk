@@ -34,7 +34,7 @@ public class Collect {
         productId: Int? = nil,
         completion: ((Bool, APIClientError?) -> Void)? = nil
     ) {
-        let sdkVersion = "4.1.1" // Define the current SDK version.
+        let sdkVersion = SDKInfo.version // Define the current SDK version.
 
         // Check if "Do Not Track" (DNT) mode is enabled.
         if Config.shared.isDntMode() == false {
