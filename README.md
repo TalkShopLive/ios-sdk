@@ -553,9 +553,9 @@ The host app does not implement this rule. It forwards its player events to `Vid
 let tracker = VideoViewTracker(userId: "UserId") // one per player screen
 
 tracker.onSourceChanged(VideoViewSource(show: showData, event: eventData)) // on load and on every status refresh
-tracker.onFirstFrame()                     // the player rendered its first frame
-tracker.onPlaybackStateChanged(.playing)   // .playing / .paused / .buffering
-tracker.onPlaybackEnded()                  // playback reached the end
+tracker.onFirstFrame()                   // AVPlayerLayer / AVPlayerViewController: isReadyForDisplay becomes true
+tracker.onPlaybackStateChanged(.playing) // timeControlStatus: .playing / .paused / .waitingToPlayAtSpecifiedRate (.buffering)
+tracker.onPlaybackEnded()                // AVPlayerItemDidPlayToEndTime
 ```
     
 ## Run the Tests: 
