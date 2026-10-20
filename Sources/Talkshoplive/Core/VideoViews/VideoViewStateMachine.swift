@@ -47,7 +47,7 @@ enum VideoViewEffect: Equatable {
 /// Applies the view rule (same as web/embed):
 /// - VIDEO_VIEW once per play, at the first rendered frame while the player is playing.
 /// - VIDEO_ENGAGED_VIEW once per play, after 3 s of watch time. The clock pauses while paused,
-///   buffering or backgrounded.
+///   buffering or backgrounded. Picture in Picture keeps it running: the video stays on screen.
 /// - A new play starts on replay after the end and when the source changes to a different
 ///   show, phase or stream.
 ///
@@ -71,6 +71,7 @@ struct VideoViewStateMachine {
     private var timerArmed = false
     private var endedForReplay = false
     private var backgrounded = false
+    private var pictureInPicture = false
 
     // MARK: - Inputs
 
@@ -130,12 +131,22 @@ struct VideoViewStateMachine {
 
     mutating func appBackgrounded(now: UInt64) -> [VideoViewEffect] {
         backgrounded = true
-        return pauseClock(now: now)
+        // Picture in Picture keeps the video on screen: the clock keeps running.
+        return pictureInPicture ? [] : pauseClock(now: now)
     }
 
     mutating func appForegrounded(now: UInt64) -> [VideoViewEffect] {
         backgrounded = false
         return startClock(now: now)
+    }
+
+    mutating func pictureInPictureChanged(_ isActive: Bool, now: UInt64) -> [VideoViewEffect] {
+        pictureInPicture = isActive
+        if isActive {
+            return startClock(now: now)
+        }
+        // PiP closed while the app is in the background: nothing is on screen any more.
+        return backgrounded ? pauseClock(now: now) : []
     }
 
     mutating func engagedTimerFired(generation: Int, now: UInt64) -> [VideoViewEffect] {
@@ -157,6 +168,11 @@ struct VideoViewStateMachine {
 
     // MARK: - Rule
 
+    /// The video is visible: the app is in the foreground, or Picture in Picture is active.
+    private var isOnScreen: Bool {
+        !backgrounded || pictureInPicture
+    }
+
     private mutating func advance(now: UInt64) -> [VideoViewEffect] {
         viewSent ? startClock(now: now) : maybeSendView(now: now)
     }
@@ -171,7 +187,7 @@ struct VideoViewStateMachine {
     }
 
     private mutating func startClock(now: UInt64) -> [VideoViewEffect] {
-        guard viewSent, !engagedSent, isPlaying, !backgrounded, let source = source else {
+        guard viewSent, !engagedSent, isPlaying, isOnScreen, let source = source else {
             return []
         }
         bank(now: now)

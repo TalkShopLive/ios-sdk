@@ -18,13 +18,15 @@ import UIKit
 /// The host app forwards its player events to the hooks below and the SDK applies the view rule:
 /// - VIDEO_VIEW (`view_rule: first_frame`) once per play, at the first rendered frame while playing.
 /// - VIDEO_ENGAGED_VIEW (`view_rule: engaged_3s`) once per play, after 3 s of watch time.
-///   The clock pauses while paused, buffering or while the app is in the background (including PiP).
+///   The clock pauses while paused, buffering or while the app is in the background.
+///   Picture in Picture keeps it running (see `onPictureInPictureChanged(_:)`): the video stays on screen.
 /// - Pause/resume, seek, buffering, background/foreground, rotation and re-creating the player for
 ///   the same source never send a new view. Replay after the end, a different show/stream and
 ///   prelive -> live start a new play.
 /// - With DNT on, both events are sent anonymously.
 ///
-/// Create one tracker per player screen and keep it for as long as the screen exists
+/// Create one tracker per player and keep it for as long as the video plays, also in Picture in
+/// Picture after the player screen is gone: keep it next to the object that keeps the player alive
 /// (rotation and fullscreen use the same tracker). Every method is thread-safe.
 public final class VideoViewTracker {
 
@@ -89,6 +91,14 @@ public final class VideoViewTracker {
     /// Playing again afterwards is a new play.
     public func onPlaybackEnded() {
         apply { $0.playbackEnded(now: $1) }
+    }
+
+    /// Call when Picture in Picture starts or stops (`AVPlayerViewControllerDelegate` / `AVPictureInPictureControllerDelegate`):
+    /// `…WillStartPictureInPicture(_:)` -> true; `…DidStopPictureInPicture(_:)` and
+    /// `…(_:failedToStartPictureInPictureWithError:)` -> false.
+    /// While PiP is active the video stays on screen, so leaving the app does not pause the engaged clock.
+    public func onPictureInPictureChanged(_ isActive: Bool) {
+        apply { $0.pictureInPictureChanged(isActive, now: $1) }
     }
 
     // MARK: - App Lifecycle
