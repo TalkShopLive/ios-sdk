@@ -37,6 +37,7 @@ public struct CollectorRequest: Codable {
         case videoPause = "VIDEO_PAUSE"
         case videoPlay = "VIDEO_PLAY"
         case videoView = "VIDEO_VIEW"
+        case videoEngagedView = "VIDEO_ENGAGED_VIEW"
         case viewContent = "VIEW_CONTENT"
         case addToCart = "ADD_TO_CART"
         case selectProduct = "SELECT_PRODUCT"
@@ -49,7 +50,7 @@ public struct CollectorRequest: Codable {
             switch self {
             case .viewContent:
                 return .pageView
-            case .videoComplete, .videoTime, .videoView:
+            case .videoComplete, .videoTime, .videoView, .videoEngagedView:
                 return .process
             case .videoPause, .videoPlay, .addToCart,.selectProduct,
                     .customizeProductQuantityIncrease,.customizeProductQuantityDecrease:
@@ -87,6 +88,8 @@ struct Meta: Codable {
     let productKey: String?
     let productId: Int?
     let channelId: Int?
+    var viewRule: String? = nil
+    var anonymous: Bool? = nil
 
     // MARK: Coding Keys
     enum CodingKeys: String, CodingKey {
@@ -101,6 +104,8 @@ struct Meta: Codable {
         case productKey = "product_key"
         case productId = "product_id"
         case channelId = "product_owning_channel_id"
+        case viewRule = "view_rule"
+        case anonymous
     }
 }
 //MARK: - Aspect Object

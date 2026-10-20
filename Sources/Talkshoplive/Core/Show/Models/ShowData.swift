@@ -47,6 +47,11 @@ public struct ShowData: Codable {
     public let videoThumbnailUrl: String?
     public let type: ShowType
     
+    /// The id of the show's live asset, sent as `meta.event_id` on view events.
+    public var liveAssetId: Int? {
+        assets?.first(where: { $0.type == .live })?.id
+    }
+
     // TODO: remove legacy status as string and leave only enumeration
     public var statusEnum: ShowData.Status? {
         status.flatMap(ShowData.Status.init(rawValue:))

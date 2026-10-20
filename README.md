@@ -12,6 +12,7 @@ TSL takes care of the infrastructure and APIs needed for live streaming of diffe
 * [Chats](#chats)
 * [Shoppettes](#shoppettes)
 * [Collect](#collect)
+* [Video Views](#video-views)
 
 ## Requirements
 
@@ -52,11 +53,14 @@ For more information, see Apple's guide on [Adding Package Dependencies to Your 
        - `clientKey`: Given secured client key.
        - `debugMode`: Print console logs if true
        - `testMode`: Switch to staging if true
+       - `dnt`: Do Not Track. If true, no collector events are sent, except video views (`VIDEO_VIEW` / `VIDEO_ENGAGED_VIEW`), which are sent anonymously. Defaults to false.
 
    ```
-   let TSL = Talkshoplive.TalkShopLive(clientKey: "YourClientKey", debugMode: true/false, testMode: true/false)
+   let TSL = Talkshoplive.TalkShopLive(clientKey: "YourClientKey", debugMode: true/false, testMode: true/false, dnt: true/false)
 
     ```
+
+   Note: every `TalkShopLive(...)` initialization sets DNT again. Pass `dnt:` each time you initialize the SDK, otherwise DNT is reset to false.
     
 ## Shows
 
@@ -121,6 +125,8 @@ showInstance.getProducts(showKey: "yourShowKey", preLive: "true/false") { result
 #### `getStatus(showKey:completion:)`
 
 Get the current event of a show.
+
+Since 4.2.0 this call has no side effects: it no longer counts a view for live shows. Views are counted only by [`VideoViewTracker`](#video-views).
 
 - Parameters:
     - `showKey`: The unique identifier of the show.
@@ -524,6 +530,33 @@ let collectInstance = Collect(event: eventInstance, userId: "UserId")
 // Pass variantId, productKey and ProductId only for product-related actions.
 collectInstance.collect(actionName: .actionName, videoTime: currentVideoTimeInSeconds, variantId: variantId, productKey: productKey, productId:productId)
 
+```
+
+Video views (`VIDEO_VIEW` and `VIDEO_ENGAGED_VIEW`) are sent by [`VideoViewTracker`](#video-views). Do not send `.videoView` through `collect` once the tracker is wired, or views will be counted twice.
+
+## Video Views
+
+### Overview
+
+The SDK counts video views the same way as TalkShopLive web and embed:
+
+- `VIDEO_VIEW` (`view_rule: first_frame`): once per play, at the first rendered video frame while playing.
+- `VIDEO_ENGAGED_VIEW` (`view_rule: engaged_3s`): once per play, after 3 seconds of watch time. The clock pauses while paused, buffering or while the app is in the background. Picture in Picture does not count as background, because the video stays on screen. Report it with `onPictureInPictureChanged`; without it, PiP in the background pauses the clock.
+- Pause/resume, seek, buffering, background/foreground, rotation and re-creating the player for the same stream do not send new views. Replay after the end, a different show or stream, and prelive → live start a new play.
+- With `dnt: true`, both events are sent anonymously (`meta.anonymous = true`, no `user_id`, `page_metrics` or `aspect`).
+
+The host app does not implement this rule. It forwards its player events to `VideoViewTracker`, and the SDK decides when to send each event.
+
+### Usage
+
+```
+let tracker = VideoViewTracker(userId: "UserId") // one per player; keep it while the video plays, also in PiP
+
+tracker.onSourceChanged(VideoViewSource(show: showData, event: eventData)) // on load and on every status refresh
+tracker.onFirstFrame()                   // AVPlayerLayer / AVPlayerViewController: isReadyForDisplay becomes true
+tracker.onPlaybackStateChanged(.playing) // timeControlStatus: .playing / .paused / .waitingToPlayAtSpecifiedRate (.buffering)
+tracker.onPlaybackEnded()                // AVPlayerItemDidPlayToEndTime
+tracker.onPictureInPictureChanged(true)  // PiP delegate: …WillStartPictureInPicture -> true; …DidStopPictureInPicture / failedToStartPictureInPictureWithError -> false
 ```
     
 ## Run the Tests: 
